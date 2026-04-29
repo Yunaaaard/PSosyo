@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:p_sosyo/app/views/landing_page.dart';
+import 'package:p_sosyo/app/modules/views/landing_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -7,7 +7,7 @@ void main() {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-  
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
