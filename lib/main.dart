@@ -1,5 +1,9 @@
+
 import 'package:flutter/material.dart';
-import 'package:p_sosyo/app/modules/views/landing_page.dart';
+import 'package:get/get.dart';
+import 'app/routes/app_pages.dart';
+import 'app/routes/app_routes.dart';
+
 
 void main() {
   runApp(const MyApp());
@@ -10,13 +14,14 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return GetMaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'PSosyo',
       theme: ThemeData(
         fontFamily: 'Poppins',
       ),
-      home: const LandingPage(),
+      initialRoute: AppRoutes.landing,
+      getPages: AppPages.pages,
     );
   }
 }

@@ -37,4 +37,9 @@ flutter:
           weight: 500
         - asset: assets/fonts/Poppins-Bold.ttf
           weight: 700
- 
+    - family: "IT TENOVIANA DEMO"
+      fonts:
+        - asset: assets/fonts/ITTENOVIANADEMO-Italic.otf
+          weight: 400
+        - asset: assets/fonts/ITTENOVIANADEMO-Regular.otf
+          weight: 400

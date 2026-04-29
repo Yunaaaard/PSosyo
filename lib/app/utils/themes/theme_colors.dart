@@ -17,9 +17,16 @@ class AppThemes {
 	static final ButtonStyle primaryButtonStyle = ElevatedButton.styleFrom(
 		backgroundColor: AppColors.buttonBackground,
 		foregroundColor: AppColors.buttonText,
-		textStyle: const TextStyle(fontWeight: FontWeight.w600),
-		shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+		textStyle: const TextStyle(
+			fontWeight: FontWeight.w500,
+			letterSpacing: 1,
+			fontFamily: 'Poppins',
+			fontSize: 25,
+		),
+		shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
 		padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+		minimumSize: const Size(500, 65), // width, height
+		maximumSize: const Size(500, 65),
 	);
 }
 
