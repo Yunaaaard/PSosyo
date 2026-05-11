@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:get/get.dart';
 import 'package:p_sosyo/app/widgets/custom_app_bar.dart';
 import 'package:p_sosyo/app/widgets/custom_navbar.dart';
 import 'package:p_sosyo/app/widgets/carousel_widget.dart';
 import 'package:p_sosyo/app/utils/peso_formatter.dart';
+import 'package:p_sosyo/app/modules/dashboard_page/controller/dashboard_controller.dart';
 
 class InitialDashboard extends StatelessWidget {
   const InitialDashboard({Key? key}) : super(key: key);
+
+  DashboardController get controller =>
+      Get.isRegistered<DashboardController>()
+          ? Get.find<DashboardController>()
+          : Get.put(DashboardController());
 
   @override
   Widget build(BuildContext context) {
@@ -32,12 +39,7 @@ class InitialDashboard extends StatelessWidget {
   }
 
   Widget _buildCarousel(BuildContext context) {
-    final carouselImages = [
-      'assets/images/cdo-card.png',
-      'assets/images/monde-card.png',
-      'assets/images/nestle-card.png',
-    ];
-    return CarouselWidget(images: carouselImages);
+    return CarouselWidget(images: controller.carouselImages);
   }
 
   Widget _buildStatsCard(BuildContext context) {
@@ -73,12 +75,12 @@ class InitialDashboard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      PesoFormatter.buildPesoText(
-                        amount: '0,000.00',
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.black,
-                      ),
+                      Obx(() => PesoFormatter.buildPesoText(
+                            amount: controller.totalOrderedValue.value,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.black,
+                          )),
                     ],
                   ),
                 ),
@@ -101,14 +103,14 @@ class InitialDashboard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      const Text(
-                        '2,028 SKU\'s',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.black,
-                        ),
-                      ),
+                      Obx(() => Text(
+                            controller.totalProducts.value,
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.black,
+                            ),
+                          )),
                     ],
                   ),
                 ),
@@ -123,47 +125,48 @@ class InitialDashboard extends StatelessWidget {
   }
 
   Widget _buildPsosyoButton(BuildContext context) {
-    return Container(
-      width: 90,
-      height: 90,
-      decoration: BoxDecoration(
-        color: const Color(0xFF6533E7),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: controller.openPsosyoEligibility,
         borderRadius: BorderRadius.circular(18),
-      ),
-      padding: const EdgeInsets.all(12),
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SvgPicture.asset(
-              'assets/icons/psosyo-icon-button.svg',
-              width: 42,
-              height: 42,
-              fit: BoxFit.contain,
+        child: Container(
+          width: 90,
+          height: 90,
+          decoration: BoxDecoration(
+            color: const Color(0xFF6533E7),
+            borderRadius: BorderRadius.circular(18),
+          ),
+          padding: const EdgeInsets.all(12),
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SvgPicture.asset(
+                  'assets/icons/psosyo-icon-button.svg',
+                  width: 42,
+                  height: 42,
+                  fit: BoxFit.contain,
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Psosyo',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    height: 1,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 4),
-            const Text(
-              'Psosyo',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                height: 1,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildBrandCategoriesSection(BuildContext context) {
-    final categories = [
-      ('Nestle', 'assets/images/nestle-card.png', 'assets/images/nestle-sample-logo.png'),
-      ('Monde Nissin', 'assets/images/monde-card.png', 'assets/images/monde-sample-logo.png'),
-      ('CDO', 'assets/images/cdo-card.png', 'assets/images/cdo-sample-logo.png'),
-    ];
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -177,13 +180,13 @@ class InitialDashboard extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        ...categories.map(
+        ...controller.brandCategories.map(
           (category) => Padding(
             padding: const EdgeInsets.only(bottom: 12),
             child: _buildBrandCategoryCard(
-              title: category.$1,
-              imagePath: category.$2,
-              logoPath: category.$3,
+              title: category['title'] ?? '',
+              imagePath: category['imageCard'] ?? '',
+              logoPath: category['logo'] ?? '',
             ),
           ),
         ),

@@ -59,7 +59,7 @@ class OtpController extends GetxController {
       // TODO: integrate with verification service
       // Navigate to dashboard after successful verification
       Future.delayed(const Duration(milliseconds: 500), () {
-        Get.off(() => const InitialDashboard());
+        Get.offNamed(AppRoutes.dashboard);
       });
     } else {
       Get.snackbar('Error', 'Please enter the complete 6-digit code',

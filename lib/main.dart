@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'app/routes/app_pages.dart';
 import 'app/routes/app_routes.dart';
+import 'app/utils/themes/theme_colors.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,9 +20,7 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'PSosyo',
-      theme: ThemeData(
-        fontFamily: 'Poppins',
-      ),
+      theme: AppThemes.lightTheme,
       initialRoute: AppRoutes.landing,
       getPages: AppPages.pages,
     );

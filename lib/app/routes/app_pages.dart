@@ -4,6 +4,7 @@ import 'package:p_sosyo/app/modules/register_number/pages/register_page.dart';
 import 'package:p_sosyo/app/modules/verify_otp/pages/otp_page.dart';
 import 'package:p_sosyo/app/modules/verify_otp/bindings/otp_binding.dart';
 import 'package:p_sosyo/app/modules/dashboard_page/pages/initial_dashboard.dart';
+import 'package:p_sosyo/app/modules/dashboard_page/bindings/dashboard_binding.dart';
 import '../modules/register_number/bindings/register_binding.dart';
 import 'app_routes.dart';
 
@@ -26,6 +27,7 @@ class AppPages {
 		GetPage(
 			name: AppRoutes.dashboard,
 			page: () => const InitialDashboard(),
+			binding: DashboardBinding(),
 		),
 	];
 }
