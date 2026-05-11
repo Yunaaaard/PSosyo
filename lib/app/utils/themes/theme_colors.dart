@@ -112,5 +112,20 @@ class AppThemes {
 		minimumSize: const Size(500, 65), // width, height
 		maximumSize: const Size(500, 65),
 	);
+
+	// Style for an inactive / unaccessible Continue button used across the app
+	static final ButtonStyle unaccessibleButtonStyle = ElevatedButton.styleFrom(
+		backgroundColor: const Color(0xFFE7E8EC),
+		foregroundColor: const Color(0xFFB9BCC5),
+		textStyle: const TextStyle(
+			fontWeight: FontWeight.w500,
+			fontFamily: 'Poppins',
+			fontSize: 25,
+		),
+		shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+		padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+		minimumSize: const Size(500, 65), // width, height
+		maximumSize: const Size(500, 65),
+	);
 }
 

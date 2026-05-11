@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:p_sosyo/app/utils/themes/theme_colors.dart';
+import 'package:p_sosyo/app/modules/check_eligiblity/pages/upload_id.dart';
 
 class PsosyoEligibilityPage extends StatelessWidget {
   const PsosyoEligibilityPage({super.key});
@@ -91,20 +93,27 @@ class PsosyoEligibilityPage extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 34),
-                        Container(
-                          height: 64,
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.88),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Center(
-                            child: Text(
-                              'Check My Eligibility',
-                              style: TextStyle(
-                                color: colors.primaryPurple,
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
+                        GestureDetector(
+                          onTap: () {
+                            // debug visibility that CTA was tapped
+                            Get.snackbar('Navigation', 'Opening Upload ID...', snackPosition: SnackPosition.BOTTOM);
+                            Get.to(() => const UploadIdPage());
+                          },
+                          child: Container(
+                            height: 64,
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.88),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Center(
+                              child: Text(
+                                'Check My Eligibility',
+                                style: TextStyle(
+                                  color: colors.primaryPurple,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
                           ),
