@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:p_sosyo/app/routes/app_routes.dart';
+import 'package:p_sosyo/app/modules/dashboard_page/pages/initial_dashboard.dart';
 
 class OtpController extends GetxController {
   final int length = 6;
@@ -37,6 +38,13 @@ class OtpController extends GetxController {
     otp.value = controllers.map((c) => c.text).join();
     isValid.value = otp.value.length == length &&
         controllers.every((c) => c.text.trim().isNotEmpty);
+    
+    // Auto-submit when all 6 digits are entered
+    if (isValid.value) {
+      Future.delayed(const Duration(milliseconds: 300), () {
+        submit();
+      });
+    }
   }
 
   void resend() {
@@ -49,8 +57,10 @@ class OtpController extends GetxController {
       Get.snackbar('OTP', 'Entered: ${otp.value}',
           snackPosition: SnackPosition.BOTTOM);
       // TODO: integrate with verification service
-      // For now navigate to landing after successful verification
-      Get.offAllNamed(AppRoutes.landing);
+      // Navigate to dashboard after successful verification
+      Future.delayed(const Duration(milliseconds: 500), () {
+        Get.off(() => const InitialDashboard());
+      });
     } else {
       Get.snackbar('Error', 'Please enter the complete 6-digit code',
           snackPosition: SnackPosition.BOTTOM);
