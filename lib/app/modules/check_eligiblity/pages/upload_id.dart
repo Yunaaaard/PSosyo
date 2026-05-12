@@ -1,10 +1,11 @@
 import 'dart:io';
+import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:p_sosyo/app/modules/check_eligiblity/controllers/upload_id_controller.dart';
+import 'package:p_sosyo/app/routes/app_routes.dart';
 import 'package:p_sosyo/app/utils/themes/theme_colors.dart';
 import 'package:p_sosyo/app/widgets/basic_info_appbar.dart';
-import 'package:p_sosyo/app/widgets/dashed_rounded_box.dart';
 
 class UploadIdPage extends StatelessWidget {
 	const UploadIdPage({super.key});
@@ -132,63 +133,89 @@ class UploadIdPage extends StatelessWidget {
 										() => controller.selectedIdType.value != null
 												? Column(
 													children: [
-														DashedRoundedBox(
-															onTap: () => controller.pickImage(true),
-															child: Obx(
-																() => controller.frontImage.value == null
-																		? Column(
-																			mainAxisAlignment: MainAxisAlignment.center,
-																			children: [
-																				Icon(Icons.camera_alt_outlined, color: colors.primaryPurple, size: 36),
-																				const SizedBox(height: 8),
-																				Text('Front of ID', style: TextStyle(color: colors.darkText, fontWeight: FontWeight.w700, fontSize: 18)),
-																				const SizedBox(height: 6),
-																				Text('PNG, JPG or PDF up to 10MB', style: TextStyle(color: colors.titleGrey)),
-																			],
-																		)
-																		: Padding(
-																			padding: const EdgeInsets.all(8),
-																			child: ClipRRect(
-																				borderRadius: BorderRadius.circular(12),
-																				child: Image.file(File(controller.frontImage.value!.path), fit: BoxFit.cover, width: double.infinity, height: double.infinity),
-																			),
-																		),
+														DottedBorder(
+															color: colors.primaryPurple,
+															strokeWidth: 2,
+															dashPattern: const [8, 6],
+															borderType: BorderType.RRect,
+															radius: const Radius.circular(16),
+															child: GestureDetector(
+																onTap: () => controller.pickImage(true),
+																child: SizedBox(
+																	width: double.infinity,
+																	height: 180,
+																	child: Obx(
+																		() => controller.frontImage.value == null
+																				? Column(
+																					mainAxisAlignment: MainAxisAlignment.center,
+																					children: [
+																						Icon(Icons.camera_alt_outlined, color: colors.primaryPurple, size: 36),
+																						const SizedBox(height: 8),
+																						Text('Front of ID', style: TextStyle(color: colors.darkText, fontWeight: FontWeight.w700, fontSize: 18)),
+																						const SizedBox(height: 6),
+																						Text('PNG, JPG or PDF up to 10MB', style: TextStyle(color: colors.titleGrey)),
+																					],
+																				)
+																				: Padding(
+																					padding: const EdgeInsets.all(8),
+																					child: ClipRRect(
+																						borderRadius: BorderRadius.circular(12),
+																						child: Image.file(File(controller.frontImage.value!.path), fit: BoxFit.cover, width: double.infinity, height: double.infinity),
+																					),
+																				),
+																	),
+																),
 															),
 														),
 														const SizedBox(height: 18),
-														DashedRoundedBox(
-															onTap: () => controller.pickImage(false),
-															child: Obx(
-																() => controller.backImage.value == null
-																		? Column(
-																			mainAxisAlignment: MainAxisAlignment.center,
-																			children: [
-																				Icon(Icons.camera_alt_outlined, color: colors.primaryPurple, size: 36),
-																				const SizedBox(height: 8),
-																				Text('Back of ID', style: TextStyle(color: colors.darkText, fontWeight: FontWeight.w700, fontSize: 18)),
-																				const SizedBox(height: 6),
-																				Text('PNG, JPG or PDF up to 10MB', style: TextStyle(color: colors.titleGrey)),
-																			],
-																		)
-																		: Padding(
-																			padding: const EdgeInsets.all(8),
-																			child: ClipRRect(
-																				borderRadius: BorderRadius.circular(12),
-																				child: Image.file(File(controller.backImage.value!.path), fit: BoxFit.cover, width: double.infinity, height: double.infinity),
-																			),
-																		),
+														DottedBorder(
+															color: colors.primaryPurple,
+															strokeWidth: 2,
+															dashPattern: const [8, 6],
+															borderType: BorderType.RRect,
+															radius: const Radius.circular(16),
+															child: GestureDetector(
+																onTap: () => controller.pickImage(false),
+																child: SizedBox(
+																	width: double.infinity,
+																	height: 180,
+																	child: Obx(
+																		() => controller.backImage.value == null
+																				? Column(
+																					mainAxisAlignment: MainAxisAlignment.center,
+																					children: [
+																						Icon(Icons.camera_alt_outlined, color: colors.primaryPurple, size: 36),
+																						const SizedBox(height: 8),
+																						Text('Back of ID', style: TextStyle(color: colors.darkText, fontWeight: FontWeight.w700, fontSize: 18)),
+																						const SizedBox(height: 6),
+																						Text('PNG, JPG or PDF up to 10MB', style: TextStyle(color: colors.titleGrey)),
+																					],
+																				)
+																				: Padding(
+																					padding: const EdgeInsets.all(8),
+																					child: ClipRRect(
+																						borderRadius: BorderRadius.circular(12),
+																						child: Image.file(File(controller.backImage.value!.path), fit: BoxFit.cover, width: double.infinity, height: double.infinity),
+																					),
+																				),
+																	),
+																),
 															),
 														),
 													],
 												)
 												: const SizedBox(),
 									),
-
 									const Spacer(),
-									ElevatedButton(
-										style: AppThemes.unaccessibleButtonStyle,
-										onPressed: null,
-										child: const Center(child: Text('Continue')),
+									Obx(
+										() {
+											final canContinue = controller.frontImage.value != null && controller.backImage.value != null;
+											return ElevatedButton(
+												style: canContinue ? AppThemes.primaryButtonStyle : AppThemes.unaccessibleButtonStyle,
+												onPressed: canContinue ? () => Get.toNamed(AppRoutes.selfieVerification) : null,
+												child: const Center(child: Text('Continue')),
+											);
+										},
 									),
 								],
 							),

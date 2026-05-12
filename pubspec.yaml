@@ -16,6 +16,7 @@ dependencies:
   flutter_svg: ^2.1.0
   image_picker: ^0.8.7+4
   get: ^4.6.6
+  dotted_border: ^2.1.0
 
 dev_dependencies:
   flutter_test:

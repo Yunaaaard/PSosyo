@@ -6,6 +6,8 @@ import 'package:p_sosyo/app/modules/verify_otp/bindings/otp_binding.dart';
 import 'package:p_sosyo/app/modules/dashboard_page/pages/initial_dashboard.dart';
 import 'package:p_sosyo/app/modules/dashboard_page/bindings/dashboard_binding.dart';
 import 'package:p_sosyo/app/modules/check_eligiblity/pages/upload_id.dart';
+import 'package:p_sosyo/app/modules/check_eligiblity/pages/selfie_verification.dart';
+import 'package:p_sosyo/app/modules/check_eligiblity/bindings/selfie_verification_binding.dart';
 import '../modules/register_number/bindings/register_binding.dart';
 import 'app_routes.dart';
 
@@ -33,6 +35,11 @@ class AppPages {
 		GetPage(
 			name: AppRoutes.uploadId,
 			page: () => const UploadIdPage(),
+		),
+		GetPage(
+			name: AppRoutes.selfieVerification,
+			page: () => const SelfieVerificationPage(),
+			binding: SelfieVerificationBinding(),
 		),
 	];
 }
