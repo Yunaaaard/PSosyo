@@ -45,7 +45,7 @@ class UploadIdPage extends StatelessWidget {
 													color: const Color(0xFFE9E3FF),
 												),
 												FractionallySizedBox(
-													widthFactor: 0.2,
+													widthFactor: 0.25,
 													child: Container(
 														height: 13,
 														color: colors.primaryPurple,
@@ -75,7 +75,7 @@ class UploadIdPage extends StatelessWidget {
 											fontWeight: FontWeight.w400,
 										),
 									),
-									const SizedBox(height: 34),
+									const SizedBox(height: 16),
 									Text(
 										'Select ID Type',
 										style: TextStyle(

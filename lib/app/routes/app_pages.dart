@@ -5,8 +5,12 @@ import 'package:p_sosyo/app/modules/verify_otp/pages/otp_page.dart';
 import 'package:p_sosyo/app/modules/verify_otp/bindings/otp_binding.dart';
 import 'package:p_sosyo/app/modules/dashboard_page/pages/initial_dashboard.dart';
 import 'package:p_sosyo/app/modules/dashboard_page/bindings/dashboard_binding.dart';
+import 'package:p_sosyo/app/modules/check_eligiblity/pages/about_yourself.dart';
+import 'package:p_sosyo/app/modules/check_eligiblity/pages/employment_income.dart';
 import 'package:p_sosyo/app/modules/check_eligiblity/pages/upload_id.dart';
 import 'package:p_sosyo/app/modules/check_eligiblity/pages/selfie_verification.dart';
+import 'package:p_sosyo/app/modules/check_eligiblity/bindings/employment_income_binding.dart';
+import 'package:p_sosyo/app/modules/check_eligiblity/bindings/about_yourself_binding.dart';
 import 'package:p_sosyo/app/modules/check_eligiblity/bindings/selfie_verification_binding.dart';
 import '../modules/register_number/bindings/register_binding.dart';
 import 'app_routes.dart';
@@ -33,6 +37,11 @@ class AppPages {
 			binding: DashboardBinding(),
 		),
 		GetPage(
+			name: AppRoutes.employmentIncome,
+			page: () => const EmploymentIncomePage(),
+			binding: EmploymentIncomeBinding(),
+		),
+		GetPage(
 			name: AppRoutes.uploadId,
 			page: () => const UploadIdPage(),
 		),
@@ -40,6 +49,11 @@ class AppPages {
 			name: AppRoutes.selfieVerification,
 			page: () => const SelfieVerificationPage(),
 			binding: SelfieVerificationBinding(),
+		),
+		GetPage(
+			name: AppRoutes.aboutYourself,
+			page: () => const AboutYourselfPage(),
+			binding: AboutYourselfBinding(),
 		),
 	];
 }

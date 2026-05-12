@@ -12,10 +12,12 @@ class SelfieVerificationPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.find<SelfieVerificationController>();
-    final colors = Theme.of(context).extension<PsosyoThemeColors>() ?? AppColors.psosyo;
 
-    return Scaffold(
+      return GetBuilder<SelfieVerificationController>(
+        builder: (controller) {
+          final colors = Theme.of(context).extension<PsosyoThemeColors>() ?? AppColors.psosyo;
+
+          return Scaffold(
       backgroundColor: colors.surface,
       body: SafeArea(
         child: Padding(
@@ -40,7 +42,7 @@ class SelfieVerificationPage extends StatelessWidget {
                   children: [
                     Container(height: 13, color: const Color(0xFFE9E3FF)),
                     FractionallySizedBox(
-                      widthFactor: 0.4,
+                      widthFactor: 0.5,
                       child: Container(height: 13, color: colors.primaryPurple),
                     ),
                   ],
@@ -195,7 +197,7 @@ class SelfieVerificationPage extends StatelessWidget {
                         ? AppThemes.primaryButtonStyle
                         : AppThemes.unaccessibleButtonStyle,
                     onPressed: hasCapture
-                        ? () => Get.toNamed(AppRoutes.dashboard)
+                        ? () => Get.toNamed(AppRoutes.aboutYourself)
                         : null,
                     child: const Text('Continue'),
                   );
@@ -206,5 +208,7 @@ class SelfieVerificationPage extends StatelessWidget {
         ),
       ),
     );
+        },
+      );
   }
 }
