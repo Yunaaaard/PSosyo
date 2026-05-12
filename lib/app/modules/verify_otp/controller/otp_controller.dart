@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:p_sosyo/app/routes/app_routes.dart';
-import 'package:p_sosyo/app/modules/dashboard_page/pages/initial_dashboard.dart';
 
 class OtpController extends GetxController {
   final int length = 6;

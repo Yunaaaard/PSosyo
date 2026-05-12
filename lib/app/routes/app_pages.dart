@@ -12,6 +12,7 @@ import 'package:p_sosyo/app/modules/check_eligiblity/pages/selfie_verification.d
 import 'package:p_sosyo/app/modules/check_eligiblity/bindings/employment_income_binding.dart';
 import 'package:p_sosyo/app/modules/check_eligiblity/bindings/about_yourself_binding.dart';
 import 'package:p_sosyo/app/modules/check_eligiblity/bindings/selfie_verification_binding.dart';
+import 'package:p_sosyo/app/modules/check_eligiblity/bindings/upload_id_binding.dart';
 import '../modules/register_number/bindings/register_binding.dart';
 import 'app_routes.dart';
 
@@ -44,6 +45,7 @@ class AppPages {
 		GetPage(
 			name: AppRoutes.uploadId,
 			page: () => const UploadIdPage(),
+			binding: UploadIdBinding(),
 		),
 		GetPage(
 			name: AppRoutes.selfieVerification,

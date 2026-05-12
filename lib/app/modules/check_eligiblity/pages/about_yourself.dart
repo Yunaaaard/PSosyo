@@ -11,17 +11,8 @@ class AboutYourselfPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetBuilder<AboutYourselfController>(
-      init: AboutYourselfController(),
       builder: (controller) {
         final colors = Theme.of(context).extension<PsosyoThemeColors>() ?? AppColors.psosyo;
-
-        // ── Moved out of children list — cannot declare variables inside a list literal ──
-        final isComplete = controller.fullnameController.text.isNotEmpty &&
-            controller.emailController.text.isNotEmpty &&
-            controller.dateOfBirthController.text.isNotEmpty &&
-            controller.selectedStatus.value != null &&
-            controller.selectedGender.value != null &&
-            controller.addressController.text.isNotEmpty;
 
         return Scaffold(
           backgroundColor: colors.surface,
@@ -100,11 +91,13 @@ class AboutYourselfPage extends StatelessWidget {
                           const SizedBox(height: 12),
                           TextField(
                             controller: controller.fullnameController,
+                            readOnly: true,
+                            showCursor: false,
                             decoration: InputDecoration(
-                              hintText: '',
+                              hintText: 'Fetched from your ID',
                               hintStyle: TextStyle(color: colors.titleGrey),
                               filled: true,
-                              fillColor: Colors.white,
+                              fillColor: const Color(0xFFF7F7FB),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: const BorderSide(color: Color(0xFFE3E5EA), width: 1.2),
@@ -113,9 +106,19 @@ class AboutYourselfPage extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: const BorderSide(color: Color(0xFFE3E5EA), width: 1.2),
                               ),
+                              suffixIcon: Icon(Icons.lock_outline, color: colors.titleGrey, size: 20),
                               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                             ),
                             style: TextStyle(color: colors.darkText, fontSize: 18),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'This name is taken from the uploaded ID and cannot be edited here.',
+                            style: TextStyle(
+                              color: colors.titleGrey,
+                              fontSize: 13,
+                              height: 1.35,
+                            ),
                           ),
                           const SizedBox(height: 24),
 
@@ -135,7 +138,7 @@ class AboutYourselfPage extends StatelessWidget {
                             textInputAction: TextInputAction.next,
                             autofillHints: const [AutofillHints.email],
                             decoration: InputDecoration(
-                              hintText: 'Enter Email Address',
+                              hintText: 'example@email.com',
                               hintStyle: TextStyle(color: colors.titleGrey),
                               filled: true,
                               fillColor: Colors.white,

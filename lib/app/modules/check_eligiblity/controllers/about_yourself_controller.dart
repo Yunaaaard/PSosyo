@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:p_sosyo/app/services/id_verification_service.dart';
 
 class AboutYourselfController extends GetxController {
 	final TextEditingController fullnameController = TextEditingController();
@@ -12,14 +13,24 @@ class AboutYourselfController extends GetxController {
 	var isFormComplete = false.obs;
 
 	final statusOptions = ['Single', 'Married', 'Divorced', 'Widowed'];
+	late final IdVerificationService _idVerificationService;
 
 	@override
 	void onInit() {
 		super.onInit();
+		_idVerificationService = Get.find<IdVerificationService>();
+		
 		fullnameController.addListener(_syncFormState);
 		emailController.addListener(_syncFormState);
 		dateOfBirthController.addListener(_syncFormState);
 		addressController.addListener(_syncFormState);
+		
+		// Check if scanned name is available from ID scanning
+		final scannedName = _idVerificationService.getScannedName();
+		if (scannedName != null && scannedName.isNotEmpty) {
+			fullnameController.text = scannedName;
+		}
+		
 		_syncFormState();
 	}
 

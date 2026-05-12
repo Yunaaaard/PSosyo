@@ -81,7 +81,6 @@ class EmploymentIncomePage extends StatelessWidget {
                           _buildInputField(
                             controller: controller.sourceOfIncomeController,
                             colors: colors,
-                            hintText: 'Input Text',
                           ),
                           const SizedBox(height: 24),
                           Text.rich(
@@ -106,7 +105,6 @@ class EmploymentIncomePage extends StatelessWidget {
                           _buildInputField(
                             controller: controller.monthlyIncomeController,
                             colors: colors,
-                            hintText: 'Input Text',
                             keyboardType: TextInputType.number,
                           ),
                           const SizedBox(height: 24),
@@ -115,7 +113,6 @@ class EmploymentIncomePage extends StatelessWidget {
                           _buildInputField(
                             controller: controller.incomeTaxController,
                             colors: colors,
-                            hintText: 'Input Text',
                             keyboardType: TextInputType.number,
                           ),
                           const SizedBox(height: 24),
@@ -124,7 +121,6 @@ class EmploymentIncomePage extends StatelessWidget {
                           _buildInputField(
                             controller: controller.employerNameController,
                             colors: colors,
-                            hintText: 'Input Text',
                           ),
                           const SizedBox(height: 24),
                           _buildFieldLabel(colors, 'Years of Employment'),
@@ -132,7 +128,6 @@ class EmploymentIncomePage extends StatelessWidget {
                           _buildInputField(
                             controller: controller.yearsOfEmploymentController,
                             colors: colors,
-                            hintText: 'Input Text',
                             keyboardType: TextInputType.number,
                           ),
                           const SizedBox(height: 18),
@@ -298,14 +293,12 @@ class EmploymentIncomePage extends StatelessWidget {
   Widget _buildInputField({
     required TextEditingController controller,
     required PsosyoThemeColors colors,
-    required String hintText,
     TextInputType keyboardType = TextInputType.text,
   }) {
     return TextField(
       controller: controller,
       keyboardType: keyboardType,
       decoration: InputDecoration(
-        hintText: hintText,
         hintStyle: TextStyle(color: colors.titleGrey),
         filled: true,
         fillColor: Colors.white,

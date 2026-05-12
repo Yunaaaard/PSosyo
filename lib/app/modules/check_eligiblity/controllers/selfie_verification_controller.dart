@@ -9,7 +9,6 @@ class SelfieVerificationController extends GetxController {
 
   final ImagePicker _picker = ImagePicker();
 
-  /// Open the camera and capture a selfie.
   Future<void> startLivenessCheck() async {
     isLivenessCheckStarted.value = true;
     isCapturing.value = true;
@@ -25,13 +24,11 @@ class SelfieVerificationController extends GetxController {
     isCapturing.value = false;
   }
 
-  /// Mark photo as taken
   void setPhotoTaken(bool taken) {
     isPhotoTaken.value = taken;
     isCapturing.value = false;
   }
 
-  /// Reset state
   void resetState() {
     isLivenessCheckStarted.value = false;
     isPhotoTaken.value = false;
@@ -39,9 +36,7 @@ class SelfieVerificationController extends GetxController {
     selfieFile.value = null;
   }
 
-  /// Proceed to next step
   void continueToPreviousStep() {
-    // Navigate to the next step or previous step as needed
     Get.back();
   }
 }
