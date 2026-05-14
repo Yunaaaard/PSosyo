@@ -1,12 +1,17 @@
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:p_sosyo/app/services/upload_id_service.dart';
+import 'package:p_sosyo/app/services/drivers_license_service.dart';
 import 'package:p_sosyo/app/services/id_scan_service.dart';
+import 'package:p_sosyo/app/services/national_id_service.dart';
+import 'package:p_sosyo/app/services/other_id_service.dart';
+import 'package:p_sosyo/app/services/upload_id_service.dart';
 import 'package:p_sosyo/app/services/id_verification_service.dart';
 
 class UploadIdController extends GetxController {
   final UploadIdService _service = UploadIdService();
-  final IdScanService _scanService = IdScanService();
+  final NationalIdService _nationalIdService = NationalIdService();
+  final DriversLicenseService _driversLicenseService = DriversLicenseService();
+  final OtherIdService _otherIdService = OtherIdService();
   late final IdVerificationService _idVerificationService;
 
   var selectedIdType = Rx<String?>(null);
@@ -97,11 +102,14 @@ class UploadIdController extends GetxController {
       IdScanResult result;
       final norm = (selectedIdType.value ?? '').toLowerCase();
       if (norm.contains('national') || norm.contains('philsys')) {
-        result = await _scanService.extractNameFromPhilSysImage(imageFile);
+        result = await _nationalIdService.scanFront(imageFile);
       } else if (norm.contains('driver')) {
-        result = await _scanService.extractNameFromDriversLicenseImage(imageFile);
+        result = await _driversLicenseService.scanFront(imageFile);
       } else {
-        result = await _scanService.extractNameFromIdImage(imageFile, idType: selectedIdType.value);
+        result = await _otherIdService.scanFront(
+          imageFile,
+          idType: selectedIdType.value,
+        );
       }
 
       scannedName.value = result.extractedName;
@@ -139,14 +147,14 @@ class UploadIdController extends GetxController {
         return;
       }
       print('Starting QR code scan for back image...');
-      final rawQrContent = await _scanService.readQrRaw(imageFile);
+      final rawQrContent = await _nationalIdService.readBackQrRaw(imageFile);
 
       if (rawQrContent != null && rawQrContent.isNotEmpty) {
         print('QR code found: $rawQrContent');
         scannedQrCode.value = rawQrContent;
         
         // Extract name from QR content
-        final extractedQrName = _scanService.extractNameFromQrRawContent(rawQrContent);
+        final extractedQrName = _nationalIdService.extractNameFromQrRawContent(rawQrContent);
         scannedQrName.value = extractedQrName;
         
         if (extractedQrName != null && extractedQrName.isNotEmpty) {
@@ -178,7 +186,7 @@ class UploadIdController extends GetxController {
 
   void _recomputeNameMatch() {
     if (scannedName.value != null && scannedName.value!.isNotEmpty && scannedQrName.value != null && scannedQrName.value!.isNotEmpty) {
-      final namesMatch = _scanService.namesMatchApproximately(scannedName.value!, scannedQrName.value!);
+      final namesMatch = _nationalIdService.namesMatchApproximately(scannedName.value!, scannedQrName.value!);
       nameMatchResult.value = namesMatch;
       print('Recomputed name match: Front="${scannedName.value}" vs QR="${scannedQrName.value}" -> $namesMatch');
     } else {
