@@ -265,7 +265,9 @@ class EmploymentIncomePage extends StatelessWidget {
                         style: canContinue
                             ? AppThemes.primaryButtonStyle
                             : AppThemes.unaccessibleButtonStyle,
-                        onPressed: canContinue ? () => Get.toNamed(AppRoutes.aboutYourself) : null,
+                        onPressed: canContinue
+                            ? () => Get.offAllNamed(AppRoutes.verificationProcess)
+                            : null,
                         child: const Center(child: Text('Continue')),
                       );
                     },

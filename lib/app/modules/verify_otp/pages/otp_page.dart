@@ -87,9 +87,17 @@ class OtpVerificationPage extends StatelessWidget {
                       children.add(const SizedBox(width: spacing));
                   }
 
-                  return Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: children,
+                  final rowWidth = (boxWidth * count) + (spacing * (count - 1));
+
+                  return Center(
+                    child: SizedBox(
+                      width: rowWidth,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: children,
+                      ),
+                    ),
                   );
                 }),
                 const SizedBox(height: 16),

@@ -7,4 +7,6 @@ class AppRoutes {
   static const String uploadId = '/upload-id';
   static const String selfieVerification = '/selfie-verification';
   static const String aboutYourself = '/about-yourself';
+  static const String verificationProcess = '/verification-process';
+  static const String loanOffer = '/loan-offer';
 }
