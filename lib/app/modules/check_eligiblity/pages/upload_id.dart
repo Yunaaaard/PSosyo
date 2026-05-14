@@ -37,20 +37,15 @@ class UploadIdPage extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 14),
+                    // Progress bar
                     ClipRRect(
                       borderRadius: BorderRadius.circular(999),
                       child: Stack(
                         children: [
-                          Container(
-                            height: 13,
-                            color: const Color(0xFFE9E3FF),
-                          ),
+                          Container(height: 13, color: const Color(0xFFE9E3FF)),
                           FractionallySizedBox(
                             widthFactor: 0.25,
-                            child: Container(
-                              height: 13,
-                              color: colors.primaryPurple,
-                            ),
+                            child: Container(height: 13, color: colors.primaryPurple),
                           ),
                         ],
                       ),
@@ -86,6 +81,7 @@ class UploadIdPage extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 16),
+                    // ID type dropdown
                     Container(
                       height: 70,
                       padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -112,7 +108,8 @@ class UploadIdPage extends StatelessWidget {
                                       value: o,
                                       child: Text(
                                         o,
-                                        style: const TextStyle(fontFamily: 'Poppins', fontSize: 18),
+                                        style: const TextStyle(
+                                            fontFamily: 'Poppins', fontSize: 18),
                                       ),
                                     ))
                                 .toList(),
@@ -133,18 +130,20 @@ class UploadIdPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 20),
 
-                    // show upload boxes only when an ID type is selected
+                    // Upload boxes — shown only when an ID type is selected
                     Obx(
                       () => controller.selectedIdType.value != null
                           ? Column(
                               children: [
-                                Obx(
-                                  () {
-                                    if (controller.orientationWarning.value == null || controller.orientationWarning.value!.isEmpty) {
-                                      return const SizedBox();
-                                    }
-
-                                    return Container(
+                                // ── Front orientation warning ──────────────
+                                Obx(() {
+                                  if (controller.orientationWarning.value == null ||
+                                      controller.orientationWarning.value!.isEmpty) {
+                                    return const SizedBox();
+                                  }
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 10),
+                                    child: Container(
                                       padding: const EdgeInsets.all(16),
                                       decoration: BoxDecoration(
                                         color: const Color(0xFFFEF3C7),
@@ -153,7 +152,8 @@ class UploadIdPage extends StatelessWidget {
                                       child: Row(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          const Icon(Icons.rotate_90_degrees_ccw_rounded, color: Color(0xFFA16207), size: 24),
+                                          const Icon(Icons.rotate_90_degrees_ccw_rounded,
+                                              color: Color(0xFFA16207), size: 24),
                                           const SizedBox(width: 12),
                                           Expanded(
                                             child: Text(
@@ -167,10 +167,11 @@ class UploadIdPage extends StatelessWidget {
                                           ),
                                         ],
                                       ),
-                                    );
-                                  },
-                                ),
-                                const SizedBox(height: 18),
+                                    ),
+                                  );
+                                }),
+
+                                // ── Front upload box ───────────────────────
                                 DottedBorder(
                                   color: colors.primaryPurple,
                                   strokeWidth: 2,
@@ -187,11 +188,17 @@ class UploadIdPage extends StatelessWidget {
                                             ? Column(
                                                 mainAxisAlignment: MainAxisAlignment.center,
                                                 children: [
-                                                  Icon(Icons.camera_alt_outlined, color: colors.primaryPurple, size: 36),
+                                                  Icon(Icons.camera_alt_outlined,
+                                                      color: colors.primaryPurple, size: 36),
                                                   const SizedBox(height: 8),
-                                                  Text('Front of ID', style: TextStyle(color: colors.darkText, fontWeight: FontWeight.w700, fontSize: 18)),
+                                                  Text('Front of ID',
+                                                      style: TextStyle(
+                                                          color: colors.darkText,
+                                                          fontWeight: FontWeight.w700,
+                                                          fontSize: 18)),
                                                   const SizedBox(height: 6),
-                                                  Text('PNG, JPG or PDF up to 10MB', style: TextStyle(color: colors.titleGrey)),
+                                                  Text('PNG, JPG or PDF up to 10MB',
+                                                      style: TextStyle(color: colors.titleGrey)),
                                                 ],
                                               )
                                             : Padding(
@@ -210,15 +217,18 @@ class UploadIdPage extends StatelessWidget {
                                     ),
                                   ),
                                 ),
-                                const SizedBox(height: 18),
 
-                                Obx(
-                                  () {
-                                    if (controller.backOrientationWarning.value == null || controller.backOrientationWarning.value!.isEmpty) {
-                                      return const SizedBox();
-                                    }
+                                const SizedBox(height: 16),
 
-                                    return Container(
+                                // ── Back orientation warning ───────────────
+                                Obx(() {
+                                  if (controller.backOrientationWarning.value == null ||
+                                      controller.backOrientationWarning.value!.isEmpty) {
+                                    return const SizedBox();
+                                  }
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 10),
+                                    child: Container(
                                       padding: const EdgeInsets.all(16),
                                       decoration: BoxDecoration(
                                         color: const Color(0xFFFEF3C7),
@@ -227,7 +237,8 @@ class UploadIdPage extends StatelessWidget {
                                       child: Row(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          const Icon(Icons.qr_code_2_rounded, color: Color(0xFFA16207), size: 24),
+                                          const Icon(Icons.qr_code_2_rounded,
+                                              color: Color(0xFFA16207), size: 24),
                                           const SizedBox(width: 12),
                                           Expanded(
                                             child: Text(
@@ -241,116 +252,11 @@ class UploadIdPage extends StatelessWidget {
                                           ),
                                         ],
                                       ),
-                                    );
-                                  },
-                                ),
-                                const SizedBox(height: 18),
+                                    ),
+                                  );
+                                }),
 
-                                // Scanning feedback
-                                Obx(
-                                  () {
-                                    if (controller.isScanning.value) {
-                                      return Container(
-                                        padding: const EdgeInsets.all(16),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFFF0E7FF),
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            const SizedBox(
-                                              width: 20,
-                                              height: 20,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                                color: Color(0xFF7C3AED),
-                                              ),
-                                            ),
-                                            const SizedBox(width: 12),
-                                            Expanded(
-                                              child: Text(
-                                                'Scanning ID information...',
-                                                style: TextStyle(
-                                                  color: colors.darkText,
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                    } else if (controller.scanWarning.value != null && controller.scanWarning.value!.isNotEmpty) {
-                                      return Container(
-                                        padding: const EdgeInsets.all(16),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFFFEE2E2),
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                        child: Row(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            const Icon(Icons.warning_amber_rounded, color: Color(0xFFB91C1C), size: 24),
-                                            const SizedBox(width: 12),
-                                            Expanded(
-                                              child: Text(
-                                                controller.scanWarning.value!,
-                                                style: const TextStyle(
-                                                  color: Color(0xFFB91C1C),
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                    } else if (controller.scannedName.value != null && controller.scannedName.value!.isNotEmpty) {
-                                      return Container(
-                                        padding: const EdgeInsets.all(16),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFFECFDF5),
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            Icon(Icons.check_circle, color: colors.primaryPurple, size: 24),
-                                            const SizedBox(width: 12),
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    'Name detected',
-                                                    style: TextStyle(
-                                                      color: colors.darkText,
-                                                      fontSize: 14,
-                                                      fontWeight: FontWeight.w500,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(height: 4),
-                                                  Text(
-                                                    controller.scannedName.value ?? '',
-                                                    style: TextStyle(
-                                                      color: colors.darkText,
-                                                      fontSize: 16,
-                                                      fontWeight: FontWeight.w700,
-                                                    ),
-                                                    maxLines: 2,
-                                                    overflow: TextOverflow.ellipsis,
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                    }
-                                    return const SizedBox();
-                                  },
-                                ),
-                                const SizedBox(height: 18),
-
+                                // ── Back upload box ────────────────────────
                                 DottedBorder(
                                   color: colors.primaryPurple,
                                   strokeWidth: 2,
@@ -367,11 +273,17 @@ class UploadIdPage extends StatelessWidget {
                                             ? Column(
                                                 mainAxisAlignment: MainAxisAlignment.center,
                                                 children: [
-                                                  Icon(Icons.camera_alt_outlined, color: colors.primaryPurple, size: 36),
+                                                  Icon(Icons.camera_alt_outlined,
+                                                      color: colors.primaryPurple, size: 36),
                                                   const SizedBox(height: 8),
-                                                    Text('Back of Driver\'s License', style: TextStyle(color: colors.darkText, fontWeight: FontWeight.w700, fontSize: 18)),
+                                                  Text('Back of ID',
+                                                      style: TextStyle(
+                                                          color: colors.darkText,
+                                                          fontWeight: FontWeight.w700,
+                                                          fontSize: 18)),
                                                   const SizedBox(height: 6),
-                                                    Text('Keep the barcode and text visible', style: TextStyle(color: colors.titleGrey)),
+                                                  Text('Keep the barcode and text visible',
+                                                      style: TextStyle(color: colors.titleGrey)),
                                                 ],
                                               )
                                             : Padding(
@@ -395,17 +307,234 @@ class UploadIdPage extends StatelessWidget {
                           : const SizedBox(),
                     ),
 
+                    // ── Single unified status card (above Continue) ────────
                     const SizedBox(height: 24),
-                    Obx(
-                      () {
-                        final canContinue = controller.frontImage.value != null && controller.backImage.value != null;
-                        return ElevatedButton(
-                          style: canContinue ? AppThemes.primaryButtonStyle : AppThemes.unaccessibleButtonStyle,
-                          onPressed: canContinue ? () => Get.toNamed(AppRoutes.selfieVerification) : null,
-                          child: const Center(child: Text('Continue')),
+                    Obx(() {
+                      final isScanning = controller.isScanning.value;
+                      final scanWarning = controller.scanWarning.value;
+                      final qrWarning = controller.qrScanWarning.value;
+                      final frontName = controller.scannedName.value;
+                      final qrName = controller.scannedQrName.value;
+                      final qrCode = controller.scannedQrCode.value;
+                      final namesMatch = controller.nameMatchResult.value;
+
+                      // 1. Scanning in progress
+                      if (isScanning) {
+                        return Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF0E7FF),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            children: [
+                              const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2, color: Color(0xFF7C3AED)),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  (frontName != null && frontName.isNotEmpty)
+                                      ? 'Scanning QR code...'
+                                      : 'Scanning ID information...',
+                                  style: TextStyle(
+                                      color: colors.darkText,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500),
+                                ),
+                              ),
+                            ],
+                          ),
                         );
-                      },
-                    ),
+                      }
+
+                      // 2. Any scan error
+                      final warning = (scanWarning != null && scanWarning.isNotEmpty)
+                          ? scanWarning
+                          : (qrWarning != null && qrWarning.isNotEmpty)
+                              ? qrWarning
+                              : null;
+                      if (warning != null) {
+                        return Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFEE2E2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Icon(Icons.warning_amber_rounded,
+                                  color: Color(0xFFB91C1C), size: 24),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(warning,
+                                    style: const TextStyle(
+                                        color: Color(0xFFB91C1C),
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600)),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+
+                      // 3. QR verified — final state
+                      if (qrName != null && qrName.isNotEmpty) {
+                        final isMatch = namesMatch == true;
+                        return Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: isMatch
+                                ? const Color(0xFFECFDF5)
+                                : const Color(0xFFFEF3C7),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                isMatch ? Icons.verified_rounded : Icons.info_rounded,
+                                color: isMatch
+                                    ? colors.primaryPurple
+                                    : const Color(0xFFA16207),
+                                size: 28,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      isMatch ? 'Name Verified' : 'Name Mismatch',
+                                      style: TextStyle(
+                                          color: colors.darkText,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      isMatch
+                                          ? qrName
+                                          : 'QR name doesn\'t match front ID. Please verify.',
+                                      style: TextStyle(
+                                          color: colors.darkText,
+                                          fontSize: 16,
+                                          fontWeight: isMatch
+                                              ? FontWeight.w700
+                                              : FontWeight.w400),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+
+                      // 4. QR found but unrecognized
+                      if (qrCode != null && qrCode.isNotEmpty) {
+                        return Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFEF3C7),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.qr_code_2_rounded,
+                                  color: Color(0xFFA16207), size: 24),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  'QR code found but format not recognized.',
+                                  style: TextStyle(
+                                      color: colors.titleGrey,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+
+                      // 5. Front name detected, waiting for back
+                      if (frontName != null && frontName.isNotEmpty) {
+                        return Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFECFDF5),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.check_circle,
+                                  color: colors.primaryPurple, size: 28),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Name detected',
+                                      style: TextStyle(
+                                          color: colors.darkText,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      frontName,
+                                      style: TextStyle(
+                                          color: colors.darkText,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w700),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      'Now upload the back of your ID to verify.',
+                                      style: TextStyle(
+                                          color: colors.titleGrey,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w400),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+
+                      return const SizedBox();
+                    }),
+
+                    // ── Continue button ────────────────────────────────────
+                    const SizedBox(height: 16),
+                    Obx(() {
+                      final bothImagesSelected = controller.frontImage.value != null &&
+                          controller.backImage.value != null;
+                      final idType = (controller.selectedIdType.value ?? '').toLowerCase();
+                      final isDriver = idType.contains('driver');
+                      final namesMatch = controller.nameMatchResult.value ?? false;
+                      final canContinue = bothImagesSelected && (isDriver || namesMatch);
+                      return ElevatedButton(
+                        style: canContinue
+                            ? AppThemes.primaryButtonStyle
+                            : AppThemes.unaccessibleButtonStyle,
+                        onPressed: canContinue
+                            ? () => Get.toNamed(AppRoutes.selfieVerification)
+                            : null,
+                        child: const Center(child: Text('Continue')),
+                      );
+                    }),
                   ],
                 ),
               ),
