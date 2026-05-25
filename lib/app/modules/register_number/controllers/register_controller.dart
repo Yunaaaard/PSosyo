@@ -2,6 +2,8 @@ import 'package:get/get.dart';
 import 'package:p_sosyo/app/routes/app_routes.dart';
 import 'package:p_sosyo/app/modules/landing_page/controller/landing_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:p_sosyo/app/widgets/app_snackbar.dart';
+import 'package:p_sosyo/app/services/user_phone_service.dart';
 
 class RegisterController extends GetxController {
   // Observable for loading state
@@ -18,9 +20,18 @@ class RegisterController extends GetxController {
   }
 
   void sendCode() async {
-    if (phoneController.text.isEmpty) return;
+    final phone = phoneController.text.trim();
+    if (phone.isEmpty) {
+      AppSnackbar.show(title: 'Error', message: 'Please enter your phone number');
+      return;
+    }
+    if (phone.length != 10) {
+      AppSnackbar.show(title: 'Error', message: 'Phone number must be 10 digits');
+      return;
+    }
     // Set phone and navigate immediately (temporary flow)
-    phoneNumber.value = phoneController.text;
+    phoneNumber.value = phone;
+    Get.find<UserPhoneService>().setRegisteredPhone(phone);
     // Ensure any existing LandingController (and its timer) is removed
     try {
       if (Get.isRegistered<LandingController>()) {

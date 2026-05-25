@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:p_sosyo/app/services/loan_agreement_sheet.dart';
+import 'package:p_sosyo/app/modules/loan_offer/controllers/loan_offer_controller.dart';
 import 'package:p_sosyo/app/utils/peso_formatter.dart';
 import 'package:p_sosyo/app/utils/themes/theme_colors.dart';
 import 'package:p_sosyo/app/widgets/loan_offer_app_bar.dart';
@@ -10,17 +10,88 @@ class LoanOfferPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).extension<PsosyoThemeColors>() ?? AppColors.psosyo;
+    final controller = Get.find<LoanOfferController>();
+    final colors =
+        Theme.of(context).extension<PsosyoThemeColors>() ?? AppColors.psosyo;
 
     return Scaffold(
       backgroundColor: colors.surface,
+
+      // ── Sticky bottom bar (warning + button) ────────────────────────────────
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Container(
+          color: colors.surface,
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF3CD),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: const Color(0xFFFFE69C),
+                    width: 1,
+                  ),
+                ),
+                child: const Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.info_outline_rounded,
+                      color: Color(0xFFFFA500),
+                      size: 20,
+                    ),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Please view and sign the agreement to enable E-Sign.',
+                        style: TextStyle(
+                          color: Color(0xFF856404),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: Obx(
+                  () {
+                    final isAgreementAccepted =
+                        controller.isAgreementAccepted.value;
+                    return ElevatedButton(
+                      style: isAgreementAccepted
+                          ? AppThemes.primaryButtonStyle
+                          : AppThemes.unaccessibleButtonStyle,
+                      onPressed:
+                          isAgreementAccepted ? controller.openLoanOfferOtp : null,
+                      child: const Text('E-Sign via OTP'),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+
+      // ── Body ────────────────────────────────────────────────────────────────
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
             return SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
               child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight - 36),
+                constraints:
+                    BoxConstraints(minHeight: constraints.maxHeight - 36),
                 child: IntrinsicHeight(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -28,10 +99,10 @@ class LoanOfferPage extends StatelessWidget {
                       LoanOfferAppBar(colors: colors),
                       const SizedBox(height: 28),
 
-                      // ── Credit limit card ──────────────────────────────
+                      // ── Credit limit card ────────────────────────────────
                       Container(
                         width: double.infinity,
-                        padding: const EdgeInsets.fromLTRB(18, 26, 18, 26),
+                        padding: const EdgeInsets.fromLTRB(20, 26, 20, 26),
                         decoration: BoxDecoration(
                           color: colors.primaryPurple,
                           borderRadius: BorderRadius.circular(24),
@@ -43,7 +114,7 @@ class LoanOfferPage extends StatelessWidget {
                               style: TextStyle(
                                 color: Colors.white.withOpacity(0.92),
                                 fontSize: 17,
-                                fontWeight: FontWeight.w700,
+                                fontWeight: FontWeight.w500,
                                 letterSpacing: 0.5,
                               ),
                             ),
@@ -69,17 +140,11 @@ class LoanOfferPage extends StatelessWidget {
                                     colors: colors,
                                   ),
                                 ),
-                                Container(
-                                  width: 1,
-                                  height: 54,
-                                  color: Colors.white.withOpacity(0.16),
-                                ),
                                 Expanded(
                                   child: _OfferMetric(
                                     label: 'Payment Term',
                                     value: '7 Days',
                                     colors: colors,
-                                    alignRight: true,
                                   ),
                                 ),
                               ],
@@ -89,31 +154,28 @@ class LoanOfferPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 28),
 
-                      // ── Digital contract section ───────────────────────
+                      // ── Digital contract section ─────────────────────────
                       Text(
                         'DIGITAL CONTRACT',
                         style: TextStyle(
                           color: colors.darkText,
-                          fontSize: 24,
+                          fontSize: 20,
                           fontWeight: FontWeight.w800,
                           letterSpacing: -0.4,
                         ),
                       ),
                       const SizedBox(height: 18),
-                      GestureDetector(
-                        onTap: () => Get.bottomSheet(
-                          const LoanAgreementSheet(),
-                          isScrollControlled: true,
-                          backgroundColor: Colors.transparent,
-                          ignoreSafeArea: false,
+
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(18),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(22),
                         ),
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(18),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(22),
-                          ),
+                        // File row opens the agreement sheet for terms review.
+                        child: GestureDetector(
+                          onTap: controller.openAgreementSheet,
                           child: Row(
                             children: [
                               Container(
@@ -145,7 +207,7 @@ class LoanOfferPage extends StatelessWidget {
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      'Tap to view agreement',
+                                      '1.4MB | Tap to preview agreement',
                                       style: TextStyle(
                                         color: colors.titleGrey,
                                         fontSize: 13,
@@ -154,11 +216,6 @@ class LoanOfferPage extends StatelessWidget {
                                     ),
                                   ],
                                 ),
-                              ),
-                              Icon(
-                                Icons.chevron_right_rounded,
-                                color: colors.titleGrey,
-                                size: 24,
                               ),
                             ],
                           ),
@@ -176,28 +233,23 @@ class LoanOfferPage extends StatelessWidget {
   }
 }
 
-// ── Offer metric chip (used inside the credit limit card) ──────────────────
+// ── Offer metric chip ──────────────────────────────────────────────────────────
 
 class _OfferMetric extends StatelessWidget {
   const _OfferMetric({
     required this.label,
     required this.value,
     required this.colors,
-    this.alignRight = false,
   });
 
   final String label;
   final String value;
   final PsosyoThemeColors colors;
-  final bool alignRight;
 
   @override
   Widget build(BuildContext context) {
-    final crossAxisAlignment =
-        alignRight ? CrossAxisAlignment.end : CrossAxisAlignment.start;
-
     return Column(
-      crossAxisAlignment: crossAxisAlignment,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
@@ -212,7 +264,7 @@ class _OfferMetric extends StatelessWidget {
           value,
           style: const TextStyle(
             color: Colors.white,
-            fontSize: 26,
+            fontSize: 24,
             fontWeight: FontWeight.w800,
             height: 1,
           ),

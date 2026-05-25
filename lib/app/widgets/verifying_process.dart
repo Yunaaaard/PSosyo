@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:p_sosyo/app/modules/loan_offer/pages/loan_offer.dart';
+import 'package:p_sosyo/app/routes/app_routes.dart';
 import 'package:p_sosyo/app/utils/themes/theme_colors.dart';
 
 class VerifyingProcessPage extends StatefulWidget {
@@ -29,7 +29,15 @@ class _VerifyingProcessPageState extends State<VerifyingProcessPage>
     _stopTimer = Timer(const Duration(seconds: 5), () {
       if (mounted) {
         _animationController.stop();
-        Get.offAll(() => const LoanOfferPage());
+
+        // Navigate after the current frame and a short delay to avoid
+        // render/hit-test races that can occur if we change routes while
+        // animations or layout are still finishing.
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          Future.delayed(const Duration(milliseconds: 400), () {
+            if (mounted) Get.offAllNamed(AppRoutes.loanOffer);
+          });
+        });
       }
     });
   }

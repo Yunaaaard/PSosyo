@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:p_sosyo/app/routes/app_routes.dart';
+import 'package:p_sosyo/app/widgets/app_snackbar.dart';
 
 class OtpController extends GetxController {
   final int length = 6;
@@ -9,10 +10,25 @@ class OtpController extends GetxController {
 
   final otp = ''.obs;
   final isValid = false.obs;
+  final flow = 'register'.obs;
+  final displayPhone = ''.obs;
+
+  bool get isLoanOfferEsign => flow.value == 'loanOfferESign';
+  String get pageTitle => isLoanOfferEsign ? 'E-Sign Verification' : 'OTP Verification';
+  String get continueLabel => isLoanOfferEsign ? 'Continue' : 'Continue';
+  String get subtitlePrefix => isLoanOfferEsign ? 'Enter the code to verify your E-sign sent to ' : 'Enter OTP sent to ';
 
   @override
   void onInit() {
     super.onInit();
+    final arguments = Get.arguments;
+    if (arguments is Map) {
+      flow.value = (arguments['flow']?.toString()) ?? 'register';
+      displayPhone.value = (arguments['phone']?.toString()) ?? '';
+    } else if (arguments is String) {
+      displayPhone.value = arguments;
+    }
+
     for (var i = 0; i < length; i++) {
       controllers.add(TextEditingController());
       focusNodes.add(FocusNode());
@@ -47,22 +63,31 @@ class OtpController extends GetxController {
   }
 
   void resend() {
-    Get.snackbar('Resend', 'OTP resend requested',
-        snackPosition: SnackPosition.BOTTOM);
+    AppSnackbar.show(title: 'Resend', message: 'OTP resend requested');
   }
 
   void submit() {
     if (isValid.value) {
-      Get.snackbar('OTP', 'Entered: ${otp.value}',
-          snackPosition: SnackPosition.BOTTOM);
-      // TODO: integrate with verification service
-      // Navigate to dashboard after successful verification
-      Future.delayed(const Duration(milliseconds: 500), () {
-        Get.offNamed(AppRoutes.dashboard);
+      AppSnackbar.show(title: 'OTP', message: 'Entered: ${otp.value}', margin: const EdgeInsets.all(16));
+
+      // Ensure keyboard/focus is dismissed and any overlays are closed
+      FocusManager.instance.primaryFocus?.unfocus();
+      if (Get.isSnackbarOpen) Get.closeCurrentSnackbar();
+
+      if (isLoanOfferEsign) {
+        Get.offNamed(AppRoutes.loanSuccessful);
+        return;
+      }
+
+      // Navigate after a short delay and on the next frame to avoid
+      // hit-test/layout races when routes change while the keyboard is closing.
+      Future.delayed(const Duration(milliseconds: 400), () {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          Get.offNamed(AppRoutes.dashboard);
+        });
       });
     } else {
-      Get.snackbar('Error', 'Please enter the complete 6-digit code',
-          snackPosition: SnackPosition.BOTTOM);
+      AppSnackbar.show(title: 'Error', message: 'Please enter the complete 6-digit code');
     }
   }
 

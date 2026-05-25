@@ -7,46 +7,39 @@ import '../controller/otp_controller.dart';
 import 'package:p_sosyo/app/animations/keyboard_shrink_animation.dart';
 
 class OtpVerificationPage extends StatelessWidget {
+  const OtpVerificationPage({Key? key, this.phoneNumber = ''})
+      : super(key: key);
+
   final String phoneNumber;
 
-  const OtpVerificationPage({Key? key, this.phoneNumber = '+93 9453482113'})
-      : super(key: key);
+  String _formatDisplayNumber(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) return phoneNumber;
+    if (trimmed.startsWith('+')) return trimmed;
+    return '+63 $trimmed';
+  }
 
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<OtpController>();
-    final displayNumber = (Get.arguments as String?) ?? phoneNumber;
+    final displayNumber = controller.displayPhone.value.isNotEmpty
+      ? _formatDisplayNumber(controller.displayPhone.value)
+      : _formatDisplayNumber(phoneNumber);
 
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0),
-          child: ShrinkOnKeyboard(
-            child: Column(
-              children: [
-                const SizedBox(height: 24),
-                SvgPicture.asset(
-                  'assets/icons/otp-verification-page.svg',
-                  width: 260,
-                  height: 220,
-                  fit: BoxFit.contain,
-                ),
-                const SizedBox(height: 12),
-                const SizedBox(height: 8),
-                const Text('OTP Verification',
-                    style:
-                        TextStyle(fontSize: 28, fontWeight: FontWeight.w700)),
-                const SizedBox(height: 8),
-                Text('Enter OTP sent to $displayNumber',
-                    style: TextStyle(color: Colors.grey[600]),
-                    textAlign: TextAlign.center),
-                const SizedBox(height: 24),
-                LayoutBuilder(builder: (context, constraints) {
+        child: GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onTap: () => FocusScope.of(context).unfocus(),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+            child: ShrinkOnKeyboard(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
                   final totalWidth = constraints.maxWidth;
-                  const horizontalPadding =
-                      40.0; // left+right content padding approx
-                  const spacing = 12.0; // gap between boxes
+                  const horizontalPadding = 40.0;
+                  const spacing = 12.0;
                   final available =
                       (totalWidth - horizontalPadding).clamp(0.0, totalWidth);
                   final count = controller.length;
@@ -62,88 +55,139 @@ class OtpVerificationPage extends StatelessWidget {
                       child: TextField(
                         controller: controller.controllers[i],
                         focusNode: controller.focusNodes[i],
+                        autofocus: i == 0,
                         keyboardType: TextInputType.number,
                         textAlign: TextAlign.center,
+                        textInputAction: i == count - 1
+                            ? TextInputAction.done
+                            : TextInputAction.next,
                         style: const TextStyle(
-                            fontSize: 17, fontWeight: FontWeight.w600),
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                        ),
                         inputFormatters: [
                           FilteringTextInputFormatter.digitsOnly,
-                          LengthLimitingTextInputFormatter(1)
+                          LengthLimitingTextInputFormatter(1),
                         ],
                         decoration: InputDecoration(
                           filled: true,
                           fillColor: Colors.grey[50],
                           counterText: '',
                           border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide:
-                                  BorderSide(color: Colors.grey.shade300)),
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide:
+                                BorderSide(color: Colors.grey.shade300),
+                          ),
                         ),
                         onChanged: (v) => controller.onChanged(v, i),
+                        onSubmitted: (v) {
+                          if (i + 1 < count) {
+                            controller.focusNodes[i + 1].requestFocus();
+                          } else {
+                            controller.focusNodes[i].unfocus();
+                            if (controller.isValid.value) {
+                              controller.submit();
+                            }
+                          }
+                        },
                       ),
                     ));
 
-                    if (i != count - 1)
+                    if (i != count - 1) {
                       children.add(const SizedBox(width: spacing));
+                    }
                   }
 
                   final rowWidth = (boxWidth * count) + (spacing * (count - 1));
 
-                  return Center(
-                    child: SizedBox(
-                      width: rowWidth,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                  return SingleChildScrollView(
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         mainAxisSize: MainAxisSize.min,
-                        children: children,
+                        children: [
+                          const SizedBox(height: 24),
+                          SvgPicture.asset(
+                            'assets/icons/otp-verification-page.svg',
+                            width: 260,
+                            height: 220,
+                            fit: BoxFit.contain,
+                          ),
+                          const SizedBox(height: 20),
+                          Obx(() {
+                            return Column(
+                              children: [
+                                Text(
+                                  controller.pageTitle,
+                                  style: const TextStyle(
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  '${controller.subtitlePrefix}$displayNumber',
+                                  style: TextStyle(color: Colors.grey[600]),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            );
+                          }),
+                          const SizedBox(height: 24),
+                          Center(
+                            child: SizedBox(
+                              width: rowWidth,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                mainAxisSize: MainAxisSize.min,
+                                children: children,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'You didn\'t receive any code?',
+                                style: TextStyle(color: Colors.grey[600]),
+                              ),
+                              TextButton(
+                                onPressed: controller.resend,
+                                child: const Text('Resend'),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 40),
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 18.0),
+                            child: SizedBox(
+                              width: double.infinity,
+                              height: 64,
+                              child: Obx(() {
+                                final isEnabled = controller.isValid.value;
+
+                                return ElevatedButton(
+                                  onPressed:
+                                      isEnabled ? controller.submit : null,
+                                  style: isEnabled
+                                      ? AppThemes.primaryButtonStyle
+                                      : AppThemes.unaccessibleButtonStyle,
+                                  child: Obx(() => Text(controller.continueLabel)),
+                                );
+                              }),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   );
-                }),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text('You didn\'t receive any code?',
-                        style: TextStyle(color: Colors.grey[600])),
-                    TextButton(
-                        onPressed: controller.resend,
-                        child: const Text('Resend')),
-                  ],
-                ),
-                const Spacer(),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 18.0),
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: 64,
-                    child: Obx(() {
-                      if (controller.isValid.value) {
-                        return ElevatedButton(
-                          onPressed: controller.submit,
-                          style: AppThemes.primaryButtonStyle,
-                          child: const Text('Continue'),
-                        );
-                      }
-
-                      // Disabled / empty state: smaller, muted button
-                      return ElevatedButton(
-                        onPressed: null,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.grey.shade300,
-                          foregroundColor: Colors.grey.shade600,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                          minimumSize: const Size(double.infinity, 56),
-                        ),
-                        child: const Text('Continue',
-                            style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.w600)),
-                      );
-                    }),
-                  ),
-                ),
-              ],
+                },
+              ),
             ),
           ),
         ),

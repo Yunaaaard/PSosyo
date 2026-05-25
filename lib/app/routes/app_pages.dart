@@ -13,7 +13,9 @@ import 'package:p_sosyo/app/modules/check_eligiblity/bindings/employment_income_
 import 'package:p_sosyo/app/modules/check_eligiblity/bindings/about_yourself_binding.dart';
 import 'package:p_sosyo/app/modules/check_eligiblity/bindings/selfie_verification_binding.dart';
 import 'package:p_sosyo/app/modules/check_eligiblity/bindings/upload_id_binding.dart';
+import 'package:p_sosyo/app/modules/loan_offer/bindings/loan_offer_binding.dart';
 import 'package:p_sosyo/app/modules/loan_offer/pages/loan_offer.dart';
+import 'package:p_sosyo/app/modules/loan_offer/pages/loan_successful.dart';
 import 'package:p_sosyo/app/widgets/verifying_process.dart';
 import '../modules/register_number/bindings/register_binding.dart';
 import 'app_routes.dart';
@@ -66,6 +68,11 @@ class AppPages {
 		GetPage(
 			name: AppRoutes.loanOffer,
 			page: () => const LoanOfferPage(),
+			binding: LoanOfferBinding(),
+		),
+		GetPage(
+			name: AppRoutes.loanSuccessful,
+			page: () => const LoanSuccessfulPage(),
 		),
 	];
 }

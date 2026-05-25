@@ -3,11 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'app/routes/app_pages.dart';
 import 'app/routes/app_routes.dart';
+import 'app/services/user_phone_service.dart';
 import 'app/utils/themes/theme_colors.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+  Get.put(UserPhoneService(), permanent: true);
   runApp(const MyApp());
 }
 
@@ -20,7 +22,8 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'PSosyo',
       theme: AppThemes.lightTheme,
-      initialRoute: AppRoutes.landing,
+      // Revert to AppRoutes.landing when finished.
+      initialRoute: AppRoutes.loanOffer,
       getPages: AppPages.pages,
     );
   }

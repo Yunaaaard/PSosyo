@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import '../../../utils/themes/theme_colors.dart';
@@ -53,15 +54,20 @@ class RegisterPage extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                           color: Colors.white,
                         ),
-                        child: const Row(
+                        child: Row(
                           children: [
-                            Icon(Icons.star_border, color: Colors.grey, size: 20),
-                            SizedBox(width: 4),
-                            Text(
-                              '+63',
-                              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                            SvgPicture.asset(
+                              'assets/icons/Star.svg',
+                              height: 20,
+                              width: 20,
+                              color: Colors.grey,
                             ),
-                            Icon(Icons.arrow_drop_down, color: Colors.grey),
+                            const SizedBox(width: 4),
+                            const Text(
+                              '+63',
+                              style: TextStyle(fontWeight: FontWeight.w500, fontSize: 16),
+                            ),
+                            const Icon(Icons.arrow_drop_down, color: Colors.grey),
                           ],
                         ),
                       ),
@@ -76,6 +82,10 @@ class RegisterPage extends StatelessWidget {
                           child: TextField(
                             controller: controller.phoneController,
                             keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              LengthLimitingTextInputFormatter(10),
+                            ],
                             decoration: const InputDecoration(
                               hintText: 'Enter phone number',
                               border: InputBorder.none,
