@@ -3,12 +3,14 @@ import 'package:p_sosyo/app/modules/check_eligiblity/controllers/about_yourself_
 import 'package:p_sosyo/app/services/id_verification_service.dart';
 
 class AboutYourselfBinding extends Bindings {
-	@override
-	void dependencies() {
-		Get.lazyPut<IdVerificationService>(() => IdVerificationService(), fenix: true);
-		Get.put<AboutYourselfController>(
-      AboutYourselfController()
+  @override
+  void dependencies() {
+    if (!Get.isRegistered<IdVerificationService>()) {
+      Get.put<IdVerificationService>(
+        IdVerificationService(),
+        permanent: true,
       );
-	}
+    }
+    Get.put<AboutYourselfController>(AboutYourselfController());
+  }
 }
-

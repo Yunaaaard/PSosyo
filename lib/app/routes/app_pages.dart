@@ -17,67 +17,69 @@ import 'package:p_sosyo/app/modules/loan_offer/bindings/loan_offer_binding.dart'
 import 'package:p_sosyo/app/modules/loan_offer/pages/loan_offer.dart';
 import 'package:p_sosyo/app/modules/loan_offer/pages/loan_successful.dart';
 import 'package:p_sosyo/app/widgets/verifying_process.dart';
+import 'package:p_sosyo/app/modules/home_screen/bindings/home_binding.dart';
 import 'package:p_sosyo/app/modules/home_screen/pages/home_screen.dart';
 import '../modules/register_number/bindings/register_binding.dart';
 import 'app_routes.dart';
 
 class AppPages {
-	static final pages = [
-		GetPage(
-			name: AppRoutes.landing,
-			page: () => const LandingPage(),
-		),
-		GetPage(
-			name: AppRoutes.register,
-			page: () => const RegisterPage(),
-			binding: RegisterBinding(),
-		),
-		GetPage(
-			name: AppRoutes.verifyOtp,
-			page: () => const OtpVerificationPage(),
-			binding: OtpBinding(),
-		),
-		GetPage(
-			name: AppRoutes.dashboard,
-			page: () => const InitialDashboard(),
-			binding: DashboardBinding(),
-		),
-		GetPage(
-			name: AppRoutes.employmentIncome,
-			page: () => const EmploymentIncomePage(),
-			binding: EmploymentIncomeBinding(),
-		),
-		GetPage(
-			name: AppRoutes.uploadId,
-			page: () => const UploadIdPage(),
-			binding: UploadIdBinding(),
-		),
-		GetPage(
-			name: AppRoutes.selfieVerification,
-			page: () => const SelfieVerificationPage(),
-			binding: SelfieVerificationBinding(),
-		),
-		GetPage(
-			name: AppRoutes.aboutYourself,
-			page: () => const AboutYourselfPage(),
-			binding: AboutYourselfBinding(),
-		),
-		GetPage(
-			name: AppRoutes.verificationProcess,
-			page: () => const VerifyingProcessPage(),
-		),
-		GetPage(
-			name: AppRoutes.loanOffer,
-			page: () => const LoanOfferPage(),
-			binding: LoanOfferBinding(),
-		),
-		GetPage(
-			name: AppRoutes.loanSuccessful,
-			page: () => const LoanSuccessfulPage(),
-		),
-		GetPage(
-			name: AppRoutes.homeScreen,
-			page: () => const HomeScreen(),
-		),
-	];
+  static final pages = [
+    GetPage(
+      name: AppRoutes.landing,
+      page: () => const LandingPage(),
+    ),
+    GetPage(
+      name: AppRoutes.register,
+      page: () => const RegisterPage(),
+      binding: RegisterBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.verifyOtp,
+      page: () => const OtpVerificationPage(),
+      binding: OtpBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.dashboard,
+      page: () => const InitialDashboard(),
+      binding: DashboardBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.employmentIncome,
+      page: () => const EmploymentIncomePage(),
+      binding: EmploymentIncomeBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.uploadId,
+      page: () => const UploadIdPage(),
+      binding: UploadIdBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.selfieVerification,
+      page: () => const SelfieVerificationPage(),
+      binding: SelfieVerificationBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.aboutYourself,
+      page: () => const AboutYourselfPage(),
+      binding: AboutYourselfBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.verificationProcess,
+      page: () => const VerifyingProcessPage(),
+    ),
+    GetPage(
+      name: AppRoutes.loanOffer,
+      page: () => const LoanOfferPage(),
+      binding: LoanOfferBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.loanSuccessful,
+      page: () => const LoanSuccessfulPage(),
+    ),
+    GetPage(
+      name: AppRoutes.homeScreen,
+      page: () => const HomeScreen(),
+      binding: HomeBinding(),
+    ),
+  ];
 }

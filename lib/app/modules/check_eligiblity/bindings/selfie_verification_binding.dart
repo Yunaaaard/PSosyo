@@ -5,7 +5,12 @@ import 'package:p_sosyo/app/services/id_verification_service.dart';
 class SelfieVerificationBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<IdVerificationService>(() => IdVerificationService(), fenix: true);
+    if (!Get.isRegistered<IdVerificationService>()) {
+      Get.put<IdVerificationService>(
+        IdVerificationService(),
+        permanent: true,
+      );
+    }
     Get.put<SelfieVerificationController>(
       SelfieVerificationController(),
     );

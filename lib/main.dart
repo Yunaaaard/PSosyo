@@ -22,8 +22,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'PSosyo',
       theme: AppThemes.lightTheme,
-      // Revert to AppRoutes.landing when finished.
-      initialRoute: AppRoutes.homeScreen,
+      initialRoute: AppRoutes.dashboard,
       getPages: AppPages.pages,
     );
   }

@@ -18,6 +18,8 @@ class UploadIdController extends GetxController {
   var frontImage = Rx<XFile?>(null);
   var backImage = Rx<XFile?>(null);
   var scannedName = Rx<String?>(null);
+  var scannedBirthDate = Rx<String?>(null);
+  var scannedGender = Rx<String?>(null);
   var scanWarning = Rx<String?>(null);
   var orientationWarning = Rx<String?>(null);
   var backOrientationWarning = Rx<String?>(null);
@@ -35,7 +37,8 @@ class UploadIdController extends GetxController {
   }
 
   List<String> get idOptions => _service.idOptions;
-  bool get bothImagesSelected => frontImage.value != null && backImage.value != null;
+  bool get bothImagesSelected =>
+      frontImage.value != null && backImage.value != null;
 
   void setSelectedIdType(String? idType) {
     selectedIdType.value = idType;
@@ -43,6 +46,8 @@ class UploadIdController extends GetxController {
     frontImage.value = null;
     backImage.value = null;
     scannedName.value = null;
+    scannedBirthDate.value = null;
+    scannedGender.value = null;
     scanWarning.value = null;
     scannedQrCode.value = null;
     scannedQrName.value = null;
@@ -53,7 +58,7 @@ class UploadIdController extends GetxController {
 
     // Also clear the verification service's scanned name
     try {
-      _idVerificationService.clearScannedName();
+      _idVerificationService.clearScannedData();
     } catch (_) {}
 
     // If selected type is driver's license, there's no QR comparison step
@@ -65,7 +70,10 @@ class UploadIdController extends GetxController {
   }
 
   Future<void> pickImage(bool isFront) async {
-    final XFile? file = await _service.pickImage();
+    final XFile? file = await _service.pickImage(
+      isFront: isFront,
+      idType: selectedIdType.value,
+    );
     if (file == null) return;
     // Clear previous match result while the user is picking a new image
     nameMatchResult.value = null;
@@ -113,13 +121,33 @@ class UploadIdController extends GetxController {
       }
 
       scannedName.value = result.extractedName;
+      scannedBirthDate.value = result.extractedBirthDate;
+      scannedGender.value = result.extractedGender;
       scanWarning.value = result.warningMessage;
       isTypeMatch.value = result.matchesSelectedType;
 
-      if (result.extractedName != null && result.extractedName!.isNotEmpty && result.matchesSelectedType) {
+      if (result.extractedName != null &&
+          result.extractedName!.isNotEmpty &&
+          result.matchesSelectedType) {
         _idVerificationService.setScannedName(result.extractedName);
       } else {
         _idVerificationService.clearScannedName();
+      }
+
+      if (result.extractedBirthDate != null &&
+          result.extractedBirthDate!.isNotEmpty &&
+          result.matchesSelectedType) {
+        _idVerificationService.setScannedBirthDate(result.extractedBirthDate);
+      } else {
+        _idVerificationService.clearScannedBirthDate();
+      }
+
+      if (result.extractedGender != null &&
+          result.extractedGender!.isNotEmpty &&
+          result.matchesSelectedType) {
+        _idVerificationService.setScannedGender(result.extractedGender);
+      } else {
+        _idVerificationService.setScannedGender(null);
       }
 
       // Recompute match (if possible) after front scan
@@ -152,25 +180,28 @@ class UploadIdController extends GetxController {
       if (rawQrContent != null && rawQrContent.isNotEmpty) {
         print('QR code found: $rawQrContent');
         scannedQrCode.value = rawQrContent;
-        
+
         // Extract name from QR content
-        final extractedQrName = _nationalIdService.extractNameFromQrRawContent(rawQrContent);
+        final extractedQrName =
+            _nationalIdService.extractNameFromQrRawContent(rawQrContent);
         scannedQrName.value = extractedQrName;
-        
+
         if (extractedQrName != null && extractedQrName.isNotEmpty) {
           print('QR name extracted: $extractedQrName');
           qrScanWarning.value = null;
-          
+
           // Compare with front image name if available
           // Recompute match using helper to avoid race conditions
           _recomputeNameMatch();
         } else {
           print('QR detected but no name extracted');
-          qrScanWarning.value = 'QR code found but couldn\'t extract name. The barcode format may not be supported.';
+          qrScanWarning.value =
+              'QR code found but couldn\'t extract name. The barcode format may not be supported.';
         }
       } else {
         print('No QR code detected');
-        qrScanWarning.value = 'No QR code detected on the back. Ensure the barcode is clearly visible and not obstructed.';
+        qrScanWarning.value =
+            'No QR code detected on the back. Ensure the barcode is clearly visible and not obstructed.';
         scannedQrCode.value = null;
         scannedQrName.value = null;
       }
@@ -185,10 +216,15 @@ class UploadIdController extends GetxController {
   }
 
   void _recomputeNameMatch() {
-    if (scannedName.value != null && scannedName.value!.isNotEmpty && scannedQrName.value != null && scannedQrName.value!.isNotEmpty) {
-      final namesMatch = _nationalIdService.namesMatchApproximately(scannedName.value!, scannedQrName.value!);
+    if (scannedName.value != null &&
+        scannedName.value!.isNotEmpty &&
+        scannedQrName.value != null &&
+        scannedQrName.value!.isNotEmpty) {
+      final namesMatch = _nationalIdService.namesMatchApproximately(
+          scannedName.value!, scannedQrName.value!);
       nameMatchResult.value = namesMatch;
-      print('Recomputed name match: Front="${scannedName.value}" vs QR="${scannedQrName.value}" -> $namesMatch');
+      print(
+          'Recomputed name match: Front="${scannedName.value}" vs QR="${scannedQrName.value}" -> $namesMatch');
     } else {
       // Not enough info yet
       nameMatchResult.value = null;
@@ -200,6 +236,8 @@ class UploadIdController extends GetxController {
     frontImage.value = null;
     backImage.value = null;
     scannedName.value = null;
+    scannedBirthDate.value = null;
+    scannedGender.value = null;
     scanWarning.value = null;
     orientationWarning.value = null;
     backOrientationWarning.value = null;
@@ -209,7 +247,6 @@ class UploadIdController extends GetxController {
     nameMatchResult.value = null;
     isTypeMatch.value = true;
     isScanning.value = false;
+    _idVerificationService.clearScannedData();
   }
 }
-
-

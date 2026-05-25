@@ -5,12 +5,12 @@ import 'package:p_sosyo/app/services/id_verification_service.dart';
 class UploadIdBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<IdVerificationService>(
-      () => IdVerificationService(), 
-      fenix: true
-    );
-    Get.lazyPut<UploadIdController>(
-      () => UploadIdController()
-    );
+    if (!Get.isRegistered<IdVerificationService>()) {
+      Get.put<IdVerificationService>(
+        IdVerificationService(),
+        permanent: true,
+      );
+    }
+    Get.lazyPut<UploadIdController>(() => UploadIdController());
   }
 }

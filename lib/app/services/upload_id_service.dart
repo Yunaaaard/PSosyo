@@ -2,7 +2,9 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:p_sosyo/app/modules/check_eligiblity/pages/id_capture_camera_page.dart';
 
 class UploadIdService {
   static final UploadIdService _instance = UploadIdService._internal();
@@ -13,8 +15,6 @@ class UploadIdService {
 
   UploadIdService._internal();
 
-  final ImagePicker _picker = ImagePicker();
-
   final List<String> idOptions = [
     'National ID',
     "Driver's License",
@@ -22,15 +22,24 @@ class UploadIdService {
     'Passport',
   ];
 
-  Future<XFile?> pickImage({int? maxWidth, int? maxHeight}) async {
-    return await _picker.pickImage(
-      source: ImageSource.gallery,
-      maxWidth: (maxWidth ?? 1600).toDouble(),
-      maxHeight: (maxHeight ?? 1600).toDouble(),
+  Future<XFile?> pickImage({
+    required bool isFront,
+    String? idType,
+    int? maxWidth,
+    int? maxHeight,
+  }) async {
+    final image = await Get.to<XFile?>(
+      () => IdCaptureCameraPage(
+        isFront: isFront,
+        idType: idType,
+      ),
     );
+
+    return image;
   }
 
-  Future<bool> isOrientationValidForIdType(XFile imageFile, String? idType) async {
+  Future<bool> isOrientationValidForIdType(
+      XFile imageFile, String? idType) async {
     if (!_requiresLandscapeOrientation(idType)) {
       return true;
     }

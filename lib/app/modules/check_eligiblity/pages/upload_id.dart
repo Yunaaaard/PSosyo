@@ -14,7 +14,8 @@ class UploadIdPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetBuilder<UploadIdController>(
       builder: (controller) {
-        final colors = Theme.of(context).extension<PsosyoThemeColors>() ?? AppColors.psosyo;
+        final colors = Theme.of(context).extension<PsosyoThemeColors>() ??
+            AppColors.psosyo;
 
         return Scaffold(
           backgroundColor: colors.surface,
@@ -45,14 +46,15 @@ class UploadIdPage extends StatelessWidget {
                           Container(height: 13, color: const Color(0xFFE9E3FF)),
                           FractionallySizedBox(
                             widthFactor: 0.25,
-                            child: Container(height: 13, color: colors.primaryPurple),
+                            child: Container(
+                                height: 13, color: colors.primaryPurple),
                           ),
                         ],
                       ),
                     ),
                     const SizedBox(height: 30),
                     Text(
-                      'Upload your Government ID',
+                      'Capture your Government ID',
                       style: TextStyle(
                         color: colors.darkText,
                         fontSize: 25,
@@ -63,7 +65,7 @@ class UploadIdPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      'Please take a clear photo of your government-issued ID card. Ensure all details are legible and within the frame.',
+                      'Please capture a clear photo of your government-issued ID card. Ensure all details are legible and within the frame.',
                       style: TextStyle(
                         color: colors.titleGrey,
                         fontSize: 18,
@@ -88,7 +90,8 @@ class UploadIdPage extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: const Color(0xFFE3E5EA), width: 1.2),
+                        border: Border.all(
+                            color: const Color(0xFFE3E5EA), width: 1.2),
                       ),
                       child: DropdownButtonHideUnderline(
                         child: Obx(
@@ -109,7 +112,8 @@ class UploadIdPage extends StatelessWidget {
                                       child: Text(
                                         o,
                                         style: const TextStyle(
-                                            fontFamily: 'Poppins', fontSize: 18),
+                                            fontFamily: 'Poppins',
+                                            fontSize: 18),
                                       ),
                                     ))
                                 .toList(),
@@ -130,15 +134,17 @@ class UploadIdPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 20),
 
-                    // Upload boxes — shown only when an ID type is selected
+                    // Capture boxes — shown only when an ID type is selected
                     Obx(
                       () => controller.selectedIdType.value != null
                           ? Column(
                               children: [
                                 // ── Front orientation warning ──────────────
                                 Obx(() {
-                                  if (controller.orientationWarning.value == null ||
-                                      controller.orientationWarning.value!.isEmpty) {
+                                  if (controller.orientationWarning.value ==
+                                          null ||
+                                      controller
+                                          .orientationWarning.value!.isEmpty) {
                                     return const SizedBox();
                                   }
                                   return Padding(
@@ -150,14 +156,19 @@ class UploadIdPage extends StatelessWidget {
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Row(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
-                                          const Icon(Icons.rotate_90_degrees_ccw_rounded,
-                                              color: Color(0xFFA16207), size: 24),
+                                          const Icon(
+                                              Icons
+                                                  .rotate_90_degrees_ccw_rounded,
+                                              color: Color(0xFFA16207),
+                                              size: 24),
                                           const SizedBox(width: 12),
                                           Expanded(
                                             child: Text(
-                                              controller.orientationWarning.value!,
+                                              controller
+                                                  .orientationWarning.value!,
                                               style: const TextStyle(
                                                 color: Color(0xFFA16207),
                                                 fontSize: 14,
@@ -171,7 +182,7 @@ class UploadIdPage extends StatelessWidget {
                                   );
                                 }),
 
-                                // ── Front upload box ───────────────────────
+                                // ── Front capture box ──────────────────────
                                 DottedBorder(
                                   color: colors.primaryPurple,
                                   strokeWidth: 2,
@@ -184,29 +195,42 @@ class UploadIdPage extends StatelessWidget {
                                       width: double.infinity,
                                       height: 180,
                                       child: Obx(
-                                        () => controller.frontImage.value == null
+                                        () => controller.frontImage.value ==
+                                                null
                                             ? Column(
-                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
                                                 children: [
-                                                  Icon(Icons.camera_alt_outlined,
-                                                      color: colors.primaryPurple, size: 36),
+                                                  Icon(
+                                                      Icons.camera_alt_outlined,
+                                                      color:
+                                                          colors.primaryPurple,
+                                                      size: 36),
                                                   const SizedBox(height: 8),
                                                   Text('Front of ID',
                                                       style: TextStyle(
-                                                          color: colors.darkText,
-                                                          fontWeight: FontWeight.w700,
+                                                          color:
+                                                              colors.darkText,
+                                                          fontWeight:
+                                                              FontWeight.w700,
                                                           fontSize: 18)),
                                                   const SizedBox(height: 6),
-                                                  Text('PNG, JPG or PDF up to 10MB',
-                                                      style: TextStyle(color: colors.titleGrey)),
+                                                  Text(
+                                                      'Open camera to capture front ID',
+                                                      style: TextStyle(
+                                                          color: colors
+                                                              .titleGrey)),
                                                 ],
                                               )
                                             : Padding(
-                                                padding: const EdgeInsets.all(8),
+                                                padding:
+                                                    const EdgeInsets.all(8),
                                                 child: ClipRRect(
-                                                  borderRadius: BorderRadius.circular(12),
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
                                                   child: Image.file(
-                                                    File(controller.frontImage.value!.path),
+                                                    File(controller.frontImage
+                                                        .value!.path),
                                                     fit: BoxFit.cover,
                                                     width: double.infinity,
                                                     height: double.infinity,
@@ -222,8 +246,10 @@ class UploadIdPage extends StatelessWidget {
 
                                 // ── Back orientation warning ───────────────
                                 Obx(() {
-                                  if (controller.backOrientationWarning.value == null ||
-                                      controller.backOrientationWarning.value!.isEmpty) {
+                                  if (controller.backOrientationWarning.value ==
+                                          null ||
+                                      controller.backOrientationWarning.value!
+                                          .isEmpty) {
                                     return const SizedBox();
                                   }
                                   return Padding(
@@ -235,14 +261,17 @@ class UploadIdPage extends StatelessWidget {
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Row(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           const Icon(Icons.qr_code_2_rounded,
-                                              color: Color(0xFFA16207), size: 24),
+                                              color: Color(0xFFA16207),
+                                              size: 24),
                                           const SizedBox(width: 12),
                                           Expanded(
                                             child: Text(
-                                              controller.backOrientationWarning.value!,
+                                              controller.backOrientationWarning
+                                                  .value!,
                                               style: const TextStyle(
                                                 color: Color(0xFFA16207),
                                                 fontSize: 14,
@@ -256,7 +285,7 @@ class UploadIdPage extends StatelessWidget {
                                   );
                                 }),
 
-                                // ── Back upload box ────────────────────────
+                                // ── Back capture box ───────────────────────
                                 DottedBorder(
                                   color: colors.primaryPurple,
                                   strokeWidth: 2,
@@ -271,27 +300,39 @@ class UploadIdPage extends StatelessWidget {
                                       child: Obx(
                                         () => controller.backImage.value == null
                                             ? Column(
-                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
                                                 children: [
-                                                  Icon(Icons.camera_alt_outlined,
-                                                      color: colors.primaryPurple, size: 36),
+                                                  Icon(
+                                                      Icons.camera_alt_outlined,
+                                                      color:
+                                                          colors.primaryPurple,
+                                                      size: 36),
                                                   const SizedBox(height: 8),
                                                   Text('Back of ID',
                                                       style: TextStyle(
-                                                          color: colors.darkText,
-                                                          fontWeight: FontWeight.w700,
+                                                          color:
+                                                              colors.darkText,
+                                                          fontWeight:
+                                                              FontWeight.w700,
                                                           fontSize: 18)),
                                                   const SizedBox(height: 6),
-                                                  Text('Keep the barcode and text visible',
-                                                      style: TextStyle(color: colors.titleGrey)),
+                                                  Text(
+                                                      'Keep the barcode and text visible',
+                                                      style: TextStyle(
+                                                          color: colors
+                                                              .titleGrey)),
                                                 ],
                                               )
                                             : Padding(
-                                                padding: const EdgeInsets.all(8),
+                                                padding:
+                                                    const EdgeInsets.all(8),
                                                 child: ClipRRect(
-                                                  borderRadius: BorderRadius.circular(12),
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
                                                   child: Image.file(
-                                                    File(controller.backImage.value!.path),
+                                                    File(controller
+                                                        .backImage.value!.path),
                                                     fit: BoxFit.cover,
                                                     width: double.infinity,
                                                     height: double.infinity,
@@ -352,11 +393,12 @@ class UploadIdPage extends StatelessWidget {
                       }
 
                       // 2. Any scan error
-                      final warning = (scanWarning != null && scanWarning.isNotEmpty)
-                          ? scanWarning
-                          : (qrWarning != null && qrWarning.isNotEmpty)
-                              ? qrWarning
-                              : null;
+                      final warning =
+                          (scanWarning != null && scanWarning.isNotEmpty)
+                              ? scanWarning
+                              : (qrWarning != null && qrWarning.isNotEmpty)
+                                  ? qrWarning
+                                  : null;
                       if (warning != null) {
                         return Container(
                           padding: const EdgeInsets.all(16),
@@ -396,7 +438,9 @@ class UploadIdPage extends StatelessWidget {
                           child: Row(
                             children: [
                               Icon(
-                                isMatch ? Icons.verified_rounded : Icons.info_rounded,
+                                isMatch
+                                    ? Icons.verified_rounded
+                                    : Icons.info_rounded,
                                 color: isMatch
                                     ? colors.primaryPurple
                                     : const Color(0xFFA16207),
@@ -408,7 +452,9 @@ class UploadIdPage extends StatelessWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      isMatch ? 'Name Verified' : 'Name Mismatch',
+                                      isMatch
+                                          ? 'Name Verified'
+                                          : 'Name Mismatch',
                                       style: TextStyle(
                                           color: colors.darkText,
                                           fontSize: 14,
@@ -499,7 +545,7 @@ class UploadIdPage extends StatelessWidget {
                                     ),
                                     const SizedBox(height: 6),
                                     Text(
-                                      'Now upload the back of your ID to verify.',
+                                      'Now capture the back of your ID to verify.',
                                       style: TextStyle(
                                           color: colors.titleGrey,
                                           fontSize: 13,
@@ -519,12 +565,16 @@ class UploadIdPage extends StatelessWidget {
                     // ── Continue button ────────────────────────────────────
                     const SizedBox(height: 16),
                     Obx(() {
-                      final bothImagesSelected = controller.frontImage.value != null &&
-                          controller.backImage.value != null;
-                      final idType = (controller.selectedIdType.value ?? '').toLowerCase();
+                      final bothImagesSelected =
+                          controller.frontImage.value != null &&
+                              controller.backImage.value != null;
+                      final idType =
+                          (controller.selectedIdType.value ?? '').toLowerCase();
                       final isDriver = idType.contains('driver');
-                      final namesMatch = controller.nameMatchResult.value ?? false;
-                      final canContinue = bothImagesSelected && (isDriver || namesMatch);
+                      final namesMatch =
+                          controller.nameMatchResult.value ?? false;
+                      final canContinue =
+                          bothImagesSelected && (isDriver || namesMatch);
                       return ElevatedButton(
                         style: canContinue
                             ? AppThemes.primaryButtonStyle

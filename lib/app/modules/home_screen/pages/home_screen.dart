@@ -1,12 +1,13 @@
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
-import 'package:p_sosyo/app/widgets/dashed_line.dart';
+import 'package:p_sosyo/app/modules/home_screen/controllers/home_controller.dart';
 import 'package:p_sosyo/app/utils/peso_formatter.dart';
+import 'package:p_sosyo/app/widgets/dashed_line.dart';
 import 'package:p_sosyo/app/widgets/psosyo_app_bar.dart';
-import 'package:p_sosyo/app/modules/home_screen/pages/pay_now.dart';
+import 'package:p_sosyo/app/widgets/transaction_tile.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends GetView<HomeController> {
   const HomeScreen({super.key});
 
   @override
@@ -20,7 +21,7 @@ class HomeScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 10), 
+              const SizedBox(height: 10),
               Container(
                 padding: const EdgeInsets.fromLTRB(22, 26, 22, 24),
                 decoration: BoxDecoration(
@@ -40,7 +41,7 @@ class HomeScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 14),
                     PesoFormatter.buildPesoText(
-                      amount: '25,000.00',
+                      amount: controller.maximumCreditLimit,
                       fontSize: 44,
                       fontWeight: FontWeight.w800,
                       color: Colors.white,
@@ -48,7 +49,8 @@ class HomeScreen extends StatelessWidget {
                     const SizedBox(height: 26),
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 18, vertical: 18),
                       decoration: BoxDecoration(
                         color: const Color(0xFFF0ECFF),
                         borderRadius: BorderRadius.circular(15),
@@ -111,7 +113,7 @@ class HomeScreen extends StatelessWidget {
                       children: [
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
+                          children: [
                             Text(
                               'Fast Sosyo Nestle',
                               style: TextStyle(
@@ -131,7 +133,7 @@ class HomeScreen extends StatelessWidget {
                         ),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
-                          children: const [
+                          children: [
                             Text(
                               'AL-001NES',
                               style: TextStyle(
@@ -154,10 +156,10 @@ class HomeScreen extends StatelessWidget {
                     const SizedBox(height: 10),
                     const DashedLine(),
                     const SizedBox(height: 10),
-                    const Row(
+                    Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
+                        const Text(
                           'Repayment Progress',
                           style: TextStyle(
                             fontSize: 13,
@@ -165,8 +167,8 @@ class HomeScreen extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          '8%',
-                          style: TextStyle(
+                          controller.repaymentProgress,
+                          style: const TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w700,
                             color: Color(0xFF6B3DF0),
@@ -177,11 +179,13 @@ class HomeScreen extends StatelessWidget {
                     const SizedBox(height: 10),
                     ClipRRect(
                       borderRadius: BorderRadius.circular(999),
-                      child: const LinearProgressIndicator(
-                        value: 0.08,
+                      child: LinearProgressIndicator(
+                        value: controller.repaymentProgressValue,
                         minHeight: 10,
-                        backgroundColor: Color(0xFFE8E3FF),
-                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF6B3DF0)),
+                        backgroundColor: const Color(0xFFE8E3FF),
+                        valueColor: const AlwaysStoppedAnimation<Color>(
+                          Color(0xFF6B3DF0),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -189,13 +193,13 @@ class HomeScreen extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         PesoFormatter.buildPesoText(
-                          amount: '370.00',
+                          amount: controller.startingAmount,
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
                           color: const Color(0xFF8D8D95),
                         ),
                         PesoFormatter.buildPesoText(
-                          amount: '1,834.08',
+                          amount: controller.orderedAmount,
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
                           color: const Color(0xFF8D8D95),
@@ -219,7 +223,7 @@ class HomeScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 2),
                             PesoFormatter.buildPesoText(
-                              amount: '1,574.08',
+                              amount: controller.remainingBalance,
                               fontSize: 20,
                               fontWeight: FontWeight.w800,
                               color: const Color(0xFF6B3DF0),
@@ -239,7 +243,7 @@ class HomeScreen extends StatelessWidget {
                               ),
                               elevation: 0,
                             ),
-                            onPressed: () => Get.to(() => const PayNowPage()),
+                            onPressed: controller.openPayNowPage,
                             child: const Text(
                               'Pay Now',
                               style: TextStyle(
@@ -276,122 +280,40 @@ class HomeScreen extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16),
-              _TransactionTile(
-                title: 'AL-001NES',
-                dateTime: '04-28-26  |  10:23',
-                amount: '370.00',
-                status: 'SUCCESS',
+              // Sample tiles for preview
+              TransactionTile(
+                title: 'Pending Payment',
+                dateTime: '05-01-26  |  09:00',
+                amount: '300.00',
+                status: 'Pending',
+                compact: true,
+              ),
+              const SizedBox(height: 12),
+              TransactionTile(
+                title: 'Invalid Payment',
+                dateTime: '04-20-26  |  08:12',
+                amount: '150.00',
+                status: 'Invalid',
+                compact: true,
               ),
               const SizedBox(height: 16),
-              _TransactionTile(
-                title: 'AL-001NES',
-                dateTime: '04-28-26  |  10:23',
-                amount: '370.00',
-                status: 'SUCCESS',
-              ),
+
+              for (int index = 0;
+                  index < controller.transactionHistory.length;
+                  index++) ...[
+                TransactionTile(
+                  title: controller.transactionHistory[index].title,
+                  dateTime: controller.transactionHistory[index].dateTime,
+                  amount: controller.transactionHistory[index].amount,
+                  status: controller.transactionHistory[index].status,
+                  compact: true,
+                ),
+                if (index != controller.transactionHistory.length - 1)
+                  const SizedBox(height: 16),
+              ],
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _TransactionTile extends StatelessWidget {
-  const _TransactionTile({
-    required this.title,
-    required this.dateTime,
-    required this.amount,
-    required this.status,
-  });
-
-  final String title;
-  final String dateTime;
-  final String amount;
-  final String status;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 30,
-            height: 30,
-            decoration: const BoxDecoration(
-              color: Color(0xFFDDF8E8),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.check,
-              color: Color(0xFF19B36B),
-              size: 15,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFF22222A),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  dateTime,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    color: Color(0xFF9A9AA5),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text(
-                    '-',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF464955),
-                    ),
-                  ),
-                  PesoFormatter.buildPesoText(
-                    amount: amount,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF464955),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 6),
-              Text(
-                status,
-                style: const TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF19B36B),
-                ),
-              ),
-            ],
-          ),
-        ],
       ),
     );
   }

@@ -12,7 +12,8 @@ class AboutYourselfPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetBuilder<AboutYourselfController>(
       builder: (controller) {
-        final colors = Theme.of(context).extension<PsosyoThemeColors>() ?? AppColors.psosyo;
+        final colors = Theme.of(context).extension<PsosyoThemeColors>() ??
+            AppColors.psosyo;
 
         return Scaffold(
           backgroundColor: colors.surface,
@@ -63,7 +64,6 @@ class AboutYourselfPage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 10),
-
                   Text(
                     'Please provide your legal information as it appears on your government ID to help us verify your identity.',
                     style: TextStyle(
@@ -100,16 +100,21 @@ class AboutYourselfPage extends StatelessWidget {
                               fillColor: const Color(0xFFF7F7FB),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Color(0xFFE3E5EA), width: 1.2),
+                                borderSide: const BorderSide(
+                                    color: Color(0xFFE3E5EA), width: 1.2),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Color(0xFFE3E5EA), width: 1.2),
+                                borderSide: const BorderSide(
+                                    color: Color(0xFFE3E5EA), width: 1.2),
                               ),
-                              suffixIcon: Icon(Icons.lock_outline, color: colors.titleGrey, size: 20),
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                              suffixIcon: Icon(Icons.lock_outline,
+                                  color: colors.titleGrey, size: 20),
+                              contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 16),
                             ),
-                            style: TextStyle(color: colors.darkText, fontSize: 18),
+                            style:
+                                TextStyle(color: colors.darkText, fontSize: 18),
                           ),
                           const SizedBox(height: 8),
                           Text(
@@ -144,15 +149,19 @@ class AboutYourselfPage extends StatelessWidget {
                               fillColor: Colors.white,
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Color(0xFFE3E5EA), width: 1.2),
+                                borderSide: const BorderSide(
+                                    color: Color(0xFFE3E5EA), width: 1.2),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Color(0xFFE3E5EA), width: 1.2),
+                                borderSide: const BorderSide(
+                                    color: Color(0xFFE3E5EA), width: 1.2),
                               ),
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                              contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 16),
                             ),
-                            style: TextStyle(color: colors.darkText, fontSize: 18),
+                            style:
+                                TextStyle(color: colors.darkText, fontSize: 18),
                           ),
                           const SizedBox(height: 24),
 
@@ -169,24 +178,38 @@ class AboutYourselfPage extends StatelessWidget {
                           TextField(
                             controller: controller.dateOfBirthController,
                             readOnly: true,
-                            onTap: () => controller.selectDate(context),
+                            showCursor: false,
                             decoration: InputDecoration(
-                              hintText: 'Enter Date of Birth',
+                              hintText: 'Fetched from your ID',
                               hintStyle: TextStyle(color: colors.titleGrey),
                               filled: true,
-                              fillColor: Colors.white,
+                              fillColor: const Color(0xFFF7F7FB),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Color(0xFFE3E5EA), width: 1.2),
+                                borderSide: const BorderSide(
+                                    color: Color(0xFFE3E5EA), width: 1.2),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Color(0xFFE3E5EA), width: 1.2),
+                                borderSide: const BorderSide(
+                                    color: Color(0xFFE3E5EA), width: 1.2),
                               ),
-                              suffixIcon: Icon(Icons.calendar_today, color: colors.titleGrey),
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                              suffixIcon: Icon(Icons.lock_outline,
+                                  color: colors.titleGrey, size: 20),
+                              contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 16),
                             ),
-                            style: TextStyle(color: colors.darkText, fontSize: 18),
+                            style:
+                                TextStyle(color: colors.darkText, fontSize: 18),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'This birth date is taken from your scanned ID and cannot be edited here.',
+                            style: TextStyle(
+                              color: colors.titleGrey,
+                              fontSize: 13,
+                              height: 1.35,
+                            ),
                           ),
                           const SizedBox(height: 24),
 
@@ -205,7 +228,8 @@ class AboutYourselfPage extends StatelessWidget {
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: const Color(0xFFE3E5EA), width: 1.2),
+                              border: Border.all(
+                                  color: const Color(0xFFE3E5EA), width: 1.2),
                             ),
                             child: DropdownButtonHideUnderline(
                               child: DropdownButton<String>(
@@ -213,17 +237,24 @@ class AboutYourselfPage extends StatelessWidget {
                                 value: controller.selectedStatus.value,
                                 hint: Text(
                                   'Select Status',
-                                  style: TextStyle(color: colors.titleGrey, fontSize: 18),
+                                  style: TextStyle(
+                                      color: colors.titleGrey, fontSize: 18),
                                 ),
                                 items: controller.statusOptions
                                     .map((option) => DropdownMenuItem(
                                           value: option,
-                                          child: Text(option, style: const TextStyle(fontSize: 18)),
+                                          child: Text(option,
+                                              style: const TextStyle(
+                                                  fontSize: 18)),
                                         ))
                                     .toList(),
                                 onChanged: controller.setStatus,
-                                icon: Icon(Icons.keyboard_arrow_down_rounded, color: colors.titleGrey, size: 24),
-                                style: TextStyle(color: colors.darkText, fontSize: 18, fontFamily: 'Poppins'),
+                                icon: Icon(Icons.keyboard_arrow_down_rounded,
+                                    color: colors.titleGrey, size: 24),
+                                style: TextStyle(
+                                    color: colors.darkText,
+                                    fontSize: 18,
+                                    fontFamily: 'Poppins'),
                               ),
                             ),
                           ),
@@ -243,31 +274,45 @@ class AboutYourselfPage extends StatelessWidget {
                             children: [
                               // ── Fix: each Expanded was missing its closing `)` ──
                               Expanded(
-                                child: GestureDetector(
-                                  onTap: () => controller.setGender('Male'),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(vertical: 14),
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: controller.selectedGender.value == 'Male'
-                                            ? colors.primaryPurple
-                                            : const Color(0xFFE3E5EA),
-                                        width: 1.5,
+                                child: Opacity(
+                                  opacity: controller.canSelectGender('Male')
+                                      ? 1
+                                      : 0.45,
+                                  child: GestureDetector(
+                                    onTap: controller.canSelectGender('Male')
+                                        ? () => controller.setGender('Male')
+                                        : null,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 14),
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color:
+                                              controller.selectedGender.value ==
+                                                      'Male'
+                                                  ? colors.primaryPurple
+                                                  : const Color(0xFFE3E5EA),
+                                          width: 1.5,
+                                        ),
+                                        color:
+                                            controller.selectedGender.value ==
+                                                    'Male'
+                                                ? colors.lightPurple
+                                                : Colors.white,
                                       ),
-                                      color: controller.selectedGender.value == 'Male'
-                                          ? colors.lightPurple
-                                          : Colors.white,
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        'Male',
-                                        style: TextStyle(
-                                          color: controller.selectedGender.value == 'Male'
-                                              ? colors.primaryPurple
-                                              : colors.titleGrey,
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
+                                      child: Center(
+                                        child: Text(
+                                          'Male',
+                                          style: TextStyle(
+                                            color: controller
+                                                        .selectedGender.value ==
+                                                    'Male'
+                                                ? colors.primaryPurple
+                                                : colors.titleGrey,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -276,31 +321,45 @@ class AboutYourselfPage extends StatelessWidget {
                               ),
                               const SizedBox(width: 12),
                               Expanded(
-                                child: GestureDetector(
-                                  onTap: () => controller.setGender('Female'),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(vertical: 14),
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: controller.selectedGender.value == 'Female'
-                                            ? colors.primaryPurple
-                                            : const Color(0xFFE3E5EA),
-                                        width: 1.5,
+                                child: Opacity(
+                                  opacity: controller.canSelectGender('Female')
+                                      ? 1
+                                      : 0.45,
+                                  child: GestureDetector(
+                                    onTap: controller.canSelectGender('Female')
+                                        ? () => controller.setGender('Female')
+                                        : null,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 14),
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color:
+                                              controller.selectedGender.value ==
+                                                      'Female'
+                                                  ? colors.primaryPurple
+                                                  : const Color(0xFFE3E5EA),
+                                          width: 1.5,
+                                        ),
+                                        color:
+                                            controller.selectedGender.value ==
+                                                    'Female'
+                                                ? colors.lightPurple
+                                                : Colors.white,
                                       ),
-                                      color: controller.selectedGender.value == 'Female'
-                                          ? colors.lightPurple
-                                          : Colors.white,
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        'Female',
-                                        style: TextStyle(
-                                          color: controller.selectedGender.value == 'Female'
-                                              ? colors.primaryPurple
-                                              : colors.titleGrey,
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
+                                      child: Center(
+                                        child: Text(
+                                          'Female',
+                                          style: TextStyle(
+                                            color: controller
+                                                        .selectedGender.value ==
+                                                    'Female'
+                                                ? colors.primaryPurple
+                                                : colors.titleGrey,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -309,31 +368,45 @@ class AboutYourselfPage extends StatelessWidget {
                               ),
                               const SizedBox(width: 12),
                               Expanded(
-                                child: GestureDetector(
-                                  onTap: () => controller.setGender('Other'),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(vertical: 14),
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: controller.selectedGender.value == 'Other'
-                                            ? colors.primaryPurple
-                                            : const Color(0xFFE3E5EA),
-                                        width: 1.5,
+                                child: Opacity(
+                                  opacity: controller.canSelectGender('Other')
+                                      ? 1
+                                      : 0.45,
+                                  child: GestureDetector(
+                                    onTap: controller.canSelectGender('Other')
+                                        ? () => controller.setGender('Other')
+                                        : null,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 14),
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color:
+                                              controller.selectedGender.value ==
+                                                      'Other'
+                                                  ? colors.primaryPurple
+                                                  : const Color(0xFFE3E5EA),
+                                          width: 1.5,
+                                        ),
+                                        color:
+                                            controller.selectedGender.value ==
+                                                    'Other'
+                                                ? colors.lightPurple
+                                                : Colors.white,
                                       ),
-                                      color: controller.selectedGender.value == 'Other'
-                                          ? colors.lightPurple
-                                          : Colors.white,
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        'Other',
-                                        style: TextStyle(
-                                          color: controller.selectedGender.value == 'Other'
-                                              ? colors.primaryPurple
-                                              : colors.titleGrey,
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
+                                      child: Center(
+                                        child: Text(
+                                          'Other',
+                                          style: TextStyle(
+                                            color: controller
+                                                        .selectedGender.value ==
+                                                    'Other'
+                                                ? colors.primaryPurple
+                                                : colors.titleGrey,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -364,15 +437,19 @@ class AboutYourselfPage extends StatelessWidget {
                               fillColor: Colors.white,
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Color(0xFFE3E5EA), width: 1.2),
+                                borderSide: const BorderSide(
+                                    color: Color(0xFFE3E5EA), width: 1.2),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Color(0xFFE3E5EA), width: 1.2),
+                                borderSide: const BorderSide(
+                                    color: Color(0xFFE3E5EA), width: 1.2),
                               ),
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                              contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 16),
                             ),
-                            style: TextStyle(color: colors.darkText, fontSize: 18),
+                            style:
+                                TextStyle(color: colors.darkText, fontSize: 18),
                           ),
                           const SizedBox(height: 24),
 
