@@ -17,6 +17,7 @@ import 'package:p_sosyo/app/modules/loan_offer/bindings/loan_offer_binding.dart'
 import 'package:p_sosyo/app/modules/loan_offer/pages/loan_offer.dart';
 import 'package:p_sosyo/app/modules/loan_offer/pages/loan_successful.dart';
 import 'package:p_sosyo/app/widgets/verifying_process.dart';
+import 'package:p_sosyo/app/modules/home_screen/pages/home_screen.dart';
 import '../modules/register_number/bindings/register_binding.dart';
 import 'app_routes.dart';
 
@@ -73,6 +74,10 @@ class AppPages {
 		GetPage(
 			name: AppRoutes.loanSuccessful,
 			page: () => const LoanSuccessfulPage(),
+		),
+		GetPage(
+			name: AppRoutes.homeScreen,
+			page: () => const HomeScreen(),
 		),
 	];
 }

@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
       title: 'PSosyo',
       theme: AppThemes.lightTheme,
       // Revert to AppRoutes.landing when finished.
-      initialRoute: AppRoutes.loanOffer,
+      initialRoute: AppRoutes.homeScreen,
       getPages: AppPages.pages,
     );
   }

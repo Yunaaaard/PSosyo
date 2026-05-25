@@ -181,7 +181,7 @@ class LoanSuccessfulPage extends StatelessWidget {
             width: double.infinity,
             child: ElevatedButton(
               style: AppThemes.primaryButtonStyle,
-              onPressed: () => Get.offAllNamed(AppRoutes.dashboard),
+              onPressed: () => Get.offAllNamed(AppRoutes.homeScreen),
               child: const Text('Continue'),
             ),
           ),
