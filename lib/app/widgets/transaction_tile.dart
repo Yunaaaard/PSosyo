@@ -10,7 +10,7 @@ class TransactionTile extends StatelessWidget {
     required this.amount,
     required this.status,
     this.compact = false,
-  });
+  }) : assert(status == 'SUCCESS', 'TransactionTile only accepts SUCCESS status');
 
   final String title;
   final String dateTime;
@@ -20,25 +20,9 @@ class TransactionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final lower = status.toLowerCase();
-
-    String assetName;
-    Color bgColor;
-    Color statusColor;
-
-    if (lower.contains('success')) {
-      assetName = 'assets/icons/success.svg';
-      bgColor = const Color(0xFFD6F5E5);
-      statusColor = const Color(0xFF15B66D);
-    } else if (lower.contains('pending')) {
-      assetName = 'assets/icons/pending.svg';
-      bgColor = const Color(0xFFFFF4E6);
-      statusColor = const Color(0xFFDF8F00);
-    } else {
-      assetName = 'assets/icons/invalid.svg';
-      bgColor = const Color(0xFFFFE8E8);
-      statusColor = const Color(0xFFFF4D4F);
-    }
+    const assetName = 'assets/icons/success.svg';
+    const bgColor = Color(0xFFD6F5E5);
+    const statusColor = Color(0xFF15B66D);
 
     final double leadSize = compact ? 30 : 72;
     final double iconSize = compact ? 15 : 28;

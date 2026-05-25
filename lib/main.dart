@@ -22,7 +22,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'PSosyo',
       theme: AppThemes.lightTheme,
-      initialRoute: AppRoutes.dashboard,
+      initialRoute: AppRoutes.homeScreen,
       getPages: AppPages.pages,
     );
   }
