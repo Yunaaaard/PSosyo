@@ -8,6 +8,7 @@ class TransactionTile extends StatelessWidget {
     required this.title,
     required this.dateTime,
     required this.amount,
+    required this.sign,
     required this.status,
     this.compact = false,
   }) : assert(status == 'SUCCESS', 'TransactionTile only accepts SUCCESS status');
@@ -15,6 +16,7 @@ class TransactionTile extends StatelessWidget {
   final String title;
   final String dateTime;
   final String amount;
+  final String sign;
   final String status;
   final bool compact;
 
@@ -86,10 +88,10 @@ class TransactionTile extends StatelessWidget {
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
-                    '-',
-                    style: TextStyle(
-                      fontSize: 21,
+                  Text(
+                    sign,
+                    style: const TextStyle(
+                      fontSize: 17,
                       fontWeight: FontWeight.w600,
                       color: Color(0xFF464955),
                     ),
@@ -97,7 +99,7 @@ class TransactionTile extends StatelessWidget {
                   PesoFormatter.buildPesoText(
                     amount: amount,
                     fontSize: amountSize,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w500,
                     color: const Color(0xFF464955),
                   ),
                 ],

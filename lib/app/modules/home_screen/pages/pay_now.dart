@@ -239,6 +239,7 @@ class PayNowPage extends GetView<HomeController> {
                       title: controller.transactionHistory[index].title,
                       dateTime: controller.transactionHistory[index].dateTime,
                       amount: controller.transactionHistory[index].amount,
+                          sign: controller.transactionHistory[index].sign,
                       status: controller.transactionHistory[index].status,
                       compact: true,
                     ),

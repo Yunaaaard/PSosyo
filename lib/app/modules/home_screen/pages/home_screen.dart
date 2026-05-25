@@ -13,42 +13,6 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<HomeController>();
-    List<_BalanceCardData> buildBalanceCards() {
-      return [
-        _BalanceCardData(
-          title: 'Nestle',
-          loanId: controller.loanId,
-          logoAsset: 'assets/images/nestle-sample-logo.png',
-          appliedDateTime: controller.startPaymentDateTime,
-          dueDateTime: controller.fullyPaidDateTime,
-          amountDue: controller.remainingBalance,
-        ),
-        const _BalanceCardData(
-          title: 'Monde Nissin',
-          loanId: 'AL-001NES',
-          logoAsset: 'assets/images/monde-sample-logo.png',
-          appliedDateTime: '04-28-26 | 10:23',
-          dueDateTime: '04-28-26 | 10:23',
-          amountDue: '1,574.08',
-        ),
-        const _BalanceCardData(
-          title: 'Shell',
-          loanId: 'AL-001NES',
-          logoAsset: 'assets/images/shell-sample-logo.png',
-          appliedDateTime: '04-28-26 | 10:23',
-          dueDateTime: '04-28-26 | 10:23',
-          amountDue: '1,574.08',
-        ),
-        const _BalanceCardData(
-          title: 'Nutri Asia',
-          loanId: 'AL-001NES',
-          logoAsset: 'assets/images/nutriasia-sample-logo.png',
-          appliedDateTime: '04-28-26 | 10:23',
-          dueDateTime: '04-28-26 | 10:23',
-          amountDue: '1,574.08',
-        ),
-      ];
-    }
 
     return Scaffold(
       backgroundColor: const Color(0xFFF6F6F8),
@@ -124,10 +88,9 @@ class HomeScreen extends StatelessWidget {
               ),
               const SizedBox(height: 18),
               Obx(() {
-                final balanceCards = buildBalanceCards();
                 final visibleCards = controller.showAllBalanceCards.value
-                    ? balanceCards
-                    : balanceCards.take(1).toList();
+                    ? controller.loanOrders
+                    : controller.loanOrders.take(1).toList();
 
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -143,17 +106,40 @@ class HomeScreen extends StatelessWidget {
                             color: Color(0xFF4B4F57),
                           ),
                         ),
-                        GestureDetector(
-                          onTap: controller.toggleBalanceCardsVisibility,
-                          child: Text(
-                            controller.showAllBalanceCards.value
-                                ? 'Hide'
-                                : 'View All',
-                            style: const TextStyle(
-                              fontSize: 15,
-                              color: Color(0xFF2F65F4),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            TextButton(
+                              onPressed: controller.openLoanOrderSheet,
+                              style: TextButton.styleFrom(
+                                foregroundColor: const Color(0xFF2F65F4),
+                                padding: EdgeInsets.zero,
+                                minimumSize: Size.zero,
+                                tapTargetSize:
+                                    MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              child: const Text(
+                                'New Order',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
                             ),
-                          ),
+                            const SizedBox(width: 12),
+                            GestureDetector(
+                              onTap: controller.toggleBalanceCardsVisibility,
+                              child: Text(
+                                controller.showAllBalanceCards.value
+                                    ? 'Hide'
+                                    : 'View All',
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  color: Color(0xFF2F65F4),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -196,8 +182,10 @@ class HomeScreen extends StatelessWidget {
                                 logoAsset: visibleCards[index].logoAsset,
                                 appliedDateTime: visibleCards[index].appliedDateTime,
                                 dueDateTime: visibleCards[index].dueDateTime,
-                                amountDue: visibleCards[index].amountDue,
-                                onPayNow: controller.openPayNowPage,
+                                amountDue: visibleCards[index].amountDueText,
+                                onPayNow: () => controller.openPayNowPage(
+                                  visibleCards[index],
+                                ),
                               ),
                               if (index != visibleCards.length - 1)
                                 const SizedBox(height: 14),
@@ -242,6 +230,7 @@ class HomeScreen extends StatelessWidget {
                         title: controller.transactionHistory[index].title,
                         dateTime: controller.transactionHistory[index].dateTime,
                         amount: controller.transactionHistory[index].amount,
+                        sign: controller.transactionHistory[index].sign,
                         status: controller.transactionHistory[index].status,
                         compact: true,
                       ),
@@ -257,22 +246,4 @@ class HomeScreen extends StatelessWidget {
       ),
     );
   }
-}
-
-class _BalanceCardData {
-  const _BalanceCardData({
-    required this.title,
-    required this.loanId,
-    required this.logoAsset,
-    required this.appliedDateTime,
-    required this.dueDateTime,
-    required this.amountDue,
-  });
-
-  final String title;
-  final String loanId;
-  final String logoAsset;
-  final String appliedDateTime;
-  final String dueDateTime;
-  final String amountDue;
 }
