@@ -22,13 +22,13 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'PSosyo',
       theme: AppThemes.lightTheme,
-      initialRoute: AppRoutes.dashboard,
+      home: const LandingPage(),
       getPages: AppPages.pages,
       builder: (context, child) {
         final mediaQuery = MediaQuery.of(context);
         return MediaQuery(
           data: mediaQuery.copyWith(
-            textScaler: const TextScaler.linear(0.85),
+            textScaler: const TextScaler.linear(0.7),
           ),
           child: child ?? const SizedBox.shrink(),
         );
