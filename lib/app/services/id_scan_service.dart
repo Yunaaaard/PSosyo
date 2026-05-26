@@ -438,11 +438,20 @@ class IdScanService {
       }
 
       // Handle compact OCR cases like "... Sex M Date of Birth ...".
-      final tokenRegex = RegExp(r'\b([MF])\b', caseSensitive: false);
-      final tokenMatch = tokenRegex.firstMatch(line);
-      if (tokenMatch != null) {
-        final normalized = _normalizeGenderValue(tokenMatch.group(1));
-        if (normalized != null) return normalized;
+      // Extract only the first ~20 characters after the label to avoid picking
+      // up letters from dates or other fields further in the line.
+      final labelIndex = lower.indexOf(RegExp('sex|gender|kasarian'));
+      if (labelIndex >= 0) {
+        final endIndex = min(labelIndex + 20, line.length);
+        final relevantPart = line.substring(labelIndex, endIndex);
+        
+        // Look for M or F, but skip if it's part of a word (like "Male", "Female")
+        final tokenRegex = RegExp(r'\b([MF])\b(?!ale)', caseSensitive: false);
+        final tokenMatch = tokenRegex.firstMatch(relevantPart);
+        if (tokenMatch != null) {
+          final normalized = _normalizeGenderValue(tokenMatch.group(1));
+          if (normalized != null) return normalized;
+        }
       }
     }
 

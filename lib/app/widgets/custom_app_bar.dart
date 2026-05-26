@@ -4,7 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
 
-  const CustomAppBar({Key? key, this.title = 'PSOSYO'}) : super(key: key);
+  const CustomAppBar({Key? key, this.title = 'FASTSYOSYO'}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +22,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
             Text(
               title,
               style: const TextStyle(
-                color: Color(0xFF6533E7),
+                color: Color.fromARGB(255, 16, 98, 221),
                 fontWeight: FontWeight.w700,
                 fontSize: 20,
               ),

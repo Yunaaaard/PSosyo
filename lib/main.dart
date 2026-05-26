@@ -20,7 +20,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'PSosyo',
+      title: 'FASTSYOSYO',
       theme: AppThemes.lightTheme,
       initialRoute: AppRoutes.homeScreen,
       getPages: AppPages.pages,
@@ -28,7 +28,7 @@ class MyApp extends StatelessWidget {
         final mediaQuery = MediaQuery.of(context);
         return MediaQuery(
           data: mediaQuery.copyWith(
-            textScaler: const TextScaler.linear(0.85),
+            textScaler: const TextScaler.linear(0.8),
           ),
           child: child ?? const SizedBox.shrink(),
         );
