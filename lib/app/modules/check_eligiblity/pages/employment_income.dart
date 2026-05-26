@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:p_sosyo/app/modules/check_eligiblity/controllers/employment_income_controller.dart';
 import 'package:p_sosyo/app/routes/app_routes.dart';
@@ -76,11 +77,18 @@ class EmploymentIncomePage extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildFieldLabel(colors, 'Source of Income'),
+                          _buildPesoFieldLabel(
+                            colors,
+                            'Target Investment Amount',
+                          ),
                           const SizedBox(height: 12),
                           _buildInputField(
                             controller: controller.sourceOfIncomeController,
                             colors: colors,
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            inputFormatters: [_decimalInputFormatter],
                           ),
                           const SizedBox(height: 24),
                           Text.rich(
@@ -91,7 +99,7 @@ class EmploymentIncomePage extends StatelessWidget {
                                 fontWeight: FontWeight.w500,
                               ),
                               children: [
-                                const TextSpan(text: 'Monthly Income ('),
+                                const TextSpan(text: 'Monthly Revenue ('),
                                 PesoFormatter.buildPesoSymbolSpan(
                                   fontSize: 20,
                                   fontWeight: FontWeight.w500,
@@ -105,30 +113,42 @@ class EmploymentIncomePage extends StatelessWidget {
                           _buildInputField(
                             controller: controller.monthlyIncomeController,
                             colors: colors,
-                            keyboardType: TextInputType.number,
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            inputFormatters: [_decimalInputFormatter],
                           ),
                           const SizedBox(height: 24),
-                          _buildFieldLabel(colors, 'Income Tax'),
+                          _buildPesoFieldLabel(
+                            colors,
+                            'Monthly Expenses',
+                          ),
                           const SizedBox(height: 12),
                           _buildInputField(
                             controller: controller.incomeTaxController,
                             colors: colors,
-                            keyboardType: TextInputType.number,
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            inputFormatters: [_decimalInputFormatter],
                           ),
                           const SizedBox(height: 24),
-                          _buildFieldLabel(colors, 'Employer Name'),
+                          _buildFieldLabel(colors, 'Business Name'),
                           const SizedBox(height: 12),
                           _buildInputField(
                             controller: controller.employerNameController,
                             colors: colors,
                           ),
                           const SizedBox(height: 24),
-                          _buildFieldLabel(colors, 'Years of Employment'),
+                          _buildFieldLabel(colors, 'Years in Business'),
                           const SizedBox(height: 12),
-                          _buildInputField(
+                          _buildYearsOfEmploymentDropdown(
                             controller: controller.yearsOfEmploymentController,
                             colors: colors,
-                            keyboardType: TextInputType.number,
+                            onChanged: (value) {
+                              controller.yearsOfEmploymentController.text =
+                                  value ?? '';
+                            },
                           ),
                           const SizedBox(height: 18),
                           DottedBorder(
@@ -141,27 +161,38 @@ class EmploymentIncomePage extends StatelessWidget {
                               onTap: controller.pickReceipt,
                               borderRadius: BorderRadius.circular(16),
                               child: Container(
-                                constraints: const BoxConstraints(minHeight: 170),
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+                                constraints:
+                                    const BoxConstraints(minHeight: 170),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 18),
                                 child: Obx(
                                   () {
-                                    final receiptFiles = controller.receiptFiles;
+                                    final receiptFiles =
+                                        controller.receiptFiles;
 
                                     return Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
                                         if (receiptFiles.isEmpty)
                                           Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 28, vertical: 14),
                                             decoration: BoxDecoration(
-                                              borderRadius: BorderRadius.circular(18),
-                                              border: Border.all(color: const Color(0xFFA9ADB8), width: 1.5),
+                                              borderRadius:
+                                                  BorderRadius.circular(18),
+                                              border: Border.all(
+                                                  color:
+                                                      const Color(0xFFA9ADB8),
+                                                  width: 1.5),
                                               color: Colors.white,
                                             ),
                                             child: Row(
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
-                                                Icon(Icons.cloud_upload_outlined, color: colors.titleGrey),
+                                                Icon(
+                                                    Icons.cloud_upload_outlined,
+                                                    color: colors.titleGrey),
                                                 const SizedBox(width: 10),
                                                 Text(
                                                   'Upload',
@@ -180,15 +211,19 @@ class EmploymentIncomePage extends StatelessWidget {
                                             child: ListView.separated(
                                               scrollDirection: Axis.horizontal,
                                               itemCount: receiptFiles.length,
-                                              separatorBuilder: (_, __) => const SizedBox(width: 10),
+                                              separatorBuilder: (_, __) =>
+                                                  const SizedBox(width: 10),
                                               itemBuilder: (context, index) {
-                                                final receipt = receiptFiles[index];
+                                                final receipt =
+                                                    receiptFiles[index];
 
                                                 return Stack(
                                                   clipBehavior: Clip.none,
                                                   children: [
                                                     ClipRRect(
-                                                      borderRadius: BorderRadius.circular(12),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              12),
                                                       child: Image.file(
                                                         File(receipt.path),
                                                         fit: BoxFit.cover,
@@ -200,14 +235,22 @@ class EmploymentIncomePage extends StatelessWidget {
                                                       right: -8,
                                                       top: -8,
                                                       child: GestureDetector(
-                                                        onTap: () => controller.removeReceiptAt(index),
+                                                        onTap: () => controller
+                                                            .removeReceiptAt(
+                                                                index),
                                                         child: Container(
                                                           width: 24,
                                                           height: 24,
-                                                          decoration: BoxDecoration(
-                                                            color: colors.darkText,
-                                                            shape: BoxShape.circle,
-                                                            border: Border.all(color: Colors.white, width: 2),
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            color:
+                                                                colors.darkText,
+                                                            shape:
+                                                                BoxShape.circle,
+                                                            border: Border.all(
+                                                                color: Colors
+                                                                    .white,
+                                                                width: 2),
                                                           ),
                                                           child: const Icon(
                                                             Icons.close,
@@ -266,7 +309,8 @@ class EmploymentIncomePage extends StatelessWidget {
                             ? AppThemes.primaryButtonStyle
                             : AppThemes.unaccessibleButtonStyle,
                         onPressed: canContinue
-                            ? () => Get.offAllNamed(AppRoutes.verificationProcess)
+                            ? () =>
+                                Get.offAllNamed(AppRoutes.verificationProcess)
                             : null,
                         child: const Center(child: Text('Continue')),
                       );
@@ -292,14 +336,120 @@ class EmploymentIncomePage extends StatelessWidget {
     );
   }
 
+  Widget _buildPesoFieldLabel(PsosyoThemeColors colors, String text) {
+    return Text.rich(
+      TextSpan(
+        style: TextStyle(
+          color: colors.darkText,
+          fontSize: 20,
+          fontWeight: FontWeight.w500,
+        ),
+        children: [
+          TextSpan(text: '$text ('),
+          PesoFormatter.buildPesoSymbolSpan(
+            fontSize: 20,
+            fontWeight: FontWeight.w500,
+            color: colors.darkText,
+          ),
+          const TextSpan(text: ')'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildYearsOfEmploymentDropdown({
+    required TextEditingController controller,
+    required PsosyoThemeColors colors,
+    required ValueChanged<String?> onChanged,
+  }) {
+    const options = [
+      'Less than 1 year',
+      '1-2 years',
+      '3-5 years',
+      '6-8 years',
+      '9-10 years',
+      '10 year+',
+    ];
+
+    final currentValue =
+        options.contains(controller.text) ? controller.text : null;
+
+    return Container(
+      height: 70,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE3E5EA), width: 1.2),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          isExpanded: true,
+          value: currentValue,
+          hint: Text(
+            'Select years of employment',
+            style: TextStyle(
+              color: colors.titleGrey,
+              fontSize: 18,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+          items: options
+              .map(
+                (option) => DropdownMenuItem<String>(
+                  value: option,
+                  child: Text(
+                    option,
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 18,
+                    ),
+                  ),
+                ),
+              )
+              .toList(),
+          onChanged: onChanged,
+          icon: Icon(
+            Icons.keyboard_arrow_down_rounded,
+            color: colors.titleGrey,
+            size: 30,
+          ),
+          style: TextStyle(
+            color: colors.darkText,
+            fontSize: 18,
+            fontFamily: 'Poppins',
+          ),
+        ),
+      ),
+    );
+  }
+
+  static final TextInputFormatter _decimalInputFormatter =
+      TextInputFormatter.withFunction((oldValue, newValue) {
+    final text = newValue.text;
+    if (text.isEmpty) {
+      return newValue;
+    }
+
+    final decimalPattern = RegExp(r'^\d*(\.\d{0,2})?$');
+    if (decimalPattern.hasMatch(text)) {
+      return newValue;
+    }
+
+    return oldValue;
+  });
+
   Widget _buildInputField({
     required TextEditingController controller,
     required PsosyoThemeColors colors,
     TextInputType keyboardType = TextInputType.text,
+    List<TextInputFormatter>? inputFormatters,
   }) {
     return TextField(
       controller: controller,
       keyboardType: keyboardType,
+      textInputAction: TextInputAction.next,
+      inputFormatters: inputFormatters,
       decoration: InputDecoration(
         hintStyle: TextStyle(color: colors.titleGrey),
         filled: true,
@@ -312,9 +462,13 @@ class EmploymentIncomePage extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Color(0xFFE3E5EA), width: 1.2),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
-      style: TextStyle(color: colors.darkText, fontSize: 18),
+      style: TextStyle(
+        color: colors.darkText,
+        fontSize: 18,
+      ),
     );
   }
 }
