@@ -58,7 +58,7 @@ class PsosyoBalanceCard extends StatelessWidget {
                   ],
                 ),
                 padding: const EdgeInsets.all(8),
-                child: Image.asset(logoAsset, fit: BoxFit.contain),
+                child: _buildLogoImage(),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -101,7 +101,10 @@ class PsosyoBalanceCard extends StatelessWidget {
                         const TextSpan(text: 'Applied:  '),
                         TextSpan(
                           text: appliedDateTime,
-                          style: const TextStyle(color: Color(0xFF7D818D), fontSize: 12,),
+                          style: const TextStyle(
+                            color: Color(0xFF7D818D),
+                            fontSize: 12,
+                          ),
                         ),
                       ],
                     ),
@@ -118,7 +121,8 @@ class PsosyoBalanceCard extends StatelessWidget {
                         const TextSpan(text: 'Due:  '),
                         TextSpan(
                           text: dueDateTime,
-                          style: const TextStyle(color: Color(0xFFFF4D4F), fontSize: 12),
+                          style: const TextStyle(
+                              color: Color(0xFFFF4D4F), fontSize: 12),
                         ),
                       ],
                     ),
@@ -180,6 +184,36 @@ class PsosyoBalanceCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildLogoImage() {
+    final uri = Uri.tryParse(logoAsset);
+    final isNetworkLogo =
+        uri != null && (uri.scheme == 'http' || uri.scheme == 'https');
+
+    if (isNetworkLogo) {
+      return Image.network(
+        logoAsset,
+        fit: BoxFit.contain,
+        errorBuilder: (_, __, ___) {
+          return const Icon(
+            Icons.image_not_supported_outlined,
+            color: Color(0xFFB8BCC7),
+          );
+        },
+      );
+    }
+
+    return Image.asset(
+      logoAsset,
+      fit: BoxFit.contain,
+      errorBuilder: (_, __, ___) {
+        return const Icon(
+          Icons.image_not_supported_outlined,
+          color: Color(0xFFB8BCC7),
+        );
+      },
     );
   }
 }

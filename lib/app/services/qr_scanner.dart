@@ -1,11 +1,8 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:p_sosyo/app/services/qr_capture_camera_page.dart';
+import 'package:p_sosyo/app/routes/app_routes.dart';
+import 'package:p_sosyo/app/services/qr_payment_live_scanner.dart';
 import 'package:p_sosyo/app/modules/home_screen/controllers/home_controller.dart';
-import 'package:p_sosyo/app/services/id_scan_service.dart';
 
 class QrScannerPage extends StatefulWidget {
   const QrScannerPage({super.key});
@@ -16,74 +13,210 @@ class QrScannerPage extends StatefulWidget {
 
 class _QrScannerPageState extends State<QrScannerPage> {
   bool _scanning = false;
-  String? _result;
+
+  Future<void> _showSuccessModal() async {
+    await Get.dialog(
+      Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 28),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFEAF7EE),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.check_rounded,
+                  color: Color(0xFF1EA35B),
+                  size: 42,
+                ),
+              ),
+              const SizedBox(height: 18),
+              const Text(
+                'Balance Card Added',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                'The scanned QR payload was imported into your Psosyo balance list.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.black54,
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Get.back();
+                    if (Get.currentRoute != AppRoutes.homeScreen) {
+                      Get.until((route) =>
+                          route.settings.name == AppRoutes.homeScreen);
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF6B3DF0),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: const Text(
+                    'Back to Home',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
+  }
+
+  Future<bool> _showFailureModal(String message) async {
+    var retry = false;
+    await Get.dialog(
+      Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 28),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFFFF0F0),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.close_rounded,
+                  color: Color(0xFFEA4335),
+                  size: 42,
+                ),
+              ),
+              const SizedBox(height: 18),
+              const Text(
+                'Scan Failed',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.black54,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        retry = true;
+                        Get.back();
+                      },
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        side: const BorderSide(color: Color(0xFF6B3DF0)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: const Text(
+                        'Try Again',
+                        style: TextStyle(color: Color(0xFF6B3DF0)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Get.back();
+                        if (Get.currentRoute != AppRoutes.homeScreen) {
+                          Get.until((route) =>
+                              route.settings.name == AppRoutes.homeScreen);
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF6B3DF0),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: const Text(
+                        'Back to Home',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
+    return retry;
+  }
 
   Future<void> _startScan() async {
-    // Open camera capture page (returns XFile)
-    final xfile = await Get.to<XFile?>(() => const QrCaptureCameraPage());
-    if (xfile == null) {
-      // user cancelled
-      if (mounted) Get.back();
-      return;
-    }
-
+    // Open live auto-scanner which returns a raw QR string
     setState(() {
       _scanning = true;
-      _result = null;
     });
-
-    final service = IdScanService();
-    final raw = await service.readQrRaw(xfile);
-
+    final raw = await Get.to<String?>(() => const QrPaymentLiveScannerPage());
     if (raw == null) {
-      setState(() {
-        _scanning = false;
-        _result = 'No QR detected';
-      });
+      if (mounted) {
+        Get.back();
+      }
       return;
     }
 
     setState(() {
       _scanning = false;
-      _result = raw;
     });
 
-    // Try parse JSON payload
-    try {
-      final decoded = json.decode(raw);
-      if (decoded is Map && decoded['loanId'] != null) {
-        final loanId = decoded['loanId'].toString();
-        final amountStr = decoded['amount']?.toString();
+    final controller = Get.find<HomeController>();
+    final imported = controller.importLoanOrderFromQrPayload(raw);
+    if (imported) {
+      await _showSuccessModal();
+      return;
+    }
 
-        final controller = Get.find<HomeController>();
-        final order = controller.activeLoanOrder;
-        if (order != null && order.loanId == loanId) {
-          final amount = amountStr != null && amountStr.isNotEmpty
-              ? double.tryParse(amountStr.replaceAll(',', '').replaceAll('₱', '').replaceAll(' ', ''))
-              : order.remainingAmount;
-
-          controller.recordLoanPaymentSuccess(order: order, amount: amount ?? order.remainingAmount);
-          Get.snackbar('Payment Success', 'Loan payment was recorded.', snackPosition: SnackPosition.BOTTOM);
-          Get.back();
-          return;
-        } else {
-          Get.snackbar('Invalid QR', 'Scanned QR does not match active loan.', snackPosition: SnackPosition.BOTTOM);
-        }
-      } else {
-        Get.snackbar('Invalid QR', 'QR payload is not recognized.', snackPosition: SnackPosition.BOTTOM);
-      }
-    } catch (e) {
-      // Not JSON — try simple match
-      final controller = Get.find<HomeController>();
-      final order = controller.activeLoanOrder;
-      if (order != null && raw.contains(order.loanId)) {
-        controller.recordLoanPaymentSuccess(order: order, amount: order.remainingAmount);
-        Get.snackbar('Payment Success', 'Loan payment was recorded.', snackPosition: SnackPosition.BOTTOM);
-        Get.back();
-        return;
-      }
-
-      Get.snackbar('Scan Result', 'Scanned: $raw', snackPosition: SnackPosition.BOTTOM);
+    final retry =
+        await _showFailureModal('The QR code is missing required loan fields.');
+    if (retry && mounted) {
+      await _startScan();
     }
   }
 
@@ -102,23 +235,17 @@ class _QrScannerPageState extends State<QrScannerPage> {
         title: const Text('Scan QR'),
       ),
       body: Center(
-        child: _scanning
-            ? const CircularProgressIndicator()
-            : _result == null
-                ? const Text('Ready to scan', style: TextStyle(color: Colors.white))
-                : SingleChildScrollView(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: [
-                        Text('Result: $_result', style: const TextStyle(color: Colors.white)),
-                        const SizedBox(height: 12),
-                        ElevatedButton(
-                          onPressed: _startScan,
-                          child: const Text('Try Again'),
-                        ),
-                      ],
-                    ),
-                  ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (_scanning) const CircularProgressIndicator(),
+            const SizedBox(height: 14),
+            Text(
+              _scanning ? 'Importing Psosyo QR...' : 'Opening scanner...',
+              style: const TextStyle(color: Colors.white),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -66,7 +66,7 @@ class HomeScreen extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             const Text(
-                              'Pay with Psosyo Credits',
+                              'Scan QR with Psosyo',
                               style: TextStyle(
                                 color: Color(0xFF6B3DF0),
                                 fontSize: 17,
@@ -236,6 +236,7 @@ class HomeScreen extends StatelessWidget {
                         amount: controller.transactionHistory[index].amount,
                         sign: controller.transactionHistory[index].sign,
                         status: controller.transactionHistory[index].status,
+                        logoAsset: controller.transactionHistory[index].logoAsset,
                         compact: true,
                       ),
                       if (index != controller.transactionHistory.length - 1)
