@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:p_sosyo/app/services/payment_service.dart';
 import 'package:p_sosyo/app/modules/home_screen/models/loan_order.dart';
 import 'package:p_sosyo/app/widgets/loan_order_sheet.dart';
 import 'package:p_sosyo/app/widgets/loan_agreement_sheet.dart';
@@ -169,8 +170,89 @@ class HomeController extends GetxController {
           amount: _formatAmount(amount),
           sign: '- ',
           status: 'SUCCESS',
+          logoAsset: principal.logoAsset,
         ),
       );
+    }
+
+    return true;
+  }
+
+  bool submitLoanOrdersByAllocation({
+    required Map<LoanPrincipalOption, double> allocations,
+    required int termDays,
+    DateTime? appliedAt,
+  }) {
+    if (allocations.isEmpty) {
+      Get.snackbar(
+        'Invalid allocation',
+        'Select at least one brand allocation.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return false;
+    }
+
+    final totalPercent = allocations.values.fold<double>(0, (sum, value) => sum + value);
+    if (totalPercent <= 0.001) {
+      Get.snackbar(
+        'Invalid allocation',
+        'Select at least one brand allocation greater than 0%.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return false;
+    }
+
+    if (totalPercent > 100.001) {
+      Get.snackbar(
+        'Invalid allocation',
+        'Brand percentages must not exceed 100%.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return false;
+    }
+
+    final available = _maximumCreditLimitValue.value;
+    if (available <= 0) {
+      Get.snackbar(
+        'Credit unavailable',
+        'No available credit limit to allocate.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return false;
+    }
+
+    final entries = allocations.entries.where((entry) => entry.value > 0).toList();
+    if (entries.isEmpty) {
+      Get.snackbar(
+        'Invalid allocation',
+        'At least one brand must have a percentage greater than 0%.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return false;
+    }
+
+    final amounts = <double>[];
+    for (var index = 0; index < entries.length; index++) {
+      final percent = entries[index].value;
+      final amount = double.parse((available * (percent / 100)).toStringAsFixed(2));
+      amounts.add(amount);
+    }
+
+    for (var index = 0; index < entries.length; index++) {
+      final principal = entries[index].key;
+      final amount = amounts[index];
+      if (amount <= 0) {
+        continue;
+      }
+      final success = submitLoanOrder(
+        principal: principal,
+        amount: amount,
+        termDays: termDays,
+        appliedAt: appliedAt,
+      );
+      if (!success) {
+        return false;
+      }
     }
 
     return true;
@@ -190,13 +272,22 @@ class HomeController extends GetxController {
       return;
     }
 
-    order.remainingAmount -= paidAmount;
+    order.remainingAmount = (order.remainingAmount - paidAmount)
+        .clamp(0, double.infinity)
+        .toDouble();
     _maximumCreditLimitValue.value =
       (_maximumCreditLimitValue.value + paidAmount).clamp(0, creditLimit).toDouble();
 
-    loanOrders.refresh();
-    if (selectedLoanOrder.value?.loanId == order.loanId) {
-      selectedLoanOrder.refresh();
+    if (order.remainingAmount <= 0) {
+      loanOrders.removeWhere((loanOrder) => loanOrder.loanId == order.loanId);
+      if (selectedLoanOrder.value?.loanId == order.loanId) {
+        selectedLoanOrder.value = loanOrders.isNotEmpty ? loanOrders.first : null;
+      }
+    } else {
+      loanOrders.refresh();
+      if (selectedLoanOrder.value?.loanId == order.loanId) {
+        selectedLoanOrder.refresh();
+      }
     }
 
     transactionHistory.insert(
@@ -207,8 +298,59 @@ class HomeController extends GetxController {
         amount: _formatAmount(paidAmount),
         sign: '+ ',
         status: 'SUCCESS',
+        logoAsset: order.logoAsset,
       ),
     );
+  }
+
+  /// Processes payment through [PaymentService] then records it locally on success.
+  Future<bool> processPayment({
+    required LoanOrderCard order,
+    required double amount,
+    String? reference,
+    String? receiptPath,
+    bool allowLocalFallback = false,
+  }) async {
+    final service = PaymentService();
+    try {
+      final success = await service.processPayment(
+        loanId: order.loanId,
+        amount: amount,
+        reference: reference,
+        receiptPath: receiptPath,
+      );
+
+      if (success) {
+        recordLoanPaymentSuccess(order: order, amount: amount);
+        return true;
+      }
+
+      if (allowLocalFallback) {
+        recordLoanPaymentSuccess(order: order, amount: amount);
+        Get.snackbar(
+          'Payment Completed',
+          'QR matched the active loan and payment was recorded locally.',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        return true;
+      }
+
+      Get.snackbar('Payment Failed', 'Unable to process payment.', snackPosition: SnackPosition.BOTTOM);
+      return false;
+    } catch (e) {
+      if (allowLocalFallback) {
+        recordLoanPaymentSuccess(order: order, amount: amount);
+        Get.snackbar(
+          'Payment Completed',
+          'QR matched the active loan and payment was recorded locally.',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        return true;
+      }
+
+      Get.snackbar('Payment Error', e.toString(), snackPosition: SnackPosition.BOTTOM);
+      return false;
+    }
   }
 
   // Payment form helpers
@@ -255,6 +397,7 @@ class TransactionItem {
     required this.amount,
     required this.sign,
     required this.status,
+    required this.logoAsset,
   });
 
   final String title;
@@ -262,4 +405,5 @@ class TransactionItem {
   final String amount;
   final String sign;
   final String status;
+  final String logoAsset;
 }

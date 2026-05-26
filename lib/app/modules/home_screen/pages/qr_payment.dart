@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:p_sosyo/app/modules/home_screen/controllers/home_controller.dart';
@@ -7,12 +8,15 @@ import 'package:p_sosyo/app/utils/peso_formatter.dart';
 import 'package:p_sosyo/app/utils/themes/theme_colors.dart';
 import 'package:p_sosyo/app/widgets/psosyo_app_bar.dart';
 import 'package:p_sosyo/app/widgets/dashed_line.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
-class QrPaymentPage extends GetView<HomeController> {
+class QrPaymentPage extends StatelessWidget {
   const QrPaymentPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final controller = Get.find<HomeController>();
+    
     return Scaffold(
       backgroundColor: const Color(0xFFF6F6F8),
       appBar: const PsosyoAppBar(
@@ -58,19 +62,39 @@ class QrPaymentPage extends GetView<HomeController> {
               ),
               child: Column(
                 children: [
-                  // QR placeholder
                   Container(
                     height: 220,
                     decoration: BoxDecoration(
                       color: const Color(0xFFF8F8FA),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Center(
-                      child: Icon(
-                        Icons.qr_code,
-                        size: 140,
-                        color: Colors.black54,
-                      ),
+                    child: Center(
+                      child: Obx(() {
+                        final payload = jsonEncode({
+                          'type': 'psosyo_payment_test',
+                          'loanId': controller.loanId,
+                          'amount': controller.orderedAmount,
+                          'name': _firstNameOnly(_currentName()),
+                        });
+
+                        return QrImageView(
+                          data: payload,
+                          version: QrVersions.auto,
+                          size: 180,
+                          backgroundColor: Colors.white,
+                          padding: const EdgeInsets.all(12),
+                        );
+                      }),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'Test QR: ${controller.loanId}',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF8F949F),
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                   const SizedBox(height: 14),
@@ -184,7 +208,7 @@ class QrPaymentPage extends GetView<HomeController> {
         child: SizedBox(
           height: 68,
           child: ElevatedButton(
-            onPressed: () => Get.back(),
+            onPressed: () => Get.toNamed('/home'),
             style: AppThemes.primaryButtonStyle,
             child: const Text(
               'Back to Home',
@@ -206,7 +230,7 @@ Widget _buildNameWidget() {
   if (Get.isRegistered<AboutYourselfController>()) {
     return GetBuilder<AboutYourselfController>(
       builder: (c) {
-        final text = c.fullnameController.text.trim();
+        final text = _firstNameOnly(c.fullnameController.text);
         return Text(
           text.isNotEmpty ? 'Hello, $text' : 'Hello, User',
           style: const TextStyle(
@@ -223,9 +247,9 @@ Widget _buildNameWidget() {
   if (Get.isRegistered<IdVerificationService>()) {
     final idService = Get.find<IdVerificationService>();
     return Obx(() {
-      final scanned = idService.scannedName.value;
+      final scanned = _firstNameOnly(idService.scannedName.value ?? '');
       return Text(
-        scanned != null && scanned.isNotEmpty ? 'Hello, $scanned' : 'Hello, User',
+        scanned.isNotEmpty ? 'Hello, $scanned' : 'Hello, User',
         style: const TextStyle(
           fontSize: 26,
           fontWeight: FontWeight.w800,
@@ -244,4 +268,25 @@ Widget _buildNameWidget() {
       color: Color(0xFF2F333A),
     ),
   );
+}
+
+String _firstNameOnly(String value) {
+  final trimmed = value.trim();
+  if (trimmed.isEmpty) {
+    return '';
+  }
+
+  return trimmed.split(RegExp(r'\s+')).first;
+}
+
+String _currentName() {
+  if (Get.isRegistered<AboutYourselfController>()) {
+    return Get.find<AboutYourselfController>().fullnameController.text;
+  }
+
+  if (Get.isRegistered<IdVerificationService>()) {
+    return Get.find<IdVerificationService>().scannedName.value ?? '';
+  }
+
+  return '';
 }

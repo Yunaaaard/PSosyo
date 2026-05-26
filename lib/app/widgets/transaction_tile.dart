@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:p_sosyo/app/utils/peso_formatter.dart';
 
 class TransactionTile extends StatelessWidget {
   const TransactionTile({
@@ -10,6 +8,7 @@ class TransactionTile extends StatelessWidget {
     required this.amount,
     required this.sign,
     required this.status,
+    required this.logoAsset,
     this.compact = false,
   }) : assert(status == 'SUCCESS', 'TransactionTile only accepts SUCCESS status');
 
@@ -18,16 +17,33 @@ class TransactionTile extends StatelessWidget {
   final String amount;
   final String sign;
   final String status;
+  final String logoAsset;
   final bool compact;
+
+  String get _signedPlainAmount {
+    final cleaned = amount.replaceAll(',', '').trim();
+    final parsed = double.tryParse(cleaned);
+
+    String plainAmount;
+    if (parsed == null) {
+      plainAmount = cleaned;
+    } else if (parsed % 1 == 0) {
+      plainAmount = parsed.toInt().toString();
+    } else {
+      plainAmount = parsed
+          .toStringAsFixed(2)
+          .replaceFirst(RegExp(r'0+$'), '')
+          .replaceFirst(RegExp(r'\.$'), '');
+    }
+
+    return '${sign.trim()}$plainAmount';
+  }
 
   @override
   Widget build(BuildContext context) {
-    const assetName = 'assets/icons/success.svg';
-    const bgColor = Color(0xFFD6F5E5);
     const statusColor = Color(0xFF15B66D);
 
-    final double leadSize = compact ? 30 : 72;
-    final double iconSize = compact ? 15 : 28;
+    final double leadSize = compact ? 36 : 58;
     final double titleSize = compact ? 15 : 22;
     final double dateSize = compact ? 15 : 18;
     final double amountSize = compact ? 15 : 21;
@@ -45,16 +61,18 @@ class TransactionTile extends StatelessWidget {
             width: leadSize,
             height: leadSize,
             decoration: BoxDecoration(
-              color: bgColor,
-              shape: BoxShape.circle,
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(compact ? 9 : 12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: compact ? 5 : 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
-            child: Center(
-              child: SvgPicture.asset(
-                assetName,
-                width: iconSize,
-                height: iconSize,
-              ),
-            ),
+            padding: EdgeInsets.all(compact ? 5 : 8),
+            child: Image.asset(logoAsset, fit: BoxFit.contain),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -85,24 +103,13 @@ class TransactionTile extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    sign,
-                    style: const TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF464955),
-                    ),
-                  ),
-                  PesoFormatter.buildPesoText(
-                    amount: amount,
-                    fontSize: amountSize,
-                    fontWeight: FontWeight.w500,
-                    color: const Color(0xFF464955),
-                  ),
-                ],
+              Text(
+                _signedPlainAmount,
+                style: TextStyle(
+                  fontSize: amountSize,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF464955),
+                ),
               ),
               const SizedBox(height: 8),
               Text(
