@@ -11,4 +11,5 @@ class AppRoutes {
   static const String loanOffer = '/loan-offer';
   static const String loanSuccessful = '/loan-successful';
   static const String homeScreen = '/home';
+  static const String qrPayment = '/qr-payment';
 }
