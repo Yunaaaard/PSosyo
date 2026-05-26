@@ -2,7 +2,6 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/liveness_controller.dart';
-import '../models/liveness_models.dart';
 import 'package:p_sosyo/app/widgets/countdown_badge.dart';
 import 'package:p_sosyo/app/widgets/challenge_pills.dart';
 import 'package:p_sosyo/app/widgets/instruction_card.dart';
@@ -13,22 +12,20 @@ class LivenessVerificationPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ctrl = Get.isRegistered<LivenessController>()
-        ? Get.find<LivenessController>()
-        : Get.put(LivenessController());
-
-    return Obx(() => Scaffold(
-          backgroundColor: Colors.black,
-          body: SafeArea(
-            child: ctrl.cameraController != null && ctrl.cameraInitialized.value
-                ? _buildLivenessUI(ctrl)
-                : const Center(child: CircularProgressIndicator(color: Colors.white)),
-          ),
-        ));
+    return GetBuilder<LivenessController>(
+      builder: (ctrl) => Scaffold(
+        backgroundColor: Colors.black,
+        body: SafeArea(
+          child: ctrl.cameraController != null && ctrl.cameraInitialized.value
+              ? _buildLivenessUI(ctrl)
+              : const Center(child: CircularProgressIndicator(color: Colors.white)),
+        ),
+      ),
+    );
   }
 
   Widget _buildLivenessUI(LivenessController ctrl) {
-    return Stack(
+    return Obx(() => Stack(
       fit: StackFit.expand,
       children: [
         CameraPreview(ctrl.cameraController!),
@@ -42,7 +39,7 @@ class LivenessVerificationPage extends StatelessWidget {
             children: [
               IconButton(
                 icon: const Icon(Icons.close, color: Colors.white, size: 28),
-                onPressed: () => Navigator.of(Get.context!).pop(null),
+                onPressed: () => Get.back(result: null),
               ),
               if (!ctrl.timedOut.value) CountdownBadge(seconds: ctrl.secondsLeft.value),
             ],
@@ -77,7 +74,7 @@ class LivenessVerificationPage extends StatelessWidget {
           ),
         ),
       ],
-    );
+    ));
   }
 }
 

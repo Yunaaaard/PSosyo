@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:p_sosyo/app/modules/check_eligiblity/pages/liveness_verification_page.dart';
+import 'package:p_sosyo/app/modules/check_eligiblity/bindings/liveness_binding.dart';
 import '../models/liveness_models.dart';
 
 class SelfieVerificationController extends GetxController {
@@ -16,7 +17,8 @@ class SelfieVerificationController extends GetxController {
     // Navigate to LivenessVerificationPage and await the result.
     // Returns a LivenessResult with an imagePath on success, or null on cancel/failure.
     final result = await Get.to<LivenessResult?>(
-      () => const LivenessVerificationPage(),
+      () => LivenessVerificationPage(),
+      binding: LivenessBinding(),
     );
 
     if (result != null) {

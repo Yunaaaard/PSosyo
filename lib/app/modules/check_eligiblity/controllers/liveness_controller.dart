@@ -1,29 +1,25 @@
 import 'dart:async';
-import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/widgets.dart';
-
 import 'package:camera/camera.dart';
 import 'package:get/get.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../models/liveness_models.dart';
+import '../../../services/camera_service.dart';
+import '../../../services/face_detection_service.dart';
 
+/// Orchestrates the liveness verification flow.
+/// Coordinates camera service, face detection service, and challenge logic.
+/// Follows GetX best practice: controller manages business logic, not infrastructure.
 class LivenessController extends GetxController with WidgetsBindingObserver {
-  // Camera
-  CameraController? _cameraController;
-  CameraController? get cameraController => _cameraController;
-  final cameraInitialized = false.obs;
+  // Services (injected via binding)
+  final CameraService cameraService;
+  final FaceDetectionService faceDetectionService;
 
-  // ML Kit
-  final FaceDetector _faceDetector = FaceDetector(
-    options: FaceDetectorOptions(
-      enableClassification: true,
-      performanceMode: FaceDetectorMode.accurate,
-    ),
-  );
-  var _isProcessingFrame = false;
+  // For convenience
+  CameraController? get cameraController => cameraService.cameraController;
+  Rx<bool> get cameraInitialized => cameraService.isInitialized;
 
   // Challenge state
   final challenges = <Challenge>[Challenge.movement, Challenge.smile];
@@ -41,6 +37,13 @@ class LivenessController extends GetxController with WidgetsBindingObserver {
   Timer? _timeoutTimer;
   final secondsLeft = 40.obs;
 
+  var _isProcessingFrame = false;
+
+  LivenessController({
+    required this.cameraService,
+    required this.faceDetectionService,
+  });
+
   @override
   void onInit() {
     super.onInit();
@@ -53,51 +56,40 @@ class LivenessController extends GetxController with WidgetsBindingObserver {
   void onClose() {
     WidgetsBinding.instance.removeObserver(this);
     _timeoutTimer?.cancel();
-    _cameraController?.dispose();
-    _faceDetector.close();
+    cameraService.dispose();
     super.onClose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (_cameraController == null || !_cameraController!.value.isInitialized) return;
+    if (cameraController == null || !cameraInitialized.value) return;
     if (state == AppLifecycleState.inactive) {
-      _cameraController?.dispose();
+      cameraService.dispose();
     } else if (state == AppLifecycleState.resumed) {
       _initCamera();
     }
   }
 
   Future<void> _initCamera() async {
-    final cameras = await availableCameras();
-    final frontCamera = cameras.firstWhere(
-      (c) => c.lensDirection == CameraLensDirection.front,
-      orElse: () => cameras.first,
-    );
-
-    final controller = CameraController(
-      frontCamera,
-      ResolutionPreset.medium,
-      enableAudio: false,
-      imageFormatGroup: Platform.isAndroid
-          ? ImageFormatGroup.nv21
-          : ImageFormatGroup.bgra8888,
-    );
-
-    await controller.initialize();
-    _cameraController = controller;
-    cameraInitialized.value = true;
-
-    controller.startImageStream(_processFrame);
+    try {
+      await cameraService.initializeCamera();
+      cameraService.startImageStream(_processFrame);
+      update(); // Notify GetBuilder that camera is ready
+    } catch (e) {
+      statusMessage.value = 'Failed to initialize camera';
+      update();
+    }
   }
 
   void _startTimeout() {
     _timeoutTimer = Timer.periodic(const Duration(seconds: 1), (t) {
       secondsLeft.value--;
+      update(); // Notify GetBuilder of countdown change
       if (secondsLeft.value <= 0) {
         t.cancel();
         timedOut.value = true;
-        _cameraController?.stopImageStream();
+        cameraService.stopImageStream();
+        update();
       }
     });
   }
@@ -107,10 +99,10 @@ class LivenessController extends GetxController with WidgetsBindingObserver {
     _isProcessingFrame = true;
 
     try {
-      final inputImage = _buildInputImage(image);
-      if (inputImage == null) return;
+      final camera = cameraController?.description;
+      if (camera == null) return;
 
-      final faces = await _faceDetector.processImage(inputImage);
+      final faces = await faceDetectionService.detectFaces(image, camera);
       if (faces.isEmpty) {
         faceDetected.value = false;
         statusMessage.value = 'No face detected — move closer';
@@ -123,33 +115,6 @@ class LivenessController extends GetxController with WidgetsBindingObserver {
     } finally {
       _isProcessingFrame = false;
     }
-  }
-
-  InputImage? _buildInputImage(CameraImage image) {
-    final camera = _cameraController?.description;
-    if (camera == null) return null;
-
-    final rotation = InputImageRotationValue.fromRawValue(camera.sensorOrientation);
-    if (rotation == null) return null;
-
-    final format = InputImageFormatValue.fromRawValue(image.format.raw);
-    if (format == null) return null;
-
-    final bytesBuilder = BytesBuilder();
-    for (final plane in image.planes) {
-      bytesBuilder.add(plane.bytes);
-    }
-    final bytes = bytesBuilder.toBytes();
-
-    return InputImage.fromBytes(
-      bytes: bytes,
-      metadata: InputImageMetadata(
-        size: Size(image.width.toDouble(), image.height.toDouble()),
-        rotation: rotation,
-        format: format,
-        bytesPerRow: image.planes.first.bytesPerRow,
-      ),
-    );
   }
 
   void _evaluateChallenge(Face face) {
@@ -179,6 +144,7 @@ class LivenessController extends GetxController with WidgetsBindingObserver {
 
   void _advanceChallenge() {
     challengeComplete.value = true;
+    update();
     Future.delayed(const Duration(milliseconds: 600), () {
       if (isClosed) return;
       if (currentChallengeIndex.value < challenges.length - 1) {
@@ -186,6 +152,7 @@ class LivenessController extends GetxController with WidgetsBindingObserver {
         challengeComplete.value = false;
         movementStarted.value = false;
         statusMessage.value = 'Great! Next challenge…';
+        update();
       } else {
         _captureAndFinish();
       }
@@ -194,11 +161,12 @@ class LivenessController extends GetxController with WidgetsBindingObserver {
 
   Future<void> _captureAndFinish() async {
     succeeded.value = true;
+    update();
     _timeoutTimer?.cancel();
 
     try {
-      await _cameraController?.stopImageStream();
-      final xfile = await _cameraController?.takePicture();
+      await cameraService.stopImageStream();
+      final xfile = await cameraService.takePicture();
       if (xfile != null) {
         Get.back(result: LivenessResult(imagePath: xfile.path));
       }
@@ -218,7 +186,8 @@ class LivenessController extends GetxController with WidgetsBindingObserver {
     secondsLeft.value = 40;
     faceDetected.value = false;
     statusMessage.value = 'Position your face in the circle';
+    update();
     _startTimeout();
-    _cameraController?.startImageStream(_processFrame);
+    cameraService.startImageStream(_processFrame);
   }
 }
