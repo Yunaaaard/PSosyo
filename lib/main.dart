@@ -24,6 +24,12 @@ class MyApp extends StatelessWidget {
       theme: AppThemes.lightTheme,
       initialRoute: AppRoutes.dashboard,
       getPages: AppPages.pages,
+      builder: (context, child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(textScaleFactor: .8),
+          child: child!,
+        );
+      },
     );
   }
 }

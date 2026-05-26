@@ -124,7 +124,7 @@ class LivenessController extends GetxController with WidgetsBindingObserver {
     if (challenge == Challenge.movement) {
       final yaw = face.headEulerAngleY ?? 0.0;
       final pitch = face.headEulerAngleX ?? 0.0;
-      statusMessage.value = '👤 Nod or look left/right';
+      statusMessage.value = ' Nod or look left/right';
 
       final moved = yaw.abs() > 18.0 || pitch.abs() > 12.0;
       final neutral = yaw.abs() < 10.0 && pitch.abs() < 8.0;
@@ -137,7 +137,7 @@ class LivenessController extends GetxController with WidgetsBindingObserver {
       }
     } else if (challenge == Challenge.smile) {
       final smileProb = face.smilingProbability ?? 0.0;
-      statusMessage.value = '😊 Smile at the camera';
+      statusMessage.value = ' Smile at the camera';
       if (smileProb > 0.75) _advanceChallenge();
     }
   }
