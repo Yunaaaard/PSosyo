@@ -7,6 +7,11 @@ class AboutYourselfController extends GetxController {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController dateOfBirthController = TextEditingController();
   final TextEditingController addressController = TextEditingController();
+  // Separated address fields
+  final TextEditingController streetController = TextEditingController();
+  final TextEditingController postalCodeController = TextEditingController();
+  final TextEditingController cityController = TextEditingController();
+  final TextEditingController countryController = TextEditingController();
 
   var selectedStatus = Rx<String?>(null);
   var selectedGender = Rx<String?>(null);
@@ -29,6 +34,10 @@ class AboutYourselfController extends GetxController {
     emailController.addListener(_syncFormState);
     dateOfBirthController.addListener(_syncFormState);
     addressController.addListener(_syncFormState);
+    streetController.addListener(_syncFormState);
+    postalCodeController.addListener(_syncFormState);
+    cityController.addListener(_syncFormState);
+    countryController.addListener(_syncFormState);
 
     // Check if scanned name is available from ID scanning
     final scannedName = _idVerificationService.getScannedName();
@@ -70,12 +79,18 @@ class AboutYourselfController extends GetxController {
   }
 
   void _syncFormState() {
+    // Require all address subfields instead of the single address text
+    final addressFilled = streetController.text.trim().isNotEmpty &&
+      postalCodeController.text.trim().isNotEmpty &&
+      cityController.text.trim().isNotEmpty &&
+      countryController.text.trim().isNotEmpty;
+
     isFormComplete.value = fullnameController.text.trim().isNotEmpty &&
-        emailController.text.trim().isNotEmpty &&
-        dateOfBirthController.text.trim().isNotEmpty &&
-        selectedStatus.value != null &&
-        selectedGender.value != null &&
-        addressController.text.trim().isNotEmpty;
+      emailController.text.trim().isNotEmpty &&
+      dateOfBirthController.text.trim().isNotEmpty &&
+      selectedStatus.value != null &&
+      selectedGender.value != null &&
+      addressFilled;
     update();
   }
 
@@ -145,6 +160,10 @@ class AboutYourselfController extends GetxController {
     emailController.dispose();
     dateOfBirthController.dispose();
     addressController.dispose();
+    streetController.dispose();
+    postalCodeController.dispose();
+    cityController.dispose();
+    countryController.dispose();
     super.onClose();
   }
 }

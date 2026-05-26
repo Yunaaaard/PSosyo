@@ -18,16 +18,29 @@ class PsosyoEligibilityPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Center(
-                child: Text(
-                  'PSOSYO',
-                  style: TextStyle(
-                    color: colors.primaryPurple,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.6,
+              Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => Get.back(),
+                    child: Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      color: colors.titleGrey,
+                      size: 22,
+                    ),
                   ),
-                ),
+                  const Spacer(),
+                  Text(
+                    'PSOSYO',
+                    style: TextStyle(
+                      color: colors.primaryPurple,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.6,
+                    ),
+                  ),
+                  const Spacer(),
+                  const SizedBox(width: 22),
+                ],
               ),
               const SizedBox(height: 28),
               Text(

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'app/routes/app_pages.dart';
-import 'app/routes/app_routes.dart';
+import 'app/modules/landing_page/pages/landing_page.dart';
 import 'app/services/user_phone_service.dart';
 import 'app/utils/themes/theme_colors.dart';
 
@@ -22,7 +22,16 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'PSosyo',
       theme: AppThemes.lightTheme,
-      initialRoute: AppRoutes.homeScreen,
+      home: const LandingPage(),
+      builder: (context, child) {
+        final mediaQuery = MediaQuery.of(context);
+        return MediaQuery(
+          data: mediaQuery.copyWith(
+            textScaler: const TextScaler.linear(0.7),
+          ),
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
       getPages: AppPages.pages,
     );
   }

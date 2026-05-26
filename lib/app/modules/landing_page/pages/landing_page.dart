@@ -19,8 +19,8 @@ class LandingPage extends StatelessWidget {
               children: [
                 Image.asset(
                   'assets/images/PSOSYO-LOGO.png',
-                  width: 300,
-                  height: 300,
+                  width: 200,
+                  height: 200,
                 ),
                 const SizedBox(height: 5),
                 const Text(
@@ -29,9 +29,9 @@ class LandingPage extends StatelessWidget {
                     fontFamily: 'IT TENOVIANA DEMO',
                     color: Colors.white,
                     fontStyle: FontStyle.italic,
-                    fontSize: 60,
+                    fontSize: 24,
                     fontWeight: FontWeight.w400,
-                    letterSpacing: 10,
+                    letterSpacing: 4,
                   ),
                   textAlign: TextAlign.center,
                 ),

@@ -417,7 +417,7 @@ class AboutYourselfPage extends StatelessWidget {
                           ),
                           const SizedBox(height: 24),
 
-                          // Permanent Address
+                          // Permanent Address - separated fields
                           Text(
                             'Permanent Address',
                             style: TextStyle(
@@ -427,29 +427,39 @@ class AboutYourselfPage extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 12),
-                          TextField(
-                            controller: controller.addressController,
-                            maxLines: 4,
-                            decoration: InputDecoration(
-                              hintText: 'Enter your permanent address',
-                              hintStyle: TextStyle(color: colors.titleGrey),
-                              filled: true,
-                              fillColor: Colors.white,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(
-                                    color: Color(0xFFE3E5EA), width: 1.2),
+                          _LabeledTextField(
+                            label: 'Street / House number',
+                            controller: controller.streetController,
+                            hintText: 'e.g. 1234 Elm St',
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(
+                                flex: 1,
+                                child: _LabeledTextField(
+                                  label: 'Postal code',
+                                  controller: controller.postalCodeController,
+                                  hintText: 'e.g. 1000',
+                                  keyboardType: TextInputType.number,
+                                ),
                               ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(
-                                    color: Color(0xFFE3E5EA), width: 1.2),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                flex: 2,
+                                child: _LabeledTextField(
+                                  label: 'City',
+                                  controller: controller.cityController,
+                                  hintText: 'e.g. Manila',
+                                ),
                               ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 16),
-                            ),
-                            style:
-                                TextStyle(color: colors.darkText, fontSize: 18),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          _LabeledTextField(
+                            label: 'Country',
+                            controller: controller.countryController,
+                            hintText: 'e.g. Philippines',
                           ),
                           const SizedBox(height: 24),
 
@@ -491,6 +501,65 @@ class AboutYourselfPage extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _LabeledTextField extends StatelessWidget {
+  final String label;
+  final TextEditingController controller;
+  final String? hintText;
+  final TextInputType? keyboardType;
+  final int maxLines;
+
+  const _LabeledTextField({
+    Key? key,
+    required this.label,
+    required this.controller,
+    this.hintText,
+    this.keyboardType,
+    this.maxLines = 1,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).extension<PsosyoThemeColors>() ?? AppColors.psosyo;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            color: colors.darkText,
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: controller,
+          keyboardType: keyboardType,
+          maxLines: maxLines,
+          textInputAction: TextInputAction.next,
+          decoration: InputDecoration(
+            hintText: hintText,
+            hintStyle: TextStyle(color: colors.titleGrey),
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFE3E5EA), width: 1.2),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFE3E5EA), width: 1.2),
+            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          ),
+          style: TextStyle(color: colors.darkText, fontSize: 18),
+        ),
+      ],
     );
   }
 }
