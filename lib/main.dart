@@ -22,17 +22,17 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'PSosyo',
       theme: AppThemes.lightTheme,
-      home: const LandingPage(),
+      initialRoute: AppRoutes.dashboard,
+      getPages: AppPages.pages,
       builder: (context, child) {
         final mediaQuery = MediaQuery.of(context);
         return MediaQuery(
           data: mediaQuery.copyWith(
-            textScaler: const TextScaler.linear(0.7),
+            textScaler: const TextScaler.linear(0.85),
           ),
           child: child ?? const SizedBox.shrink(),
         );
       },
-      getPages: AppPages.pages,
     );
   }
 }

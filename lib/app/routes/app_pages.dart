@@ -19,6 +19,7 @@ import 'package:p_sosyo/app/modules/loan_offer/pages/loan_successful.dart';
 import 'package:p_sosyo/app/widgets/verifying_process.dart';
 import 'package:p_sosyo/app/modules/home_screen/bindings/home_binding.dart';
 import 'package:p_sosyo/app/modules/home_screen/pages/home_screen.dart';
+import 'package:p_sosyo/app/modules/home_screen/pages/qr_payment.dart';
 import '../modules/register_number/bindings/register_binding.dart';
 import 'app_routes.dart';
 
@@ -80,6 +81,10 @@ class AppPages {
       name: AppRoutes.homeScreen,
       page: () => const HomeScreen(),
       binding: HomeBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.qrPayment,
+      page: () => const QrPaymentPage(),
     ),
   ];
 }

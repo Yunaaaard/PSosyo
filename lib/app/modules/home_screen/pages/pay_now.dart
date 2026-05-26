@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:p_sosyo/app/modules/home_screen/controllers/home_controller.dart';
+import 'package:p_sosyo/app/routes/app_routes.dart';
 import 'package:p_sosyo/app/utils/peso_formatter.dart';
 import 'package:p_sosyo/app/utils/themes/theme_colors.dart';
 import 'package:p_sosyo/app/widgets/dashed_line.dart';
@@ -15,7 +16,7 @@ class PayNowPage extends GetView<HomeController> {
     return Scaffold(
       backgroundColor: const Color(0xFFF6F6F8),
       appBar: const PsosyoAppBar(
-        title: 'Loan Agreement Form',
+        title: 'Psosyo Pay',
         titleColor: Color(0xFF4B4F57),
         iconColor: Color(0xFFC7CCD4),
         titleFontSize: 20,
@@ -258,7 +259,7 @@ class PayNowPage extends GetView<HomeController> {
         child: SizedBox(
           height: 82,
           child: ElevatedButton(
-            onPressed: controller.payRemainingBalance,
+            onPressed: () => Get.toNamed(AppRoutes.qrPayment),
             style: AppThemes.primaryButtonStyle,
             child: const Text(
               'Pay Balance',
