@@ -6,6 +6,7 @@ import 'package:p_sosyo/app/utils/peso_formatter.dart';
 import 'package:p_sosyo/app/widgets/psosyo_app_bar.dart';
 import 'package:p_sosyo/app/widgets/transaction_tile.dart';
 import 'package:p_sosyo/app/widgets/psosyo_balance_card.dart';
+import 'package:p_sosyo/app/services/qr_scanner.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -51,36 +52,39 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 26),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 18, vertical: 18),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF0ECFF),
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text(
-                            'Pay with Psosyo Credits',
-                            style: TextStyle(
-                              color: Color(0xFF6B3DF0),
-                              fontSize: 17,
-                              fontWeight: FontWeight.w500,
+                    GestureDetector(
+                      onTap: () => Get.to(() => const QrScannerPage()),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 18, vertical: 18),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF0ECFF),
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text(
+                              'Pay with Psosyo Credits',
+                              style: TextStyle(
+                                color: Color(0xFF6B3DF0),
+                                fontSize: 17,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 10),
-                          SvgPicture.asset(
-                            'assets/icons/scanner.svg',
-                            width: 17,
-                            height: 17,
-                            colorFilter: const ColorFilter.mode(
-                              Color(0xFF6B3DF0),
-                              BlendMode.srcIn,
+                            const SizedBox(width: 10),
+                            SvgPicture.asset(
+                              'assets/icons/scanner.svg',
+                              width: 17,
+                              height: 17,
+                              colorFilter: const ColorFilter.mode(
+                                Color(0xFF6B3DF0),
+                                BlendMode.srcIn,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ],

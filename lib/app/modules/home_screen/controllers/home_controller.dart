@@ -15,6 +15,10 @@ class HomeController extends GetxController {
   final Rxn<LoanOrderCard> selectedLoanOrder = Rxn<LoanOrderCard>();
   final RxList<TransactionItem> transactionHistory = <TransactionItem>[].obs;
 
+  // Payment form state for QR payment page
+  final RxString paymentReference = ''.obs;
+  final Rxn<String> attachedReceiptPath = Rxn<String>();
+
   final List<LoanPrincipalOption> principalOptions = const [
     LoanPrincipalOption(
       title: 'Nestle',
@@ -205,6 +209,15 @@ class HomeController extends GetxController {
         status: 'SUCCESS',
       ),
     );
+  }
+
+  // Payment form helpers
+  void setPaymentReference(String value) {
+    paymentReference.value = value;
+  }
+
+  void attachReceipt(String? path) {
+    attachedReceiptPath.value = path;
   }
 
   void payRemainingBalance() {
