@@ -8,11 +8,13 @@ import 'package:p_sosyo/app/widgets/dashed_line.dart';
 import 'package:p_sosyo/app/widgets/psosyo_app_bar.dart';
 import 'package:p_sosyo/app/widgets/transaction_tile.dart';
 
-class PayNowPage extends GetView<HomeController> {
+class PayNowPage extends StatelessWidget {
   const PayNowPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final controller = Get.find<HomeController>();
+
     return Scaffold(
       backgroundColor: const Color(0xFFF6F6F8),
       appBar: const PsosyoAppBar(
@@ -240,8 +242,9 @@ class PayNowPage extends GetView<HomeController> {
                       title: controller.transactionHistory[index].title,
                       dateTime: controller.transactionHistory[index].dateTime,
                       amount: controller.transactionHistory[index].amount,
-                          sign: controller.transactionHistory[index].sign,
+                      sign: controller.transactionHistory[index].sign,
                       status: controller.transactionHistory[index].status,
+                      logoAsset: controller.transactionHistory[index].logoAsset,
                       compact: true,
                     ),
                     if (index != controller.transactionHistory.length - 1)

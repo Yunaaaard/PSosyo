@@ -236,6 +236,7 @@ class HomeScreen extends StatelessWidget {
                         amount: controller.transactionHistory[index].amount,
                         sign: controller.transactionHistory[index].sign,
                         status: controller.transactionHistory[index].status,
+                        logoAsset: controller.transactionHistory[index].logoAsset,
                         compact: true,
                       ),
                       if (index != controller.transactionHistory.length - 1)

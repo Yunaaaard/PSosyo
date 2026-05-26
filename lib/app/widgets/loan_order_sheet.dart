@@ -13,12 +13,9 @@ class LoanOrderSheet extends StatefulWidget {
 }
 
 class _LoanOrderSheetState extends State<LoanOrderSheet> {
-  final _amountController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
-
-  late LoanPrincipalOption _selectedPrincipal;
   late int _selectedTermDays;
   late DateTime _appliedAt;
+  late final List<double> _allocations;
 
   HomeController get _controller => Get.find<HomeController>();
 
@@ -27,15 +24,10 @@ class _LoanOrderSheetState extends State<LoanOrderSheet> {
   @override
   void initState() {
     super.initState();
-    _selectedPrincipal = _controller.principalOptions.first;
     _selectedTermDays = _termOptions.first;
-    _appliedAt = DateTime.now();
-  }
-
-  @override
-  void dispose() {
-    _amountController.dispose();
-    super.dispose();
+    final now = DateTime.now();
+    _appliedAt = DateTime(now.year, now.month, now.day);
+    _allocations = List<double>.filled(_controller.principalOptions.length, 0);
   }
 
   Future<void> _pickAppliedDate() async {
@@ -61,18 +53,55 @@ class _LoanOrderSheetState extends State<LoanOrderSheet> {
     });
   }
 
-  DateTime get _dueAt => _appliedAt.add(Duration(days: _selectedTermDays));
+  DateTime get _dueAt {
+    final now = DateTime.now();
+    final applied = DateTime(now.year, now.month, now.day);
+    return applied.add(Duration(days: _selectedTermDays));
+  }
+
+  double get _totalPercent =>
+      _allocations.fold<double>(0, (sum, value) => sum + value);
+
+  double get _availableCredit => _controller.availableCreditLimitValue;
+
+  void _onAllocationChanged(int index, double value) {
+    final otherTotal = _totalPercent - _allocations[index];
+    final maxForThis = (100 - otherTotal).clamp(0, 100).toDouble();
+    final clamped = value > maxForThis ? maxForThis : value;
+
+    setState(() {
+      _allocations[index] = clamped.roundToDouble();
+    });
+  }
+
+  String _amountForPercent(double percent) {
+    final amount = _availableCredit * (percent / 100);
+    return formatAmount(amount);
+  }
 
   void _submit() {
-    if (!_formKey.currentState!.validate()) {
+    if (_totalPercent <= 0.001) {
+      Get.snackbar(
+        'Invalid allocation',
+        'Select at least one brand allocation greater than 0%.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
       return;
     }
 
-    final amount = double.parse(_amountController.text.replaceAll(',', '').trim());
-    final success = _controller.submitLoanOrder(
-      principal: _selectedPrincipal,
-      amount: amount,
-      appliedAt: _appliedAt,
+    final allocations = <LoanPrincipalOption, double>{};
+    for (var index = 0; index < _controller.principalOptions.length; index++) {
+      final percent = _allocations[index];
+      if (percent > 0) {
+        allocations[_controller.principalOptions[index]] = percent;
+      }
+    }
+
+    final now = DateTime.now();
+    final appliedAt = DateTime(now.year, now.month, now.day);
+    final success = _controller.submitLoanOrdersByAllocation(
+      allocations: allocations,
+      appliedAt: appliedAt,
       termDays: _selectedTermDays,
     );
 
@@ -86,6 +115,8 @@ class _LoanOrderSheetState extends State<LoanOrderSheet> {
     final colors =
         Theme.of(context).extension<PsosyoThemeColors>() ?? AppColors.psosyo;
     final dueDateText = formatLoanDate(_dueAt);
+    final totalPercent = _totalPercent;
+    final allocatedAmount = _availableCredit * (totalPercent / 100);
 
     return FractionallySizedBox(
       heightFactor: 0.9,
@@ -139,82 +170,85 @@ class _LoanOrderSheetState extends State<LoanOrderSheet> {
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text(
-                          'Select principal',
-                          style: TextStyle(
-                            color: colors.darkText,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                          ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        'Brand allocation',
+                        style: TextStyle(
+                          color: colors.darkText,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
                         ),
-                        const SizedBox(height: 10),
-                        DropdownButtonFormField<LoanPrincipalOption>(
-                          value: _selectedPrincipal,
-                          items: _controller.principalOptions
-                              .map(
-                                (principal) => DropdownMenuItem<LoanPrincipalOption>(
-                                  value: principal,
-                                  child: Text(principal.title),
+                      ),
+                      const SizedBox(height: 10),
+                      Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: const Color(0xFFD8DBE2)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  'Total allocation',
+                                  style: TextStyle(
+                                    color: Color(0xFF6C7180),
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
-                              )
-                              .toList(),
-                          onChanged: (principal) {
-                            if (principal == null) return;
-                            setState(() {
-                              _selectedPrincipal = principal;
-                            });
-                          },
-                        ),
-                        const SizedBox(height: 18),
-                        Text(
-                          'Loan amount',
-                          style: TextStyle(
-                            color: colors.darkText,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        TextFormField(
-                          controller: _amountController,
-                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                          decoration: InputDecoration(
-                            hintText: 'Enter amount',
-                            prefixIconConstraints:
-                                const BoxConstraints(minWidth: 0, minHeight: 0),
-                            prefixIcon: Padding(
-                              padding: const EdgeInsets.only(left: 16, right: 8),
-                              child: Text.rich(
-                                TextSpan(
-                                  children: [
-                                    PesoFormatter.buildPesoSymbolSpan(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w600,
-                                      color: const Color(0xFF4B4F57),
-                                    ),
-                                  ],
+                                Text(
+                                  '${totalPercent.toStringAsFixed(0)}%',
+                                  style: TextStyle(
+                                    color: (totalPercent - 100).abs() < 0.001
+                                        ? const Color(0xFF1EA35B)
+                                        : const Color(0xFFEA4335),
+                                    fontWeight: FontWeight.w700,
+                                  ),
                                 ),
-                              ),
+                              ],
                             ),
-                          ),
-                          validator: (value) {
-                            final text = value?.replaceAll(',', '').trim() ?? '';
-                            final amount = double.tryParse(text);
-                            if (amount == null || amount <= 0) {
-                              return 'Enter a valid amount';
-                            }
-                            if (amount > _controller.availableCreditLimitValue) {
-                              return 'Amount must be 25,000 or below';
-                            }
-                            return null;
-                          },
+                            const SizedBox(height: 4),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  'Allocated amount',
+                                  style: TextStyle(
+                                    color: Color(0xFF9B9FA9),
+                                  ),
+                                ),
+                                PesoFormatter.buildPesoText(
+                                  amount: formatAmount(allocatedAmount),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  color: const Color(0xFF4B4F57),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            for (var index = 0;
+                                index < _controller.principalOptions.length;
+                                index++) ...[
+                              _BrandAllocationSlider(
+                                option: _controller.principalOptions[index],
+                                percentage: _allocations[index],
+                                computedAmount: _amountForPercent(_allocations[index]),
+                                onChanged: (value) =>
+                                    _onAllocationChanged(index, value),
+                              ),
+                              if (index != _controller.principalOptions.length - 1)
+                                const SizedBox(height: 10),
+                            ],
+                          ],
                         ),
-                        const SizedBox(height: 18),
+                      ),
+                      const SizedBox(height: 18),
                         Text(
                           'Payment schedule',
                           style: TextStyle(
@@ -251,30 +285,25 @@ class _LoanOrderSheetState extends State<LoanOrderSheet> {
                           ),
                         ),
                         const SizedBox(height: 10),
-                        InkWell(
-                          onTap: _pickAppliedDate,
-                          borderRadius: BorderRadius.circular(14),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: const Color(0xFFD8DBE2)),
-                            ),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    formatLoanDate(_appliedAt),
-                                    style: TextStyle(
-                                      color: colors.bodyGrey,
-                                      fontSize: 16,
-                                    ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: const Color(0xFFD8DBE2)),
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  formatLoanDate(DateTime.now()),
+                                  style: TextStyle(
+                                    color: colors.bodyGrey,
+                                    fontSize: 16,
                                   ),
                                 ),
-                                Icon(Icons.calendar_month_rounded, color: colors.titleGrey),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
                         const SizedBox(height: 18),
@@ -305,10 +334,10 @@ class _LoanOrderSheetState extends State<LoanOrderSheet> {
                         SizedBox(
                           height: 56,
                           child: ElevatedButton(
-                            onPressed: _submit,
+                          onPressed: totalPercent > 0.001 ? _submit : null,
                             style: AppThemes.primaryButtonStyle,
                             child: const Text(
-                              'Create Loan Order',
+                              'Create Loan Orders',
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w700,
@@ -317,14 +346,93 @@ class _LoanOrderSheetState extends State<LoanOrderSheet> {
                             ),
                           ),
                         ),
-                      ],
-                    ),
+                    ],
                   ),
                 ),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _BrandAllocationSlider extends StatelessWidget {
+  const _BrandAllocationSlider({
+    required this.option,
+    required this.percentage,
+    required this.computedAmount,
+    required this.onChanged,
+  });
+
+  final LoanPrincipalOption option;
+  final double percentage;
+  final String computedAmount;
+  final ValueChanged<double> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8F8FB),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                padding: const EdgeInsets.all(5),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Image.asset(option.logoAsset, fit: BoxFit.contain),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  option.title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF2D3038),
+                  ),
+                ),
+              ),
+              Text(
+                '${percentage.toStringAsFixed(0)}%',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF6B3DF0),
+                ),
+              ),
+            ],
+          ),
+          Slider(
+            value: percentage,
+            onChanged: onChanged,
+            min: 0,
+            max: 100,
+            divisions: 100,
+            activeColor: const Color(0xFF6B3DF0),
+          ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: Text(
+              'Amount: $computedAmount',
+              style: const TextStyle(
+                color: Color(0xFF6C7180),
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
