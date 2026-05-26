@@ -3,15 +3,18 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:p_sosyo/app/modules/home_screen/controllers/home_controller.dart';
 import 'package:p_sosyo/app/utils/peso_formatter.dart';
-import 'package:p_sosyo/app/widgets/dashed_line.dart';
 import 'package:p_sosyo/app/widgets/psosyo_app_bar.dart';
 import 'package:p_sosyo/app/widgets/transaction_tile.dart';
+import 'package:p_sosyo/app/widgets/psosyo_balance_card.dart';
+import 'package:p_sosyo/app/services/qr_scanner.dart';
 
-class HomeScreen extends GetView<HomeController> {
+class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final controller = Get.find<HomeController>();
+
     return Scaffold(
       backgroundColor: const Color(0xFFF6F6F8),
       appBar: const PsosyoAppBar(),
@@ -40,224 +43,164 @@ class HomeScreen extends GetView<HomeController> {
                       ),
                     ),
                     const SizedBox(height: 14),
-                    PesoFormatter.buildPesoText(
-                      amount: controller.maximumCreditLimit,
-                      fontSize: 44,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
+                    Obx(
+                      () => PesoFormatter.buildPesoText(
+                        amount: controller.maximumCreditLimit,
+                        fontSize: 44,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
                     ),
                     const SizedBox(height: 26),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 18, vertical: 18),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF0ECFF),
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text(
-                            'Pay with Psosyo Credits',
-                            style: TextStyle(
-                              color: Color(0xFF6B3DF0),
-                              fontSize: 17,
-                              fontWeight: FontWeight.w500,
+                    GestureDetector(
+                      onTap: () => Get.to(() => const QrScannerPage()),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 18, vertical: 18),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF0ECFF),
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text(
+                              'Pay with Psosyo Credits',
+                              style: TextStyle(
+                                color: Color(0xFF6B3DF0),
+                                fontSize: 17,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 10),
-                          SvgPicture.asset(
-                            'assets/icons/scanner.svg',
-                            width: 17,
-                            height: 17,
-                            colorFilter: const ColorFilter.mode(
-                              Color(0xFF6B3DF0),
-                              BlendMode.srcIn,
+                            const SizedBox(width: 10),
+                            SvgPicture.asset(
+                              'assets/icons/scanner.svg',
+                              width: 17,
+                              height: 17,
+                              colorFilter: const ColorFilter.mode(
+                                Color(0xFF6B3DF0),
+                                BlendMode.srcIn,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 18),
-              const Text(
-                'Psosyo Balance',
-                style: TextStyle(
-                  fontSize: 21,
-                  fontWeight: FontWeight.w500,
-                  color: Color(0xFF4B4F57),
-                ),
-              ),
-              const SizedBox(height: 13),
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(22),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
-                      blurRadius: 14,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
+              Obx(() {
+                final visibleCards = controller.showAllBalanceCards.value
+                    ? controller.loanOrders
+                    : controller.loanOrders.take(1).toList();
+
+                return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Fast Sosyo Nestle',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Color(0xFF8D8D95),
-                              ),
-                            ),
-                            SizedBox(height: 6),
-                            Text(
-                              '04-28-26  |  10:23',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Color(0xFF9D9DA6),
-                              ),
-                            ),
-                          ],
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              'AL-001NES',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Color(0xFF8D8D95),
-                              ),
-                            ),
-                            SizedBox(height: 6),
-                            Text(
-                              '05-04-26  |  10:23',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Color(0xFFFF4D4F),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    const DashedLine(),
-                    const SizedBox(height: 10),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text(
-                          'Repayment Progress',
+                          'Psosyo Balance',
                           style: TextStyle(
-                            fontSize: 13,
-                            color: Color(0xFF8C8C94),
+                            fontSize: 21,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF4B4F57),
                           ),
                         ),
-                        Text(
-                          controller.repaymentProgress,
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF6B3DF0),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(999),
-                      child: LinearProgressIndicator(
-                        value: controller.repaymentProgressValue,
-                        minHeight: 10,
-                        backgroundColor: const Color(0xFFE8E3FF),
-                        valueColor: const AlwaysStoppedAnimation<Color>(
-                          Color(0xFF6B3DF0),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        PesoFormatter.buildPesoText(
-                          amount: controller.startingAmount,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          color: const Color(0xFF8D8D95),
-                        ),
-                        PesoFormatter.buildPesoText(
-                          amount: controller.orderedAmount,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          color: const Color(0xFF8D8D95),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    const DashedLine(),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Text(
-                              'Balance',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Color(0xFF1E1E24),
+                            TextButton(
+                              onPressed: controller.openLoanOrderSheet,
+                              style: TextButton.styleFrom(
+                                foregroundColor: const Color(0xFF2F65F4),
+                                padding: EdgeInsets.zero,
+                                minimumSize: Size.zero,
+                                tapTargetSize:
+                                    MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              child: const Text(
+                                'New Order',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
                             ),
-                            const SizedBox(height: 2),
-                            PesoFormatter.buildPesoText(
-                              amount: controller.remainingBalance,
-                              fontSize: 20,
-                              fontWeight: FontWeight.w800,
-                              color: const Color(0xFF6B3DF0),
+                            const SizedBox(width: 12),
+                            GestureDetector(
+                              onTap: controller.toggleBalanceCardsVisibility,
+                              child: Text(
+                                controller.showAllBalanceCards.value
+                                    ? 'Hide'
+                                    : 'View All',
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  color: Color(0xFF2F65F4),
+                                ),
+                              ),
                             ),
                           ],
                         ),
-                        const Spacer(),
-                        SizedBox(
-                          width: 200,
-                          height: 45,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF6B3DF0),
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                              elevation: 0,
-                            ),
-                            onPressed: controller.openPayNowPage,
-                            child: const Text(
-                              'Pay Now',
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ),
                       ],
                     ),
+                    const SizedBox(height: 14),
+                    AnimatedSize(
+                      duration: const Duration(milliseconds: 320),
+                      curve: Curves.easeInOutCubic,
+                      alignment: Alignment.topCenter,
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 280),
+                        switchInCurve: Curves.easeOutCubic,
+                        switchOutCurve: Curves.easeInCubic,
+                        transitionBuilder: (child, animation) {
+                          final fadeAnimation = CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.easeOut,
+                          );
+
+                          final slideAnimation = Tween<Offset>(
+                            begin: const Offset(0, -0.02),
+                            end: Offset.zero,
+                          ).animate(animation);
+
+                          return FadeTransition(
+                            opacity: fadeAnimation,
+                            child: SlideTransition(
+                              position: slideAnimation,
+                              child: child,
+                            ),
+                          );
+                        },
+                        child: Column(
+                          key: ValueKey<int>(visibleCards.length),
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            for (int index = 0; index < visibleCards.length; index++) ...[
+                              PsosyoBalanceCard(
+                                title: visibleCards[index].title,
+                                loanId: visibleCards[index].loanId,
+                                logoAsset: visibleCards[index].logoAsset,
+                                appliedDateTime: visibleCards[index].appliedDateTime,
+                                dueDateTime: visibleCards[index].dueDateTime,
+                                amountDue: visibleCards[index].amountDueText,
+                                onPayNow: () => controller.openPayNowPage(
+                                  visibleCards[index],
+                                ),
+                              ),
+                              if (index != visibleCards.length - 1)
+                                const SizedBox(height: 14),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
                   ],
-                ),
-              ),
+                );
+              }),
               const SizedBox(height: 26),
               const Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -280,37 +223,27 @@ class HomeScreen extends GetView<HomeController> {
                 ],
               ),
               const SizedBox(height: 16),
-              // Sample tiles for preview
-              TransactionTile(
-                title: 'Pending Payment',
-                dateTime: '05-01-26  |  09:00',
-                amount: '300.00',
-                status: 'Pending',
-                compact: true,
-              ),
-              const SizedBox(height: 12),
-              TransactionTile(
-                title: 'Invalid Payment',
-                dateTime: '04-20-26  |  08:12',
-                amount: '150.00',
-                status: 'Invalid',
-                compact: true,
-              ),
-              const SizedBox(height: 16),
-
-              for (int index = 0;
-                  index < controller.transactionHistory.length;
-                  index++) ...[
-                TransactionTile(
-                  title: controller.transactionHistory[index].title,
-                  dateTime: controller.transactionHistory[index].dateTime,
-                  amount: controller.transactionHistory[index].amount,
-                  status: controller.transactionHistory[index].status,
-                  compact: true,
+              Obx(
+                () => Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (int index = 0;
+                        index < controller.transactionHistory.length;
+                        index++) ...[
+                      TransactionTile(
+                        title: controller.transactionHistory[index].title,
+                        dateTime: controller.transactionHistory[index].dateTime,
+                        amount: controller.transactionHistory[index].amount,
+                        sign: controller.transactionHistory[index].sign,
+                        status: controller.transactionHistory[index].status,
+                        compact: true,
+                      ),
+                      if (index != controller.transactionHistory.length - 1)
+                        const SizedBox(height: 16),
+                    ],
+                  ],
                 ),
-                if (index != controller.transactionHistory.length - 1)
-                  const SizedBox(height: 16),
-              ],
+              ),
             ],
           ),
         ),

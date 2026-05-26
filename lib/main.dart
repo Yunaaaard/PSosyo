@@ -25,9 +25,12 @@ class MyApp extends StatelessWidget {
       initialRoute: AppRoutes.dashboard,
       getPages: AppPages.pages,
       builder: (context, child) {
+        final mediaQuery = MediaQuery.of(context);
         return MediaQuery(
-          data: MediaQuery.of(context).copyWith(textScaleFactor: .8),
-          child: child!,
+          data: mediaQuery.copyWith(
+            textScaler: const TextScaler.linear(0.85),
+          ),
+          child: child ?? const SizedBox.shrink(),
         );
       },
     );
