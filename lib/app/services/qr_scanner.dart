@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:p_sosyo/app/routes/app_routes.dart';
@@ -43,7 +41,7 @@ class _QrScannerPageState extends State<QrScannerPage> {
               ),
               const SizedBox(height: 18),
               const Text(
-                'Payment Successful',
+                'Balance Card Added',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 22,
@@ -52,7 +50,7 @@ class _QrScannerPageState extends State<QrScannerPage> {
               ),
               const SizedBox(height: 10),
               const Text(
-                'Your loan payment has been recorded successfully.',
+                'The scanned QR payload was imported into your Psosyo balance list.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
@@ -66,7 +64,8 @@ class _QrScannerPageState extends State<QrScannerPage> {
                   onPressed: () {
                     Get.back();
                     if (Get.currentRoute != AppRoutes.homeScreen) {
-                      Get.until((route) => route.settings.name == AppRoutes.homeScreen);
+                      Get.until((route) =>
+                          route.settings.name == AppRoutes.homeScreen);
                     }
                   },
                   style: ElevatedButton.styleFrom(
@@ -118,7 +117,7 @@ class _QrScannerPageState extends State<QrScannerPage> {
               ),
               const SizedBox(height: 18),
               const Text(
-                'Payment Failed',
+                'Scan Failed',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 22,
@@ -151,7 +150,7 @@ class _QrScannerPageState extends State<QrScannerPage> {
                         ),
                       ),
                       child: const Text(
-                        'Scan Again',
+                        'Try Again',
                         style: TextStyle(color: Color(0xFF6B3DF0)),
                       ),
                     ),
@@ -162,7 +161,8 @@ class _QrScannerPageState extends State<QrScannerPage> {
                       onPressed: () {
                         Get.back();
                         if (Get.currentRoute != AppRoutes.homeScreen) {
-                          Get.until((route) => route.settings.name == AppRoutes.homeScreen);
+                          Get.until((route) =>
+                              route.settings.name == AppRoutes.homeScreen);
                         }
                       },
                       style: ElevatedButton.styleFrom(
@@ -207,112 +207,17 @@ class _QrScannerPageState extends State<QrScannerPage> {
     });
 
     final controller = Get.find<HomeController>();
-    final order = controller.activeLoanOrder;
-
-    // First try JSON parsing
-    try {
-      final decoded = json.decode(raw);
-      final info = _extractLoanInfoFromPayload(decoded, raw);
-      final loanId = info?['loanId']?.toString();
-      final amountValue = info?['amount'];
-
-      if (order != null && loanId != null) {
-        final matches = order.loanId.toLowerCase().trim() == loanId.toLowerCase().trim() ||
-            raw.toLowerCase().contains(order.loanId.toLowerCase());
-
-        if (matches) {
-          final amount = _normalizeAmountValue(amountValue) ?? order.remainingAmount;
-          final processed = await controller.processPayment(
-            order: order,
-            amount: amount,
-            allowLocalFallback: true,
-          );
-          if (processed) {
-            if (Get.currentRoute != AppRoutes.homeScreen) {
-              Get.until((route) => route.settings.name == AppRoutes.homeScreen);
-            }
-            Future<void>.delayed(Duration.zero, _showSuccessModal);
-            return;
-          }
-          return;
-        } else {
-          final retry = await _showFailureModal('Scanned QR does not match active loan.');
-          if (retry && mounted) {
-            await _startScan();
-          }
-          return;
-        }
-      }
-
-      final retry = await _showFailureModal('QR payload is not recognized.');
-      if (retry && mounted) {
-        await _startScan();
-      }
-      return;
-    } catch (_) {
-      // Not JSON — fallthrough to simple match
-    }
-
-    // Simple raw string fallback
-    if (order != null && raw.toLowerCase().contains(order.loanId.toLowerCase())) {
-      final processed = await controller.processPayment(
-        order: order,
-        amount: order.remainingAmount,
-        allowLocalFallback: true,
-      );
-      if (processed) {
-        await _showSuccessModal();
-        return;
-      }
+    final imported = controller.importLoanOrderFromQrPayload(raw);
+    if (imported) {
+      await _showSuccessModal();
       return;
     }
-    final retry = await _showFailureModal('Scanned QR does not match active loan.');
+
+    final retry =
+        await _showFailureModal('The QR code is missing required loan fields.');
     if (retry && mounted) {
       await _startScan();
     }
-  }
-
-  Map<String, dynamic>? _extractLoanInfoFromPayload(dynamic payload, String raw) {
-    try {
-      if (payload is Map) {
-        String? foundLoanId;
-        dynamic foundAmount;
-
-        void searchMap(Map map) {
-          map.forEach((key, value) {
-            final k = key.toString().toLowerCase();
-            if (foundLoanId == null && (k == 'loanid' || k == 'loan_id' || k == 'id' || k == 'loan')) {
-              if (value != null) foundLoanId = value.toString();
-            }
-            if (foundAmount == null && (k == 'amount' || k == 'amt' || k == 'value' || k == 'total')) {
-              foundAmount = value;
-            }
-            if (value is Map) searchMap(value);
-            if (value is List) value.whereType<Map>().forEach(searchMap);
-          });
-        }
-
-        searchMap(payload);
-
-        // Fallback: regex extraction
-        if (foundLoanId == null) {
-          final orderGuess = RegExp(r'AL-\d{3}[A-Z]{3,}');
-          final match = orderGuess.firstMatch(raw);
-          if (match != null) foundLoanId = match.group(0);
-        }
-
-        if (foundLoanId != null) return {'loanId': foundLoanId, 'amount': foundAmount};
-      }
-    } catch (_) {}
-    return null;
-  }
-
-  double? _normalizeAmountValue(dynamic value) {
-    if (value == null) return null;
-    if (value is num) return value.toDouble();
-    final s = value.toString();
-    final cleaned = s.replaceAll(',', '').replaceAll('₱', '').replaceAll(' ', '');
-    return double.tryParse(cleaned);
   }
 
   @override
@@ -335,9 +240,9 @@ class _QrScannerPageState extends State<QrScannerPage> {
           children: [
             if (_scanning) const CircularProgressIndicator(),
             const SizedBox(height: 14),
-            const Text(
-              'Opening scanner...',
-              style: TextStyle(color: Colors.white),
+            Text(
+              _scanning ? 'Importing Psosyo QR...' : 'Opening scanner...',
+              style: const TextStyle(color: Colors.white),
             ),
           ],
         ),

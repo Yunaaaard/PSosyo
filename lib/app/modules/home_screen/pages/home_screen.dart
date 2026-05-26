@@ -66,7 +66,7 @@ class HomeScreen extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             const Text(
-                              'Pay with Psosyo Credits',
+                              'Scan QR with Psosyo',
                               style: TextStyle(
                                 color: Color(0xFF6B3DF0),
                                 fontSize: 17,
