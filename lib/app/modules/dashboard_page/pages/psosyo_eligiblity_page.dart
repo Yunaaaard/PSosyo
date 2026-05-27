@@ -108,7 +108,7 @@ class PsosyoEligibilityPage extends StatelessWidget {
                         const SizedBox(height: 34),
                         GestureDetector(
                           onTap: () {
-                            Get.toNamed(AppRoutes.uploadId);
+                            Get.toNamed(AppRoutes.checkEligibilityVerifyOtp);
                           },
                           child: Container(
                             height: 64,

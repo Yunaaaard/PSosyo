@@ -1,7 +1,10 @@
 class AppRoutes {
   static const String landing = '/';
+  static const String psosyoLanding = '/psosyo-landing';
+  static const String psosyoWelcome = '/psosyo-welcome';
   static const String register = '/register';
   static const String verifyOtp = '/verify-otp';
+  static const String checkEligibilityVerifyOtp = '/check-eligibility-verify-otp';
   static const String dashboard = '/dashboard';
   static const String employmentIncome = '/employment-income';
   static const String uploadId = '/upload-id';

@@ -1,6 +1,12 @@
 import 'package:get/get.dart';
+import 'package:p_sosyo/app/modules/fastsosyo_landing_page/bindings/fastsosyo_landing_binding.dart';
+import 'package:p_sosyo/app/modules/fastsosyo_landing_page/views/landing_screen.dart';
+import 'package:p_sosyo/app/modules/landing_page/bindings/landing_binding.dart';
 import 'package:p_sosyo/app/modules/landing_page/pages/landing_page.dart';
+import 'package:p_sosyo/app/modules/dashboard_page/pages/psosyo_eligiblity_page.dart';
 import 'package:p_sosyo/app/modules/register_number/pages/register_page.dart';
+import 'package:p_sosyo/app/modules/checkeligibility_verify_otp/bindings/checkeligibility_verify_otp_binding.dart';
+import 'package:p_sosyo/app/modules/checkeligibility_verify_otp/views/checkeligibility_verify_otp_page.dart';
 import 'package:p_sosyo/app/modules/verify_otp/pages/otp_page.dart';
 import 'package:p_sosyo/app/modules/verify_otp/bindings/otp_binding.dart';
 import 'package:p_sosyo/app/modules/dashboard_page/pages/initial_dashboard.dart';
@@ -27,7 +33,17 @@ class AppPages {
   static final pages = [
     GetPage(
       name: AppRoutes.landing,
+      page: () => const FastSosyoLandingScreen(),
+      binding: FastSosyoLandingBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.psosyoLanding,
       page: () => const LandingPage(),
+      binding: LandingBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.psosyoWelcome,
+      page: () => const PsosyoEligibilityPage(),
     ),
     GetPage(
       name: AppRoutes.register,
@@ -38,6 +54,11 @@ class AppPages {
       name: AppRoutes.verifyOtp,
       page: () => const OtpVerificationPage(),
       binding: OtpBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.checkEligibilityVerifyOtp,
+      page: () => const CheckEligibilityVerifyOtpPage(),
+      binding: CheckEligibilityVerifyOtpBinding(),
     ),
     GetPage(
       name: AppRoutes.dashboard,
