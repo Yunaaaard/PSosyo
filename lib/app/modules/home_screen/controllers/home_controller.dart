@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:p_sosyo/app/services/payment_service.dart';
 import 'package:p_sosyo/app/modules/home_screen/models/loan_order.dart';
@@ -21,6 +22,29 @@ class HomeController extends GetxController {
   // Payment form state for QR payment page
   final RxString paymentReference = ''.obs;
   final Rxn<String> attachedReceiptPath = Rxn<String>();
+
+  // Pay Now page state
+  final RxBool useAutoReference = true.obs;
+  final RxString phoneNumber = ''.obs;
+  final RxString remarksValue = ''.obs;
+  final RxString selectedPaymentType = ''.obs;
+  final TextEditingController payNowReferenceController = TextEditingController();
+  final TextEditingController payNowPhoneController = TextEditingController();
+  final TextEditingController payNowRemarksController = TextEditingController();
+
+  final List<String> remarksOptions = const [
+    'Partial payment',
+    'Full payment',
+    'Top up',
+    'Others',
+  ];
+
+  final List<String> paymentTypeOptions = const [
+    'Cash',
+    'GCash',
+    'Bank Transfer',
+    'Inventory Financing',
+  ];
 
   final List<LoanPrincipalOption> principalOptions = const [
     LoanPrincipalOption(
@@ -81,12 +105,14 @@ class HomeController extends GetxController {
     super.onInit();
 
     submitLoanOrder(
-      principal: principalOptions.first,
+      principal: principalOptions[1],
       amount: 1574.00,
       appliedAt: DateTime(2026, 4, 28, 10, 23),
       termDays: 6,
       seed: true,
     );
+
+    selectedPaymentType.value = '';
   }
 
   void openPayNowPage([LoanOrderCard? order]) {
@@ -96,7 +122,72 @@ class HomeController extends GetxController {
     }
 
     selectedLoanOrder.value = selectedOrder;
+    preparePayNowForm();
     Get.to(() => const PayNowPage());
+  }
+
+  void preparePayNowForm() {
+    useAutoReference.value = true;
+    payNowReferenceController.text = loanId;
+    payNowPhoneController.clear();
+    payNowRemarksController.clear();
+    phoneNumber.value = '';
+    remarksValue.value = '';
+    selectedPaymentType.value = '';
+  }
+
+  void toggleAutoReference(bool value) {
+    useAutoReference.value = value;
+    if (value) {
+      payNowReferenceController.text = loanId;
+    }
+  }
+
+  void updateReference(String value) {
+    payNowReferenceController.text = value;
+  }
+
+  void updatePhoneNumber(String value) {
+    phoneNumber.value = value;
+    payNowPhoneController.text = value;
+  }
+
+  void updateRemarks(String? value) {
+    remarksValue.value = value ?? '';
+    payNowRemarksController.text = value ?? '';
+  }
+
+  void updatePaymentType(String? value) {
+    if (value == null || value.isEmpty) {
+      return;
+    }
+
+    selectedPaymentType.value = value;
+  }
+
+  void submitPayNow() {
+    final reference = payNowReferenceController.text.trim();
+    final phone = phoneNumber.value.trim();
+    final remarks = remarksValue.value.trim();
+    final paymentType = selectedPaymentType.value.trim();
+
+    Get.snackbar(
+      'Payment ready',
+      'Reference $reference prepared for ${paymentType.isEmpty ? 'payment' : paymentType}',
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: Colors.white,
+      margin: const EdgeInsets.all(16),
+      borderRadius: 14,
+      duration: const Duration(seconds: 3),
+    );
+
+    paymentReference.value = reference;
+    if (phone.isNotEmpty) {
+      phoneNumber.value = phone;
+    }
+    if (remarks.isNotEmpty) {
+      remarksValue.value = remarks;
+    }
   }
 
   void openLoanAgreementSheet() {
@@ -706,6 +797,14 @@ class HomeController extends GetxController {
 
   void attachReceipt(String? path) {
     attachedReceiptPath.value = path;
+  }
+
+  @override
+  void onClose() {
+    payNowReferenceController.dispose();
+    payNowPhoneController.dispose();
+    payNowRemarksController.dispose();
+    super.onClose();
   }
 
   void payRemainingBalance() {

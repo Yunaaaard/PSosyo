@@ -4,13 +4,10 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class PaymentService {
-  /// Base URL for payment API. Replace with your real API host.
   final String baseUrl;
 
   PaymentService({this.baseUrl = 'https://api.example.com'});
 
-  /// Sends a payment request to the backend.
-  /// Returns true when the backend confirms success.
   Future<bool> processPayment({
     required String loanId,
     required double amount,
