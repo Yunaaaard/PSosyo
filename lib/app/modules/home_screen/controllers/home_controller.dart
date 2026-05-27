@@ -1,11 +1,13 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:get/get.dart';
+import 'package:p_sosyo/app/database/psosyo_database_service.dart';
 import 'package:p_sosyo/app/services/payment_service.dart';
 import 'package:p_sosyo/app/modules/home_screen/models/loan_order.dart';
-import 'package:p_sosyo/app/widgets/loan_order_sheet.dart';
 import 'package:p_sosyo/app/widgets/loan_agreement_sheet.dart';
 import 'package:p_sosyo/app/modules/home_screen/pages/pay_now.dart';
+import 'package:p_sosyo/app/services/user_phone_service.dart';
 
 class HomeController extends GetxController {
   final RxBool showAllBalanceCards = true.obs;
@@ -17,6 +19,7 @@ class HomeController extends GetxController {
   final RxList<LoanOrderCard> loanOrders = <LoanOrderCard>[].obs;
   final Rxn<LoanOrderCard> selectedLoanOrder = Rxn<LoanOrderCard>();
   final RxList<TransactionItem> transactionHistory = <TransactionItem>[].obs;
+  late final PsosyoDatabaseService _database;
 
   // Payment form state for QR payment page
   final RxString paymentReference = ''.obs;
@@ -79,14 +82,32 @@ class HomeController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    _database = Get.find<PsosyoDatabaseService>();
+    unawaited(_bootstrapFromDatabase());
+  }
 
-    submitLoanOrder(
-      principal: principalOptions.first,
-      amount: 1574.00,
-      appliedAt: DateTime(2026, 4, 28, 10, 23),
-      termDays: 6,
-      seed: true,
+  Future<void> _bootstrapFromDatabase() async {
+    final savedLoans = await _database.loadActiveLoanOrders();
+    if (savedLoans.isNotEmpty) {
+      loanOrders.assignAll(savedLoans);
+      selectedLoanOrder.value = savedLoans.first;
+      _syncAvailableCredit();
+      return;
+    }
+
+    loanOrders.clear();
+    selectedLoanOrder.value = null;
+    _syncAvailableCredit();
+  }
+
+  void _syncAvailableCredit() {
+    final remainingTotal = loanOrders.fold<double>(
+      0,
+      (sum, order) => sum + order.remainingAmount,
     );
+    _maximumCreditLimitValue.value = (creditLimit - remainingTotal)
+        .clamp(0, creditLimit)
+        .toDouble();
   }
 
   void openPayNowPage([LoanOrderCard? order]) {
@@ -106,39 +127,44 @@ class HomeController extends GetxController {
     );
   }
 
-  void openLoanOrderSheet() {
-    Get.bottomSheet(
-      const LoanOrderSheet(),
-      isScrollControlled: true,
-    );
-  }
-
   void toggleBalanceCardsVisibility() {
     showAllBalanceCards.toggle();
   }
 
-  bool importLoanOrderFromQrPayload(String rawPayload) {
-    final payload = _decodeQrPayload(rawPayload);
-    if (payload == null) {
+  Future<bool> importLoanOrderFromQrPayload(String rawPayload) async {
+    final userPhone = Get.find<UserPhoneService>().getRegisteredPhone();
+    final result = await _database.importLoanOrderFromRawJson(
+      rawPayload,
+      userPhone: userPhone,
+    );
+
+    if (!result.success || result.loanOrder == null) {
       Get.snackbar(
-        'Invalid QR payload',
-        'The scanned QR code does not contain a valid Psosyo loan JSON.',
+        'Loan blocked',
+        result.message ?? 'The scanned QR code could not be imported.',
         snackPosition: SnackPosition.BOTTOM,
       );
       return false;
     }
 
-    final scannedOrder = _loanOrderFromQrPayload(payload);
-    if (scannedOrder == null) {
-      Get.snackbar(
-        'Invalid QR payload',
-        'Missing required loan fields in the scanned QR code.',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-      return false;
-    }
-
-    _upsertScannedLoanOrder(scannedOrder);
+    final savedLoans = await _database.loadActiveLoanOrders();
+    loanOrders.assignAll(savedLoans);
+    selectedLoanOrder.value = savedLoans.firstWhere(
+      (order) => order.loanId == result.loanOrder!.loanId,
+      orElse: () => result.loanOrder!,
+    );
+    _syncAvailableCredit();
+    transactionHistory.insert(
+      0,
+      TransactionItem(
+        title: 'Loan Order',
+        dateTime: formatLoanDate(result.loanOrder!.appliedAt),
+        amount: _formatAmount(result.loanOrder!.originalAmount),
+        sign: '- ',
+        status: 'SUCCESS',
+        logoAsset: result.loanOrder!.logoAsset,
+      ),
+    );
     return true;
   }
 
@@ -379,51 +405,13 @@ class HomeController extends GetxController {
     return search(payload);
   }
 
-  void _upsertScannedLoanOrder(LoanOrderCard scannedOrder) {
-    final normalizedLoanId = scannedOrder.loanId.toLowerCase().trim();
-    final existingIndex = loanOrders.indexWhere(
-      (loanOrder) => loanOrder.loanId.toLowerCase().trim() == normalizedLoanId,
-    );
-
-    if (existingIndex == -1) {
-      loanOrders.insert(0, scannedOrder);
-      _maximumCreditLimitValue.value =
-          (_maximumCreditLimitValue.value - scannedOrder.remainingAmount)
-              .clamp(0, creditLimit)
-              .toDouble();
-      transactionHistory.insert(
-        0,
-        TransactionItem(
-          title: 'Loan Order',
-          dateTime: formatLoanDate(scannedOrder.appliedAt),
-          amount: _formatAmount(scannedOrder.originalAmount),
-          sign: '- ',
-          status: 'SUCCESS',
-          logoAsset: scannedOrder.logoAsset,
-        ),
-      );
-    } else {
-      final existingOrder = loanOrders[existingIndex];
-      final creditDelta =
-          scannedOrder.remainingAmount - existingOrder.remainingAmount;
-      loanOrders[existingIndex] = scannedOrder;
-      _maximumCreditLimitValue.value =
-          (_maximumCreditLimitValue.value - creditDelta)
-              .clamp(0, creditLimit)
-              .toDouble();
-      loanOrders.refresh();
-    }
-
-    selectedLoanOrder.value = scannedOrder;
-  }
-
-  bool submitLoanOrder({
+  Future<bool> submitLoanOrder({
     required LoanPrincipalOption principal,
     required double amount,
     required int termDays,
     DateTime? appliedAt,
     bool seed = false,
-  }) {
+  }) async {
     final createdAt = appliedAt ?? DateTime.now();
 
     if (amount <= 0) {
@@ -463,7 +451,7 @@ class HomeController extends GetxController {
       return false;
     }
 
-    final loanSequence = loanOrders.length + 1;
+    final loanSequence = await _database.nextLoanSequence();
     final dueAt = createdAt.add(Duration(days: termDays));
     final loanOrder = LoanOrderCard(
       title: principal.title,
@@ -477,9 +465,26 @@ class HomeController extends GetxController {
 
     loanOrders.insert(0, loanOrder);
     selectedLoanOrder.value = loanOrder;
-    _maximumCreditLimitValue.value = (_maximumCreditLimitValue.value - amount)
-        .clamp(0, creditLimit)
-        .toDouble();
+    _syncAvailableCredit();
+
+    try {
+      await _database.saveLoanOrderCard(
+        loanOrder,
+        userPhone: Get.find<UserPhoneService>().getRegisteredPhone(),
+      );
+    } catch (e) {
+      loanOrders.removeWhere((order) => order.loanId == loanOrder.loanId);
+      selectedLoanOrder.value = loanOrders.isNotEmpty ? loanOrders.first : null;
+      _syncAvailableCredit();
+      if (!seed) {
+        Get.snackbar(
+          'Database error',
+          'Unable to save the loan locally: $e',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      }
+      return false;
+    }
 
     if (!seed) {
       transactionHistory.insert(
@@ -498,11 +503,11 @@ class HomeController extends GetxController {
     return true;
   }
 
-  bool submitLoanOrdersByAllocation({
+  Future<bool> submitLoanOrdersByAllocation({
     required Map<LoanPrincipalOption, double> allocations,
     required int termDays,
     DateTime? appliedAt,
-  }) {
+  }) async {
     if (allocations.isEmpty) {
       Get.snackbar(
         'Invalid allocation',
@@ -586,7 +591,7 @@ class HomeController extends GetxController {
       if (amount <= 0) {
         continue;
       }
-      final success = submitLoanOrder(
+      final success = await submitLoanOrder(
         principal: principal,
         amount: amount,
         termDays: termDays,
@@ -600,11 +605,11 @@ class HomeController extends GetxController {
     return true;
   }
 
-  void recordLoanPaymentSuccess({
+  Future<void> recordLoanPaymentSuccess({
     required LoanOrderCard order,
     required double amount,
     DateTime? when,
-  }) {
+  }) async {
     final createdAt = when ?? DateTime.now();
 
     final paidAmount =
@@ -633,6 +638,13 @@ class HomeController extends GetxController {
         selectedLoanOrder.refresh();
       }
     }
+
+    _syncAvailableCredit();
+    await _database.applyLoanPayment(
+      loanId: order.loanId,
+      paidAmount: paidAmount,
+      remainingAmount: order.remainingAmount,
+    );
 
     transactionHistory.insert(
       0,
@@ -665,12 +677,12 @@ class HomeController extends GetxController {
       );
 
       if (success) {
-        recordLoanPaymentSuccess(order: order, amount: amount);
+        await recordLoanPaymentSuccess(order: order, amount: amount);
         return true;
       }
 
       if (allowLocalFallback) {
-        recordLoanPaymentSuccess(order: order, amount: amount);
+        await recordLoanPaymentSuccess(order: order, amount: amount);
         Get.snackbar(
           'Payment Completed',
           'QR matched the active loan and payment was recorded locally.',
@@ -684,7 +696,7 @@ class HomeController extends GetxController {
       return false;
     } catch (e) {
       if (allowLocalFallback) {
-        recordLoanPaymentSuccess(order: order, amount: amount);
+        await recordLoanPaymentSuccess(order: order, amount: amount);
         Get.snackbar(
           'Payment Completed',
           'QR matched the active loan and payment was recorded locally.',

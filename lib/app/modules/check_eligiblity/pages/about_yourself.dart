@@ -479,7 +479,10 @@ class AboutYourselfPage extends StatelessWidget {
                             ? AppThemes.primaryButtonStyle
                             : AppThemes.unaccessibleButtonStyle,
                         onPressed: canContinue
-                            ? () => Get.toNamed(AppRoutes.employmentIncome)
+                            ? () async {
+                                await controller.saveProfile();
+                                Get.toNamed(AppRoutes.employmentIncome);
+                              }
                             : null,
                         child: const Center(child: Text('Continue')),
                       );

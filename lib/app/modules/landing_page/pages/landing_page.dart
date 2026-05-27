@@ -18,7 +18,7 @@ class LandingPage extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Image.asset(
-                  'assets/images/PSOSYO-LOGO.png',
+                  'assets/images/PSosyo-Logo.png',
                   width: 300,
                   height: 300,
                 ),
