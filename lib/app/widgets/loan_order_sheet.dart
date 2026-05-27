@@ -235,13 +235,20 @@ class _LoanOrderSheetState extends State<LoanOrderSheet> {
                             for (var index = 0;
                                 index < _controller.principalOptions.length;
                                 index++) ...[
-                              _BrandAllocationSlider(
-                                option: _controller.principalOptions[index],
-                                percentage: _allocations[index],
-                                computedAmount: _amountForPercent(_allocations[index]),
-                                onChanged: (value) =>
-                                    _onAllocationChanged(index, value),
-                              ),
+                              Builder(builder: (context) {
+                                final option = _controller.principalOptions[index];
+                                final enabled = !_controller.loanOrders
+                                    .any((lo) => lo.title == option.title && lo.remainingAmount > 0);
+                                return _BrandAllocationSlider(
+                                  option: option,
+                                  percentage: _allocations[index],
+                                  computedAmount: _amountForPercent(_allocations[index]),
+                                  onChanged: enabled
+                                      ? (value) => _onAllocationChanged(index, value)
+                                      : null,
+                                  enabled: enabled,
+                                );
+                              }),
                               if (index != _controller.principalOptions.length - 1)
                                 const SizedBox(height: 10),
                             ],
@@ -364,22 +371,27 @@ class _BrandAllocationSlider extends StatelessWidget {
     required this.percentage,
     required this.computedAmount,
     required this.onChanged,
+    this.enabled = true,
   });
 
   final LoanPrincipalOption option;
   final double percentage;
   final String computedAmount;
-  final ValueChanged<double> onChanged;
+  final ValueChanged<double>? onChanged;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8F8FB),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
+    final displayAmount = enabled ? computedAmount : '—';
+    return Opacity(
+      opacity: enabled ? 1.0 : 0.45,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8F8FB),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
@@ -404,13 +416,30 @@ class _BrandAllocationSlider extends StatelessWidget {
                   ),
                 ),
               ),
-              Text(
-                '${percentage.toStringAsFixed(0)}%',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF6B3DF0),
+              if (enabled)
+                Text(
+                  '${percentage.toStringAsFixed(0)}%',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF6B3DF0),
+                  ),
+                )
+              else
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE6E7EA),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Text(
+                    'Blocked',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF6C7180),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
-              ),
             ],
           ),
           Slider(
@@ -424,7 +453,7 @@ class _BrandAllocationSlider extends StatelessWidget {
           Align(
             alignment: Alignment.centerRight,
             child: Text(
-              'Amount: $computedAmount',
+              'Amount: $displayAmount',
               style: const TextStyle(
                 color: Color(0xFF6C7180),
                 fontSize: 12,
@@ -434,6 +463,7 @@ class _BrandAllocationSlider extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ),
+  );
   }
 }

@@ -1,5 +1,8 @@
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:p_sosyo/app/modules/check_eligiblity/pages/liveness_verification_page.dart';
+import 'package:p_sosyo/app/modules/check_eligiblity/bindings/liveness_binding.dart';
+import '../models/liveness_models.dart';
 
 class SelfieVerificationController extends GetxController {
   var isLivenessCheckStarted = false.obs;
@@ -7,25 +10,23 @@ class SelfieVerificationController extends GetxController {
   var isCapturing = false.obs;
   var selfieFile = Rx<XFile?>(null);
 
-  final ImagePicker _picker = ImagePicker();
-
   Future<void> startLivenessCheck() async {
     isLivenessCheckStarted.value = true;
     isCapturing.value = true;
 
-    final XFile? file = await _picker.pickImage(source: ImageSource.camera);
-    if (file == null) {
-      isCapturing.value = false;
-      return;
+    // Navigate to LivenessVerificationPage and await the result.
+    // Returns a LivenessResult with an imagePath on success, or null on cancel/failure.
+    final result = await Get.to<LivenessResult?>(
+      () => LivenessVerificationPage(),
+      binding: LivenessBinding(),
+    );
+
+    if (result != null) {
+      selfieFile.value = XFile(result.imagePath);
+      isPhotoTaken.value = true;
     }
 
-    selfieFile.value = file;
-    isPhotoTaken.value = true;
-    isCapturing.value = false;
-  }
-
-  void setPhotoTaken(bool taken) {
-    isPhotoTaken.value = taken;
+    isLivenessCheckStarted.value = false;
     isCapturing.value = false;
   }
 

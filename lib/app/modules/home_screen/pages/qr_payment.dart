@@ -214,7 +214,7 @@ class QrPaymentPage extends StatelessWidget {
               'Back to Home',
               style: TextStyle(
                 fontSize: 22,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w500,
                 letterSpacing: 0.2,
               ),
             ),
