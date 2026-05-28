@@ -42,6 +42,8 @@ class LoansTable {
   final UsersTable _usersTable;
   final LoanItemsTable _loanItemsTable;
 
+  static const double _maxCreditLimit = 25000.0;
+
   static const String tableName = 'loans';
 
   static Future<void> create(Database db) async {
@@ -149,6 +151,16 @@ class LoansTable {
 
     final db = await _database();
     final normalizedPrincipalTitle = _normalizePrincipalTitle(principalTitle);
+
+    final activeBalance = await _activeOutstandingBalance(db);
+    final availableCredit = (_maxCreditLimit - activeBalance)
+        .clamp(0, _maxCreditLimit)
+        .toDouble();
+    if (amountDue > availableCredit + 0.0001) {
+      return LoanImportResult.failure(
+        'Loan amount exceeds the remaining credit limit of ₱${availableCredit.toStringAsFixed(2)}.',
+      );
+    }
 
     final activePrincipalRows = await db.query(
       tableName,
@@ -356,5 +368,20 @@ class LoansTable {
 
   String _normalizePrincipalTitle(String value) {
     return value.toLowerCase().replaceAll(RegExp(r'\s+'), ' ').trim();
+  }
+
+  Future<double> _activeOutstandingBalance(Database db) async {
+    final rows = await db.rawQuery(
+      '''
+      SELECT COALESCE(SUM(remaining_amount), 0) AS total
+      FROM loans
+      WHERE status = 'ACTIVE' AND remaining_amount > 0
+      ''',
+    );
+    final value = rows.first['total'];
+    if (value is num) {
+      return value.toDouble();
+    }
+    return double.tryParse(value?.toString() ?? '') ?? 0;
   }
 }

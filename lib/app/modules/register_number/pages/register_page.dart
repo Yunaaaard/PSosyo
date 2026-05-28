@@ -33,11 +33,11 @@ class RegisterPage extends GetView<RegisterController> {
 
   @override
   Widget build(BuildContext context) {
-    final primaryBlue70 = primaryBlue.withValues(alpha: 0.7);
+    final primaryBlue70 = primaryBlue.withOpacity(0.7);
 
     return PopScope(
       canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
+      onPopInvoked: (didPop) {
         if (didPop) return;
         Get.offNamed(AppRoutes.landing);
       },

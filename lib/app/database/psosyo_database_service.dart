@@ -83,7 +83,10 @@ class PsosyoDatabaseService extends GetxService {
     required String dateOfBirth,
     required String status,
     required String gender,
-    required String address,
+    required String street,
+    required String postalCode,
+    required String city,
+    required String country,
   }) =>
       usersTable.saveUserProfile(
         phoneNumber: phoneNumber,
@@ -92,7 +95,10 @@ class PsosyoDatabaseService extends GetxService {
         dateOfBirth: dateOfBirth,
         status: status,
         gender: gender,
-        address: address,
+        street: street,
+        postalCode: postalCode,
+        city: city,
+        country: country,
       );
 
   Future<void> saveRegisteredPhone(String phoneNumber) =>

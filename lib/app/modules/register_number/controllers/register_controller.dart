@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:p_sosyo/app/modules/landing_page/controller/landing_controller.dart';
-import 'package:flutter/material.dart';
+import 'package:p_sosyo/app/routes/app_routes.dart';
 import 'package:p_sosyo/app/database/psosyo_database_service.dart';
 import 'package:p_sosyo/app/widgets/app_snackbar.dart';
 import 'package:p_sosyo/app/services/user_phone_service.dart';
