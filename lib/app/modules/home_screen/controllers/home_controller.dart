@@ -2,11 +2,13 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:get/get.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:p_sosyo/app/database/psosyo_database_service.dart';
+import 'package:p_sosyo/app/database/tables/loan_items_table.dart';
 import 'package:p_sosyo/app/services/payment_service.dart';
 import 'package:p_sosyo/app/modules/home_screen/models/loan_order.dart';
 import 'package:p_sosyo/app/widgets/loan_agreement_sheet.dart';
+import 'package:p_sosyo/app/widgets/loan_details_sheet.dart';
 import 'package:p_sosyo/app/modules/home_screen/pages/pay_now.dart';
 import 'package:p_sosyo/app/services/user_phone_service.dart';
 import 'package:p_sosyo/app/utils/principal_logo_resolver.dart';
@@ -111,7 +113,8 @@ class HomeController extends GetxController {
     super.onInit();
     _database = Get.find<PsosyoDatabaseService>();
     unawaited(_bootstrapFromDatabase());
-    payNowReferenceController = TextEditingController(text: paymentReference.value);
+    payNowReferenceController =
+        TextEditingController(text: paymentReference.value);
     payNowPhoneController = TextEditingController(text: phoneNumber.value);
   }
 
@@ -145,9 +148,8 @@ class HomeController extends GetxController {
       0,
       (sum, order) => sum + order.remainingAmount,
     );
-    _maximumCreditLimitValue.value = (creditLimit - remainingTotal)
-        .clamp(0, creditLimit)
-        .toDouble();
+    _maximumCreditLimitValue.value =
+        (creditLimit - remainingTotal).clamp(0, creditLimit).toDouble();
   }
 
   void openPayNowPage([LoanOrderCard? order]) {
@@ -280,7 +282,8 @@ class HomeController extends GetxController {
     final payload = <String, dynamic>{};
 
     String? matchString(String pattern) {
-      final match = RegExp(pattern, multiLine: true, dotAll: true).firstMatch(normalized);
+      final match =
+          RegExp(pattern, multiLine: true, dotAll: true).firstMatch(normalized);
       if (match == null) {
         return null;
       }
@@ -289,30 +292,31 @@ class HomeController extends GetxController {
     }
 
     payload['loanId'] = matchString(r'"loanId"\s*:\s*"([^"]+)"');
-    payload['principalTitle'] = matchString(r'"principalTitle"\s*:\s*"([^"]+)"');
+    payload['principalTitle'] =
+        matchString(r'"principalTitle"\s*:\s*"([^"]+)"');
     payload['amountDue'] = matchString(r'"amountDue"\s*:\s*([^,}\n]+)');
     payload['appliedDate'] = matchString(r'"appliedDate"\s*:\s*"([^"]+)"');
     payload['dueDate'] = matchString(r'"dueDate"\s*:\s*"([^"]+)"');
 
-    payload.removeWhere((key, value) => value == null || value.toString().trim().isEmpty);
+    payload.removeWhere(
+        (key, value) => value == null || value.toString().trim().isEmpty);
     return payload;
   }
 
   LoanOrderCard? _loanOrderFromQrPayload(Map<String, dynamic> payload) {
     final loanId = _findString(payload, ['loanId', 'loan_id', 'id']);
     final principalTitle =
-      _findString(payload, ['principalTitle', 'principal_title', 'title']);
+        _findString(payload, ['principalTitle', 'principal_title', 'title']);
     final principalLogo = principalLogoUrlForTitle(principalTitle);
     final amountDue =
-      _findAmount(payload, ['amountDue', 'amount_due', 'amount']);
-    final appliedDate = _findDate(payload, ['appliedDate', 'applied_date']);
+        _findAmount(payload, ['amountDue', 'amount_due', 'amount']);
+    final appliedDate = DateTime.now();
     final dueDate = _findDate(payload, ['dueDate', 'due_date']);
 
     if (loanId == null ||
         principalTitle == null ||
         principalLogo == null ||
         amountDue == null ||
-        appliedDate == null ||
         dueDate == null) {
       return null;
     }
@@ -348,7 +352,8 @@ class HomeController extends GetxController {
       return value.toDouble();
     }
 
-    final cleaned = value.toString().replaceAll(',', '').replaceAll('₱', '').trim();
+    final cleaned =
+        value.toString().replaceAll(',', '').replaceAll('₱', '').trim();
     return double.tryParse(cleaned);
   }
 
@@ -663,6 +668,24 @@ class HomeController extends GetxController {
     );
   }
 
+  Future<void> openLoanDetailsSheet(LoanOrderCard order) async {
+    final List<LoanItemRecord> items =
+        await _database.loadLoanItemsForLoan(order.loanId);
+
+    Get.bottomSheet(
+      LoanDetailsSheet(
+        principalTitle: order.title,
+        loanId: order.loanId,
+        appliedDateTime: order.appliedDateTime,
+        dueDateTime: order.dueDateTime,
+        amountDue: order.amountDueText,
+        items: items,
+      ),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+    );
+  }
+
   /// Processes payment through [PaymentService] then records it locally on success.
   Future<bool> processPayment({
     required LoanOrderCard order,
@@ -754,7 +777,8 @@ class HomeController extends GetxController {
   Future<void> submitPayNow() async {
     final order = activeLoanOrder;
     if (order == null) {
-      Get.snackbar('No active loan', 'Select a loan to pay first.', snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar('No active loan', 'Select a loan to pay first.',
+          snackPosition: SnackPosition.BOTTOM);
       return;
     }
 
@@ -770,7 +794,8 @@ class HomeController extends GetxController {
     );
 
     if (success) {
-      Get.snackbar('Payment recorded', 'Payment was recorded successfully.', snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar('Payment recorded', 'Payment was recorded successfully.',
+          snackPosition: SnackPosition.BOTTOM);
     }
   }
 

@@ -161,16 +161,23 @@ class HomeScreen extends StatelessWidget {
                           key: ValueKey<int>(visibleCards.length),
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            for (int index = 0; index < visibleCards.length; index++) ...[
-                              PsosyoBalanceCard(
-                                title: visibleCards[index].title,
-                                loanId: visibleCards[index].loanId,
-                                logoAsset: visibleCards[index].logoAsset,
-                                appliedDateTime: visibleCards[index].appliedDateTime,
-                                dueDateTime: visibleCards[index].dueDateTime,
-                                amountDue: visibleCards[index].amountDueText,
-                                onPayNow: () => controller.openPayNowPage(
-                                  visibleCards[index],
+                            for (int index = 0;
+                                index < visibleCards.length;
+                                index++) ...[
+                              GestureDetector(
+                                onLongPress: () => controller
+                                    .openLoanDetailsSheet(visibleCards[index]),
+                                child: PsosyoBalanceCard(
+                                  title: visibleCards[index].title,
+                                  loanId: visibleCards[index].loanId,
+                                  logoAsset: visibleCards[index].logoAsset,
+                                  appliedDateTime:
+                                      visibleCards[index].appliedDateTime,
+                                  dueDateTime: visibleCards[index].dueDateTime,
+                                  amountDue: visibleCards[index].amountDueText,
+                                  onPayNow: () => controller.openPayNowPage(
+                                    visibleCards[index],
+                                  ),
                                 ),
                               ),
                               if (index != visibleCards.length - 1)
@@ -178,6 +185,14 @@ class HomeScreen extends StatelessWidget {
                             ],
                           ],
                         ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Tip: Hold a balance card to view SKU loan details.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF8F9398),
                       ),
                     ),
                   ],
@@ -218,7 +233,8 @@ class HomeScreen extends StatelessWidget {
                         amount: controller.transactionHistory[index].amount,
                         sign: controller.transactionHistory[index].sign,
                         status: controller.transactionHistory[index].status,
-                        logoAsset: controller.transactionHistory[index].logoAsset,
+                        logoAsset:
+                            controller.transactionHistory[index].logoAsset,
                         compact: true,
                       ),
                       if (index != controller.transactionHistory.length - 1)

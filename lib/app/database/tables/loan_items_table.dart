@@ -73,4 +73,41 @@ class LoanItemsTable {
       );
     }
   }
+
+  Future<List<LoanItemRecord>> loadLoanItemsForLoan(String loanId) async {
+    final db = await _database();
+    final rows = await db.query(
+      tableName,
+      where: 'loan_id = ?',
+      whereArgs: <Object?>[loanId],
+      orderBy: 'id ASC',
+    );
+
+    return rows.map((row) {
+      return LoanItemRecord(
+        productName: row['product_name']?.toString() ?? '',
+        sku: row['sku']?.toString() ?? '',
+        quantity: _intValue(row['quantity']),
+        unitPrice: _doubleValue(row['unit_price']),
+        totalPrice: _doubleValue(row['total_price']),
+      );
+    }).toList();
+  }
+
+  int _intValue(dynamic value) {
+    if (value is int) {
+      return value;
+    }
+    if (value is num) {
+      return value.toInt();
+    }
+    return int.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  double _doubleValue(dynamic value) {
+    if (value is num) {
+      return value.toDouble();
+    }
+    return double.tryParse(value?.toString() ?? '') ?? 0;
+  }
 }

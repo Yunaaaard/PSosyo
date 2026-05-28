@@ -91,7 +91,8 @@ class LoansTable {
     final rows = await db.query(
       tableName,
       columns: <String>['loan_id'],
-      where: 'lower(principal_title) = ? AND status = ? AND remaining_amount > 0',
+      where:
+          'lower(principal_title) = ? AND status = ? AND remaining_amount > 0',
       whereArgs: <Object?>[_normalizePrincipalTitle(principalTitle), 'ACTIVE'],
       limit: 1,
     );
@@ -106,11 +107,13 @@ class LoansTable {
     try {
       decoded = jsonDecode(rawJson);
     } catch (_) {
-      return LoanImportResult.failure('The scanned QR payload is not valid JSON.');
+      return LoanImportResult.failure(
+          'The scanned QR payload is not valid JSON.');
     }
 
     if (decoded is! Map) {
-      return LoanImportResult.failure('The scanned QR payload is not a loan object.');
+      return LoanImportResult.failure(
+          'The scanned QR payload is not a loan object.');
     }
 
     return importLoanOrderPayload(
@@ -128,34 +131,37 @@ class LoansTable {
     final loanId = _stringValue(payload['loanId']);
     final principalTitle = _stringValue(payload['principalTitle']);
     final principalLogo = principalLogoUrlForTitle(principalTitle) ?? '';
-    final amountDue = _doubleValue(payload['amountDue']);
-    final appliedDate = _dateValue(payload['appliedDate']);
+    final appliedDate = DateTime.now();
     final dueDate = _dateValue(payload['dueDate']);
     final products = _productRows(payload['products']);
+    final amountDue = _amountDueFromProducts(
+      products,
+      fallbackAmount: _doubleValue(payload['amountDue']),
+    );
 
     if (loanId == null || loanId.isEmpty) {
-      return LoanImportResult.failure('Missing loanId in the scanned QR payload.');
+      return LoanImportResult.failure(
+          'Missing loanId in the scanned QR payload.');
     }
     if (principalTitle == null || principalTitle.isEmpty) {
-      return LoanImportResult.failure('Missing principalTitle in the scanned QR payload.');
+      return LoanImportResult.failure(
+          'Missing principalTitle in the scanned QR payload.');
     }
     if (amountDue == null || amountDue <= 0) {
-      return LoanImportResult.failure('Missing or invalid amountDue in the scanned QR payload.');
-    }
-    if (appliedDate == null) {
-      return LoanImportResult.failure('Missing appliedDate in the scanned QR payload.');
+      return LoanImportResult.failure(
+          'Missing or invalid amountDue in the scanned QR payload.');
     }
     if (dueDate == null) {
-      return LoanImportResult.failure('Missing dueDate in the scanned QR payload.');
+      return LoanImportResult.failure(
+          'Missing dueDate in the scanned QR payload.');
     }
 
     final db = await _database();
     final normalizedPrincipalTitle = _normalizePrincipalTitle(principalTitle);
 
     final activeBalance = await _activeOutstandingBalance(db);
-    final availableCredit = (_maxCreditLimit - activeBalance)
-        .clamp(0, _maxCreditLimit)
-        .toDouble();
+    final availableCredit =
+        (_maxCreditLimit - activeBalance).clamp(0, _maxCreditLimit).toDouble();
     if (amountDue > availableCredit + 0.0001) {
       return LoanImportResult.failure(
         'Loan amount exceeds the remaining credit limit of ₱${availableCredit.toStringAsFixed(2)}.',
@@ -165,7 +171,8 @@ class LoansTable {
     final activePrincipalRows = await db.query(
       tableName,
       columns: <String>['loan_id'],
-      where: 'lower(principal_title) = ? AND status = ? AND remaining_amount > 0',
+      where:
+          'lower(principal_title) = ? AND status = ? AND remaining_amount > 0',
       whereArgs: <Object?>[normalizedPrincipalTitle, 'ACTIVE'],
       limit: 1,
     );
@@ -210,7 +217,8 @@ class LoansTable {
         conflictAlgorithm: ConflictAlgorithm.abort,
       );
 
-      await _loanItemsTable.replaceLoanItemsInTransaction(txn, loanId, products);
+      await _loanItemsTable.replaceLoanItemsInTransaction(
+          txn, loanId, products);
     });
 
     return LoanImportResult.success(
@@ -299,8 +307,10 @@ class LoansTable {
       title: principalTitle,
       loanId: row['loan_id']?.toString() ?? '',
       logoAsset: principalLogoUrlForTitle(principalTitle) ?? '',
-      appliedAt: DateTime.tryParse(row['applied_date']?.toString() ?? '') ?? DateTime.now(),
-      dueAt: DateTime.tryParse(row['due_date']?.toString() ?? '') ?? DateTime.now(),
+      appliedAt: DateTime.tryParse(row['applied_date']?.toString() ?? '') ??
+          DateTime.now(),
+      dueAt: DateTime.tryParse(row['due_date']?.toString() ?? '') ??
+          DateTime.now(),
       originalAmount: _doubleValue(row['amount_due']) ?? 0,
       remainingAmount: _doubleValue(row['remaining_amount']) ?? 0,
     );
@@ -311,16 +321,49 @@ class LoansTable {
       return const <LoanItemRecord>[];
     }
 
-    return value.whereType<Map>().map((item) {
-      final map = Map<String, dynamic>.from(item);
-      return LoanItemRecord(
-        productName: _stringValue(map['productName']) ?? '',
-        sku: _stringValue(map['sku']) ?? '',
-        quantity: _intValue(map['quantity']) ?? 0,
-        unitPrice: _doubleValue(map['unitPrice']) ?? 0,
-        totalPrice: _doubleValue(map['totalPrice']) ?? 0,
-      );
-    }).where((item) => item.productName.isNotEmpty).toList();
+    return value
+        .whereType<Map>()
+        .map((item) {
+          final map = Map<String, dynamic>.from(item);
+          final unitPrice =
+              _doubleValue(map['unitPrice'] ?? map['unit_price']) ?? 0;
+          final quantity = _intValue(map['quantity'] ?? map['qty']) ?? 0;
+          final totalPrice =
+              _doubleValue(map['totalPrice'] ?? map['total_price']) ??
+                  (unitPrice * quantity);
+
+          return LoanItemRecord(
+            productName: _stringValue(map['productName'] ?? map['name']) ??
+                _stringValue(map['sku']) ??
+                'SKU',
+            sku: _stringValue(map['sku']) ?? '',
+            quantity: quantity,
+            unitPrice: unitPrice,
+            totalPrice: totalPrice,
+          );
+        })
+        .where((item) => item.sku.isNotEmpty || item.productName.isNotEmpty)
+        .toList();
+  }
+
+  double? _amountDueFromProducts(
+    List<LoanItemRecord> products, {
+    double? fallbackAmount,
+  }) {
+    if (products.isEmpty) {
+      return fallbackAmount;
+    }
+
+    final total = products.fold<double>(
+      0,
+      (sum, item) => sum + item.totalPrice,
+    );
+
+    if (total <= 0) {
+      return fallbackAmount;
+    }
+
+    return total;
   }
 
   String? _stringValue(dynamic value) {
