@@ -9,6 +9,7 @@ import 'package:p_sosyo/app/modules/home_screen/models/loan_order.dart';
 import 'package:p_sosyo/app/widgets/loan_agreement_sheet.dart';
 import 'package:p_sosyo/app/modules/home_screen/pages/pay_now.dart';
 import 'package:p_sosyo/app/services/user_phone_service.dart';
+import 'package:p_sosyo/app/utils/principal_logo_resolver.dart';
 
 class HomeController extends GetxController {
   final RxBool showAllBalanceCards = true.obs;
@@ -49,23 +50,28 @@ class HomeController extends GetxController {
   final List<LoanPrincipalOption> principalOptions = const [
     LoanPrincipalOption(
       title: 'Nestle',
-      logoAsset: 'assets/images/nestle-sample-logo.png',
+      logoAsset:
+          'https://raw.githubusercontent.com/Yunaaaard/PSosyo/main/assets/images/nestle-sample-logo.png',
     ),
     LoanPrincipalOption(
       title: 'Monde Nissin',
-      logoAsset: 'assets/images/monde-sample-logo.png',
+      logoAsset:
+          'https://raw.githubusercontent.com/Yunaaaard/PSosyo/main/assets/images/monde-sample-logo.png',
     ),
     LoanPrincipalOption(
       title: 'Shell',
-      logoAsset: 'assets/images/shell-sample-logo.png',
+      logoAsset:
+          'https://raw.githubusercontent.com/Yunaaaard/PSosyo/main/assets/images/shell-sample-logo.png',
     ),
     LoanPrincipalOption(
       title: 'Nutri Asia',
-      logoAsset: 'assets/images/nutriasia-sample-logo.png',
+      logoAsset:
+          'https://raw.githubusercontent.com/Yunaaaard/PSosyo/main/assets/images/nutriasia-sample-logo.png',
     ),
     LoanPrincipalOption(
       title: 'CDO',
-      logoAsset: 'assets/images/cdo-sample-logo.png',
+      logoAsset:
+          'https://raw.githubusercontent.com/Yunaaaard/PSosyo/main/assets/images/cdo-sample-logo.png',
     ),
   ];
 
@@ -284,7 +290,6 @@ class HomeController extends GetxController {
 
     payload['loanId'] = matchString(r'"loanId"\s*:\s*"([^"]+)"');
     payload['principalTitle'] = matchString(r'"principalTitle"\s*:\s*"([^"]+)"');
-    payload['principalLogo'] = matchString(r'"principalLogo"\s*:\s*"([^"]+)"');
     payload['amountDue'] = matchString(r'"amountDue"\s*:\s*([^,}\n]+)');
     payload['appliedDate'] = matchString(r'"appliedDate"\s*:\s*"([^"]+)"');
     payload['dueDate'] = matchString(r'"dueDate"\s*:\s*"([^"]+)"');
@@ -297,7 +302,7 @@ class HomeController extends GetxController {
     final loanId = _findString(payload, ['loanId', 'loan_id', 'id']);
     final principalTitle =
       _findString(payload, ['principalTitle', 'principal_title', 'title']);
-    final principalLogo = _resolvePrincipalLogoAsset(principalTitle);
+    final principalLogo = principalLogoUrlForTitle(principalTitle);
     final amountDue =
       _findAmount(payload, ['amountDue', 'amount_due', 'amount']);
     final appliedDate = _findDate(payload, ['appliedDate', 'applied_date']);
@@ -321,41 +326,6 @@ class HomeController extends GetxController {
       originalAmount: amountDue,
       remainingAmount: amountDue,
     );
-  }
-
-  String? _resolvePrincipalLogoAsset(String? principalTitle) {
-    if (principalTitle == null || principalTitle.trim().isEmpty) {
-      return null;
-    }
-
-    final normalizedTitle = _normalizePrincipalTitle(principalTitle);
-    for (final option in principalOptions) {
-      if (_normalizePrincipalTitle(option.title) == normalizedTitle) {
-        return option.logoAsset;
-      }
-    }
-
-    if (normalizedTitle.contains('monde') || normalizedTitle.contains('nissin')) {
-      return 'assets/images/monde-sample-logo.png';
-    }
-    if (normalizedTitle.contains('nestle')) {
-      return 'assets/images/nestle-sample-logo.png';
-    }
-    if (normalizedTitle.contains('shell')) {
-      return 'assets/images/shell-sample-logo.png';
-    }
-    if (normalizedTitle.contains('nutri') || normalizedTitle.contains('asia')) {
-      return 'assets/images/nutriasia-sample-logo.png';
-    }
-    if (normalizedTitle.contains('cdo')) {
-      return 'assets/images/cdo-sample-logo.png';
-    }
-
-    return null;
-  }
-
-  String _normalizePrincipalTitle(String value) {
-    return value.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), ' ').trim();
   }
 
   String? _findString(Map<String, dynamic> payload, List<String> keys) {

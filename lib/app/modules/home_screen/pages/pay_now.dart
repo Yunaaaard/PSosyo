@@ -38,14 +38,12 @@ class PayNowPage extends GetView<HomeController> {
               children: [
                 const SectionLabel(label: 'Reference Number'),
                 const SizedBox(height: 5),
-
-                // Reference field
                 Obx(
                   () => FieldShell(
                     child: Row(
                       children: [
                         Expanded(
-                          child: TextField(
+                          child: TextField( 
                             controller: controller.payNowReferenceController,
                             readOnly: controller.useAutoReference.value,
                             onChanged: controller.updateReference,

@@ -72,7 +72,7 @@ class TransactionTile extends StatelessWidget {
               ],
             ),
             padding: EdgeInsets.all(compact ? 5 : 8),
-            child: Image.asset(logoAsset, fit: BoxFit.contain),
+            child: _buildLogoImage(),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -124,6 +124,36 @@ class TransactionTile extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildLogoImage() {
+    final uri = Uri.tryParse(logoAsset);
+    final isNetworkLogo = uri != null &&
+        (uri.scheme == 'http' || uri.scheme == 'https');
+
+    if (isNetworkLogo) {
+      return Image.network(
+        logoAsset,
+        fit: BoxFit.contain,
+        errorBuilder: (_, __, ___) {
+          return const Icon(
+            Icons.image_not_supported_outlined,
+            color: Color(0xFFB8BCC7),
+          );
+        },
+      );
+    }
+
+    return Image.asset(
+      logoAsset,
+      fit: BoxFit.contain,
+      errorBuilder: (_, __, ___) {
+        return const Icon(
+          Icons.image_not_supported_outlined,
+          color: Color(0xFFB8BCC7),
+        );
+      },
     );
   }
 }
