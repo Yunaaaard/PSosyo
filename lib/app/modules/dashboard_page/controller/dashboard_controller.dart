@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:p_sosyo/app/modules/dashboard_page/pages/psosyo_eligiblity_page.dart';
+import 'package:p_sosyo/app/routes/app_routes.dart';
 
 class DashboardController extends GetxController {
   // Carousel data
@@ -63,6 +63,6 @@ class DashboardController extends GetxController {
   }
 
   void openPsosyoEligibility() {
-    Get.to(() => const PsosyoEligibilityPage());
+    Get.toNamed(AppRoutes.psosyoLanding);
   }
 }

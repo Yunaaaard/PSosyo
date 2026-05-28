@@ -8,7 +8,11 @@ class AboutYourselfController extends GetxController {
   final TextEditingController fullnameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController dateOfBirthController = TextEditingController();
-  final TextEditingController addressController = TextEditingController();
+  // Separated address fields
+  final TextEditingController streetController = TextEditingController();
+  final TextEditingController postalCodeController = TextEditingController();
+  final TextEditingController cityController = TextEditingController();
+  final TextEditingController countryController = TextEditingController();
 
   var selectedStatus = Rx<String?>(null);
   var selectedGender = Rx<String?>(null);
@@ -34,7 +38,10 @@ class AboutYourselfController extends GetxController {
     fullnameController.addListener(_syncFormState);
     emailController.addListener(_syncFormState);
     dateOfBirthController.addListener(_syncFormState);
-    addressController.addListener(_syncFormState);
+    streetController.addListener(_syncFormState);
+    postalCodeController.addListener(_syncFormState);
+    cityController.addListener(_syncFormState);
+    countryController.addListener(_syncFormState);
 
     // Check if scanned name is available from ID scanning
     final scannedName = _idVerificationService.getScannedName();
@@ -76,13 +83,50 @@ class AboutYourselfController extends GetxController {
   }
 
   void _syncFormState() {
+    final emailValid = _isValidEmail(emailController.text);
+    final addressFilled = streetController.text.trim().isNotEmpty &&
+        _isValidPostalCode(postalCodeController.text) &&
+        cityController.text.trim().isNotEmpty &&
+        countryController.text.trim().isNotEmpty;
+
     isFormComplete.value = fullnameController.text.trim().isNotEmpty &&
-        emailController.text.trim().isNotEmpty &&
+        emailValid &&
         dateOfBirthController.text.trim().isNotEmpty &&
         selectedStatus.value != null &&
         selectedGender.value != null &&
-        addressController.text.trim().isNotEmpty;
+        addressFilled;
     update();
+  }
+
+  bool _isValidEmail(String value) {
+    final email = value.trim();
+    if (email.isEmpty) return false;
+    return RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(email);
+  }
+
+  bool _isValidPostalCode(String value) {
+    final postalCode = value.trim();
+    if (postalCode.isEmpty) return false;
+    return RegExp(r'^[0-9\-\s]{3,10}$').hasMatch(postalCode);
+  }
+
+  String? validateEmail(String? value) {
+    final email = value?.trim() ?? '';
+    if (email.isEmpty) return 'Email is required';
+    if (!_isValidEmail(email)) return 'Enter a valid email';
+    return null;
+  }
+
+  String? validateRequired(String? value, String label) {
+    if ((value ?? '').trim().isEmpty) return '$label is required';
+    return null;
+  }
+
+  String? validatePostalCode(String? value) {
+    final postalCode = value?.trim() ?? '';
+    if (postalCode.isEmpty) return 'Postal code is required';
+    if (!_isValidPostalCode(postalCode)) return 'Enter a valid postal code';
+    return null;
   }
 
   void setStatus(String? status) {
@@ -162,7 +206,10 @@ class AboutYourselfController extends GetxController {
     fullnameController.dispose();
     emailController.dispose();
     dateOfBirthController.dispose();
-    addressController.dispose();
+    streetController.dispose();
+    postalCodeController.dispose();
+    cityController.dispose();
+    countryController.dispose();
     super.onClose();
   }
 }

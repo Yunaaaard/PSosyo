@@ -10,7 +10,7 @@ class LandingController extends GetxController {
   void onInit() {
     super.onInit();
     _navTimer = Timer(const Duration(seconds: 4), () {
-      Get.offNamed(AppRoutes.register);
+      Get.offNamed(AppRoutes.psosyoWelcome);
     });
   }
 
