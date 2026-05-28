@@ -8,9 +8,17 @@ class PsosyoDbCreator {
   const PsosyoDbCreator._();
 
   static Future<void> create(Database db, int version) async {
-    await db.transaction((txn) async {
-      await _createSchema(txn);
-    });
+    await UsersTable.create(db);
+    await LoansTable.create(db);
+    await LoanItemsTable.create(db);
+    await PaymentRequestsTable.create(db);
+
+    await db.execute(
+      'CREATE INDEX idx_loans_principal_status ON loans(principal_title, status)',
+    );
+    await db.execute('CREATE INDEX idx_loans_loan_id ON loans(loan_id)');
+    await db
+        .execute('CREATE INDEX idx_loan_items_loan_id ON loan_items(loan_id)');
   }
 
   static Future<void> upgrade(
