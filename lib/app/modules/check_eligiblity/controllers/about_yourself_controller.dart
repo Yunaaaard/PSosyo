@@ -155,7 +155,10 @@ class AboutYourselfController extends GetxController {
       dateOfBirth: dateOfBirthController.text.trim(),
       status: selectedStatus.value ?? '',
       gender: selectedGender.value ?? '',
-      address: addressController.text.trim(),
+      street: streetController.text.trim(),
+      postalCode: postalCodeController.text.trim(),
+      city: cityController.text.trim(),
+      country: countryController.text.trim(),
     );
   }
 

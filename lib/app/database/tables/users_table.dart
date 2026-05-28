@@ -17,7 +17,10 @@ class UsersTable {
         date_of_birth TEXT NOT NULL DEFAULT '',
         status TEXT NOT NULL DEFAULT '',
         gender TEXT NOT NULL DEFAULT '',
-        address TEXT NOT NULL DEFAULT '',
+        street TEXT NOT NULL DEFAULT '',
+        postal_code TEXT NOT NULL DEFAULT '',
+        city TEXT NOT NULL DEFAULT '',
+        country TEXT NOT NULL DEFAULT '',
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
       )
@@ -52,7 +55,10 @@ class UsersTable {
         'date_of_birth': '',
         'status': '',
         'gender': '',
-        'address': '',
+        'street': '',
+        'postal_code': '',
+        'city': '',
+        'country': '',
         'created_at': now,
         'updated_at': now,
       },
@@ -66,7 +72,10 @@ class UsersTable {
     required String dateOfBirth,
     required String status,
     required String gender,
-    required String address,
+    required String street,
+    required String postalCode,
+    required String city,
+    required String country,
   }) async {
     final db = await _database();
     final now = DateTime.now().toIso8601String();
@@ -80,7 +89,10 @@ class UsersTable {
       'date_of_birth': dateOfBirth,
       'status': status,
       'gender': gender,
-      'address': address,
+      'street': street,
+      'postal_code': postalCode,
+      'city': city,
+      'country': country,
       'updated_at': now,
     };
 
@@ -106,7 +118,10 @@ class UsersTable {
       dateOfBirth: '',
       status: '',
       gender: '',
-      address: '',
+      street: '',
+      postalCode: '',
+      city: '',
+      country: '',
     );
   }
 }

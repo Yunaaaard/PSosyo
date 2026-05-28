@@ -521,21 +521,19 @@ class AboutYourselfPage extends StatelessWidget {
                       () {
                         final canContinue = controller.isFormComplete.value;
 
-                      return ElevatedButton(
-                        style: canContinue
-                            ? AppThemes.primaryButtonStyle
-                            : AppThemes.unaccessibleButtonStyle,
-                        onPressed: canContinue
-                            ? () async {
-                                await controller.saveProfile();
-                                Get.toNamed(AppRoutes.employmentIncome);
-                              }
-                            : null,
-                        child: const Center(child: Text('Continue')),
-                      );
-                    },
-                  ),
-                ],
+                        return ElevatedButton(
+                          style: canContinue
+                              ? AppThemes.primaryButtonStyle
+                              : AppThemes.unaccessibleButtonStyle,
+                          onPressed: canContinue
+                              ? () => Get.toNamed(AppRoutes.employmentIncome)
+                              : null,
+                          child: const Center(child: Text('Continue')),
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

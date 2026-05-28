@@ -14,7 +14,7 @@ class OtpVerificationPage extends GetView<OtpController> {
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
+      onPopInvoked: (didPop) {
         if (didPop) return;
         controller.goBackToRegister();
       },
