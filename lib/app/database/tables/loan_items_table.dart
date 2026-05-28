@@ -23,9 +23,9 @@ class LoanItemsTable {
 
   static const String tableName = 'loan_items';
 
-  static Future<void> create(Database db) async {
+  static Future<void> create(DatabaseExecutor db) async {
     await db.execute('''
-      CREATE TABLE loan_items (
+      CREATE TABLE IF NOT EXISTS loan_items (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         loan_id TEXT NOT NULL,
         product_name TEXT NOT NULL,
