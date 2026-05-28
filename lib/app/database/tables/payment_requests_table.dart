@@ -9,9 +9,9 @@ class PaymentRequestsTable {
 
   static const String tableName = 'payment_requests';
 
-  static Future<void> create(Database db) async {
+  static Future<void> create(DatabaseExecutor db) async {
     await db.execute('''
-      CREATE TABLE payment_requests (
+      CREATE TABLE IF NOT EXISTS payment_requests (
         id TEXT PRIMARY KEY,
         loan_id TEXT,
         business_id TEXT,

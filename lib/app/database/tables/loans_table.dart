@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:p_sosyo/app/database/tables/loan_items_table.dart';
 import 'package:p_sosyo/app/database/tables/users_table.dart';
 import 'package:p_sosyo/app/modules/home_screen/models/loan_order.dart';
@@ -46,7 +45,7 @@ class LoansTable {
 
   static const String tableName = 'loans';
 
-  static Future<void> create(Database db) async {
+  static Future<void> create(DatabaseExecutor db) async {
     await db.execute('''
       CREATE TABLE loans (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
