@@ -7,9 +7,9 @@ class UsersTable {
 
   static const String tableName = 'users';
 
-  static Future<void> create(Database db) async {
+  static Future<void> create(DatabaseExecutor db) async {
     await db.execute('''
-      CREATE TABLE users (
+      CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         phone_number TEXT UNIQUE,
         full_name TEXT NOT NULL DEFAULT '',

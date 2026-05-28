@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:get/get.dart';
+import 'package:flutter/widgets.dart';
 import 'package:p_sosyo/app/database/psosyo_database_service.dart';
 import 'package:p_sosyo/app/services/payment_service.dart';
 import 'package:p_sosyo/app/modules/home_screen/models/loan_order.dart';
@@ -24,6 +25,26 @@ class HomeController extends GetxController {
   // Payment form state for QR payment page
   final RxString paymentReference = ''.obs;
   final Rxn<String> attachedReceiptPath = Rxn<String>();
+  // Pay Now UI bindings
+  late final TextEditingController payNowReferenceController;
+  final RxBool useAutoReference = true.obs;
+  late final TextEditingController payNowPhoneController;
+  final RxString phoneNumber = ''.obs;
+
+  final List<String> remarksOptions = const [
+    'Payment for order',
+    'Partial payment',
+    'Full payment',
+  ];
+  final RxString remarksValue = ''.obs;
+
+  final List<String> paymentTypeOptions = const [
+    'Cash',
+    'GCash',
+    'Bank Transfer',
+    'Inventory Financing',
+  ];
+  final RxString selectedPaymentType = ''.obs;
 
   final List<LoanPrincipalOption> principalOptions = const [
     LoanPrincipalOption(
@@ -84,6 +105,19 @@ class HomeController extends GetxController {
     super.onInit();
     _database = Get.find<PsosyoDatabaseService>();
     unawaited(_bootstrapFromDatabase());
+    payNowReferenceController = TextEditingController(text: paymentReference.value);
+    payNowPhoneController = TextEditingController(text: phoneNumber.value);
+  }
+
+  @override
+  void onClose() {
+    try {
+      payNowReferenceController.dispose();
+    } catch (_) {}
+    try {
+      payNowPhoneController.dispose();
+    } catch (_) {}
+    super.onClose();
   }
 
   Future<void> _bootstrapFromDatabase() async {
@@ -718,6 +752,56 @@ class HomeController extends GetxController {
 
   void attachReceipt(String? path) {
     attachedReceiptPath.value = path;
+  }
+
+  // Pay Now helpers used by the UI
+  void updateReference(String value) {
+    paymentReference.value = value;
+  }
+
+  void toggleAutoReference(bool value) {
+    useAutoReference.value = value;
+    if (value) {
+      final generated = 'REF${DateTime.now().millisecondsSinceEpoch % 100000}';
+      paymentReference.value = generated;
+      payNowReferenceController.text = generated;
+    }
+  }
+
+  void updatePhoneNumber(String value) {
+    phoneNumber.value = value;
+    payNowPhoneController.text = value;
+  }
+
+  void updateRemarks(String value) {
+    remarksValue.value = value;
+  }
+
+  void updatePaymentType(String value) {
+    selectedPaymentType.value = value;
+  }
+
+  Future<void> submitPayNow() async {
+    final order = activeLoanOrder;
+    if (order == null) {
+      Get.snackbar('No active loan', 'Select a loan to pay first.', snackPosition: SnackPosition.BOTTOM);
+      return;
+    }
+
+    final amount = order.remainingAmount;
+    final reference = paymentReference.value.trim();
+
+    final success = await processPayment(
+      order: order,
+      amount: amount,
+      reference: reference.isEmpty ? null : reference,
+      receiptPath: attachedReceiptPath.value,
+      allowLocalFallback: true,
+    );
+
+    if (success) {
+      Get.snackbar('Payment recorded', 'Payment was recorded successfully.', snackPosition: SnackPosition.BOTTOM);
+    }
   }
 
   void payRemainingBalance() {
