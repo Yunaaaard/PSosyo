@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:p_sosyo/app/database/tables/loan_items_table.dart';
 import 'package:p_sosyo/app/database/tables/users_table.dart';
 import 'package:p_sosyo/app/modules/home_screen/models/loan_order.dart';
+import 'package:p_sosyo/app/utils/principal_logo_resolver.dart';
 import 'package:sqflite/sqflite.dart';
 
 class LoanImportResult {
@@ -136,7 +137,7 @@ class LoansTable {
   }) async {
     final loanId = _stringValue(payload['loanId']);
     final principalTitle = _stringValue(payload['principalTitle']);
-    final principalLogo = _stringValue(payload['principalLogo']) ?? '';
+    final principalLogo = principalLogoUrlForTitle(principalTitle) ?? '';
     final amountDue = _doubleValue(payload['amountDue']);
     final appliedDate = _dateValue(payload['appliedDate']);
     final dueDate = _dateValue(payload['dueDate']);
@@ -207,7 +208,6 @@ class LoansTable {
           'loan_id': loanId,
           'user_id': userId,
           'principal_title': principalTitle,
-          'principal_logo': principalLogo,
           'amount_due': amountDue,
           'remaining_amount': amountDue,
           'applied_date': appliedDate.toIso8601String(),
@@ -252,7 +252,6 @@ class LoansTable {
         'loan_id': card.loanId,
         'user_id': userId,
         'principal_title': card.title,
-        'principal_logo': card.logoAsset,
         'amount_due': card.originalAmount,
         'remaining_amount': card.remainingAmount,
         'applied_date': card.appliedAt.toIso8601String(),
@@ -305,10 +304,11 @@ class LoansTable {
   }
 
   LoanOrderCard _loanOrderFromRow(Map<String, Object?> row) {
+    final principalTitle = row['principal_title']?.toString() ?? '';
     return LoanOrderCard(
-      title: row['principal_title']?.toString() ?? '',
+      title: principalTitle,
       loanId: row['loan_id']?.toString() ?? '',
-      logoAsset: row['principal_logo']?.toString() ?? '',
+      logoAsset: principalLogoUrlForTitle(principalTitle) ?? '',
       appliedAt: DateTime.tryParse(row['applied_date']?.toString() ?? '') ?? DateTime.now(),
       dueAt: DateTime.tryParse(row['due_date']?.toString() ?? '') ?? DateTime.now(),
       originalAmount: _doubleValue(row['amount_due']) ?? 0,

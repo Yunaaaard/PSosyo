@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:p_sosyo/app/utils/principal_logo_resolver.dart';
+
 class ScanSuccessReceiptModel {
   const ScanSuccessReceiptModel._({
     required this.qrData,
@@ -36,7 +38,10 @@ class ScanSuccessReceiptModel {
       amountSent: amountSent,
       loanId: _stringValue(parsedQrJson?['loanId']) ?? 'N/A',
       principalTitle: _stringValue(parsedQrJson?['principalTitle']) ?? to ?? '',
-      principalLogo: _stringValue(parsedQrJson?['principalLogo']) ?? '',
+        principalLogo:
+          principalLogoUrlForTitle(_stringValue(parsedQrJson?['principalTitle']) ?? to) ??
+            _stringValue(parsedQrJson?['principalLogo']) ??
+            '',
       amountDueFromQr: (parsedQrJson?['amountDue'] as num?)?.toDouble() ?? amountSent,
       appliedDate: _stringValue(parsedQrJson?['appliedDate']) ?? '',
       dueDate: _stringValue(parsedQrJson?['dueDate']) ?? '',
