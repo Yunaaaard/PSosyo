@@ -10,36 +10,38 @@ class LandingPage extends GetView<LandingController> {
 
   @override
   Widget build(BuildContext context) {
-    // Touch controller so splash navigation timer always starts.
-    controller;
-
-    return Scaffold(
-      backgroundColor: AppColors.primary,
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SvgPicture.asset(
-              'assets/icons/psosyo-icon-button.svg',
-              width: 200,
-              height: 200,
+    return GetBuilder<LandingController>(
+      init: LandingController(),
+      builder: (_) {
+        return Scaffold(
+          backgroundColor: AppColors.primary,
+          body: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Image.asset(
+                  'assets/images/PSosyo-Logo.png',
+                  width: 300,
+                  height: 300,
+                ),
+                const SizedBox(height: 5),
+                const Text(
+                  'PSOSYO',
+                  style: TextStyle(
+                    fontFamily: 'IT TENOVIANA DEMO',
+                    color: Colors.white,
+                    fontStyle: FontStyle.italic,
+                    fontSize: 60,
+                    fontWeight: FontWeight.w400,
+                    letterSpacing: 10,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
             ),
-            const SizedBox(height: 5),
-            const Text(
-              'PSOSYO',
-              style: TextStyle(
-                fontFamily: 'IT TENOVIANA DEMO',
-                color: Colors.white,
-                fontStyle: FontStyle.italic,
-                fontSize: 24,
-                fontWeight: FontWeight.w400,
-                letterSpacing: 4,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

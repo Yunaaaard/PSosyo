@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:p_sosyo/app/database/psosyo_database_service.dart';
 import 'package:p_sosyo/app/services/id_verification_service.dart';
+import 'package:p_sosyo/app/services/user_phone_service.dart';
 
 class AboutYourselfController extends GetxController {
   final TextEditingController fullnameController = TextEditingController();
@@ -20,6 +22,8 @@ class AboutYourselfController extends GetxController {
 
   final statusOptions = ['Single', 'Married', 'Divorced', 'Widowed'];
   late final IdVerificationService _idVerificationService;
+  late final PsosyoDatabaseService _databaseService;
+  late final UserPhoneService _userPhoneService;
   Worker? _nameWorker;
   Worker? _birthDateWorker;
   Worker? _genderWorker;
@@ -28,6 +32,8 @@ class AboutYourselfController extends GetxController {
   void onInit() {
     super.onInit();
     _idVerificationService = Get.find<IdVerificationService>();
+    _databaseService = Get.find<PsosyoDatabaseService>();
+    _userPhoneService = Get.find<UserPhoneService>();
 
     fullnameController.addListener(_syncFormState);
     emailController.addListener(_syncFormState);
@@ -139,6 +145,18 @@ class AboutYourselfController extends GetxController {
   bool canSelectGender(String option) {
     if (!isGenderLocked.value) return true;
     return lockedGender.value == option;
+  }
+
+  Future<void> saveProfile() async {
+    await _databaseService.saveUserProfile(
+      phoneNumber: _userPhoneService.getRegisteredPhone(),
+      fullName: fullnameController.text.trim(),
+      email: emailController.text.trim(),
+      dateOfBirth: dateOfBirthController.text.trim(),
+      status: selectedStatus.value ?? '',
+      gender: selectedGender.value ?? '',
+      address: addressController.text.trim(),
+    );
   }
 
   void _applyScannedGender(String? rawGender) {

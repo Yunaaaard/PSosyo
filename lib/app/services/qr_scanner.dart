@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:p_sosyo/app/routes/app_routes.dart';
 import 'package:p_sosyo/app/services/qr_payment_live_scanner.dart';
 import 'package:p_sosyo/app/modules/home_screen/controllers/home_controller.dart';
+import 'package:p_sosyo/app/modules/home_screen/pages/scan_success_page.dart';
+import 'package:p_sosyo/app/modules/home_screen/bindings/scan_success_binding.dart';
 
 class QrScannerPage extends StatefulWidget {
   const QrScannerPage({super.key});
@@ -13,81 +15,6 @@ class QrScannerPage extends StatefulWidget {
 
 class _QrScannerPageState extends State<QrScannerPage> {
   bool _scanning = false;
-
-  Future<void> _showSuccessModal() async {
-    await Get.dialog(
-      Dialog(
-        insetPadding: const EdgeInsets.symmetric(horizontal: 28),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 72,
-                height: 72,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFEAF7EE),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.check_rounded,
-                  color: Color(0xFF1EA35B),
-                  size: 42,
-                ),
-              ),
-              const SizedBox(height: 18),
-              const Text(
-                'Balance Card Added',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 10),
-              const Text(
-                'The scanned QR payload was imported into your Psosyo balance list.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.black54,
-                ),
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Get.back();
-                    if (Get.currentRoute != AppRoutes.homeScreen) {
-                      Get.until((route) =>
-                          route.settings.name == AppRoutes.homeScreen);
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF6B3DF0),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  child: const Text(
-                    'Back to Home',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-      barrierDismissible: false,
-    );
-  }
 
   Future<bool> _showFailureModal(String message) async {
     var retry = false;
@@ -207,17 +134,45 @@ class _QrScannerPageState extends State<QrScannerPage> {
     });
 
     final controller = Get.find<HomeController>();
-    final imported = controller.importLoanOrderFromQrPayload(raw);
+    final imported = await controller.importLoanOrderFromQrPayload(raw);
     if (imported) {
-      await _showSuccessModal();
+      // Navigate to receipt page with success binding
+      await Get.to(
+        () => const ScanSuccessPage(),
+        binding: ScanSuccessBinding(),
+        arguments: {
+          'qrData': raw,
+          'from': 'PSosyo User',
+          'to': 'PSosyo Service',
+          'referenceNo': _extractReferenceNo(raw),
+          'dateTime': null,
+          'amountSent': 1834.08,
+        },
+      );
       return;
     }
 
-    final retry =
-        await _showFailureModal('The QR code is missing required loan fields.');
+    final retry = await _showFailureModal(
+      'The scanned loan could not be imported.',
+    );
     if (retry && mounted) {
       await _startScan();
     }
+  }
+
+  String _extractReferenceNo(String qrData) {
+    try {
+      final uri = Uri.tryParse(qrData);
+      if (uri != null) {
+        for (final key in ['referenceNo', 'refNo', 'ref', 'orderId', 'id']) {
+          final value = uri.queryParameters[key];
+          if (value != null && value.isNotEmpty) {
+            return value;
+          }
+        }
+      }
+    } catch (_) {}
+    return qrData;
   }
 
   @override

@@ -113,24 +113,6 @@ class HomeScreen extends StatelessWidget {
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            TextButton(
-                              onPressed: controller.openLoanOrderSheet,
-                              style: TextButton.styleFrom(
-                                foregroundColor: const Color(0xFF2F65F4),
-                                padding: EdgeInsets.zero,
-                                minimumSize: Size.zero,
-                                tapTargetSize:
-                                    MaterialTapTargetSize.shrinkWrap,
-                              ),
-                              child: const Text(
-                                'New Order',
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
                             GestureDetector(
                               onTap: controller.toggleBalanceCardsVisibility,
                               child: Text(
