@@ -31,14 +31,16 @@ class ScanSuccessPage extends GetView<ScanSuccessController> {
                     children: [
                       Expanded(
                         child: Center(
-                          child: SingleChildScrollView(
-                            child: ScanSuccessReceiptCard(
-                              qrData: controller.qrData,
-                              from: controller.senderName,
-                              to: controller.recipientName,
-                              referenceNo: controller.displayReferenceNo,
-                              formattedDateTime: controller.formattedDateTime,
-                              amountSent: controller.formatMoney(controller.amountDueFromQr),
+                          child: Obx(
+                            () => SingleChildScrollView(
+                              child: ScanSuccessReceiptCard(
+                                qrData: controller.qrData,
+                                from: controller.senderName.value,
+                                to: controller.recipientName,
+                                referenceNo: controller.displayReferenceNo,
+                                formattedDateTime: controller.formattedDateTime,
+                                amountSent: controller.formatMoney(controller.amountDueFromQr),
+                              ),
                             ),
                           ),
                         ),

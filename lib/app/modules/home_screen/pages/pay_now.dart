@@ -11,13 +11,61 @@ import 'package:p_sosyo/app/widgets/psosyo_app_bar.dart';
 
 const double _menuHorizontalPadding = 1.0;
 const double _qrSize = 240.0;
-
-class PayNowPage extends GetView<HomeController> {
+class PayNowPage extends StatefulWidget {
   const PayNowPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  State<PayNowPage> createState() => _PayNowPageState();
+}
 
+class _PayNowPageState extends State<PayNowPage> {
+  late final HomeController controller;
+  late final TextEditingController _referenceController;
+  late final TextEditingController _phoneController;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = Get.find<HomeController>();
+    _referenceController = TextEditingController(text: controller.paymentReference.value);
+    _phoneController = TextEditingController(text: controller.phoneNumber.value);
+
+    // Keep controllers in sync with controller observables
+    ever(controller.paymentReference, (val) {
+      final text = (val ?? '').toString();
+      if (_referenceController.text != text) {
+        _referenceController.text = text;
+      }
+    });
+    ever(controller.phoneNumber, (val) {
+      final text = (val ?? '').toString();
+      if (_phoneController.text != text) {
+        _phoneController.text = text;
+      }
+    });
+
+    _referenceController.addListener(() {
+      if (controller.paymentReference.value != _referenceController.text) {
+        controller.updateReference(_referenceController.text);
+      }
+    });
+
+    _phoneController.addListener(() {
+      if (controller.phoneNumber.value != _phoneController.text) {
+        controller.updatePhoneNumber(_phoneController.text);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _referenceController.dispose();
+    _phoneController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF7F7F9),
       resizeToAvoidBottomInset: false,
@@ -38,17 +86,14 @@ class PayNowPage extends GetView<HomeController> {
               children: [
                 const SectionLabel(label: 'Reference Number'),
                 const SizedBox(height: 5),
-
-                // Reference field
                 Obx(
                   () => FieldShell(
                     child: Row(
                       children: [
                         Expanded(
                           child: TextField(
-                            controller: controller.payNowReferenceController,
+                            controller: _referenceController,
                             readOnly: controller.useAutoReference.value,
-                            onChanged: controller.updateReference,
                             decoration: kBaseDecoration.copyWith(
                               hintText: 'Input Text',
                               hintStyle: kHintTextStyle,
@@ -77,7 +122,10 @@ class PayNowPage extends GetView<HomeController> {
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(6),
                             ),
-                            side: const BorderSide(color: Color(0xFFD8DBE2), width: 1.4),
+                            side: const BorderSide(
+                              color: Color(0xFFD8DBE2),
+                              width: 1.4,
+                            ),
                           ),
                         ),
                       ],
@@ -89,21 +137,56 @@ class PayNowPage extends GetView<HomeController> {
                 const SizedBox(height: 5),
                 Obx(
                   () => FieldShell(
-                    child: TextField(
-                      controller: controller.payNowPhoneController,
-                      keyboardType: TextInputType.phone,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        LengthLimitingTextInputFormatter(11),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _phoneController,
+                            readOnly: controller.useAutoPhone.value,
+                            keyboardType: TextInputType.phone,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              LengthLimitingTextInputFormatter(11),
+                            ],
+                            decoration: kBaseDecoration.copyWith(
+                              hintText: controller.useAutoPhone.value
+                                  ? 'Auto-filled from profile'
+                                  : 'Enter 11-digit phone number',
+                              hintStyle: kHintTextStyle,
+                              suffixText: '${controller.phoneNumber.value.length}/11',
+                              suffixStyle: kHintTextStyle,
+                            ),
+                            style: kInputTextStyle,
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        const Text(
+                          'Auto',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Color(0xFF8E94A0),
+                            fontWeight: FontWeight.w500,
+                            fontFamily: 'Poppins',
+                          ),
+                        ),
+                        Transform.scale(
+                          scale: 0.92,
+                          child: Checkbox(
+                            value: controller.useAutoPhone.value,
+                            onChanged: (value) {
+                              controller.toggleAutoPhone(value ?? false);
+                            },
+                            activeColor: AppColors.primary,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            side: const BorderSide(
+                              color: Color(0xFFD8DBE2),
+                              width: 1.4,
+                            ),
+                          ),
+                        ),
                       ],
-                      decoration: kBaseDecoration.copyWith(
-                        hintText: 'Enter 11-digit phone number',
-                        hintStyle: kHintTextStyle,
-                        suffixText: '${controller.phoneNumber.value.length}/11',
-                        suffixStyle: kHintTextStyle,
-                      ),
-                      style: kInputTextStyle,
-                      onChanged: controller.updatePhoneNumber,
                     ),
                   ),
                 ),
@@ -111,78 +194,81 @@ class PayNowPage extends GetView<HomeController> {
                 const SectionLabel(label: 'Remarks'),
                 const SizedBox(height: 5),
                 FieldShell(
-                  child: Builder(builder: (menuContext) {
-                    return Obx(() {
-                      final selectedRemark = controller.remarksValue.value;
+                  child: Builder(
+                    builder: (menuContext) {
+                      return Obx(() {
+                        final selectedRemark = controller.remarksValue.value;
 
-                      return InkWell(
-                        onTap: () async {
-                          final RenderBox box = menuContext.findRenderObject() as RenderBox;
-                          final Offset position = box.localToGlobal(Offset.zero);
-                          final Size screen = MediaQuery.of(menuContext).size;
+                        return InkWell(
+                          onTap: () async {
+                            final RenderBox box = menuContext.findRenderObject() as RenderBox;
+                            final Offset position = box.localToGlobal(Offset.zero);
+                            final Size screen = MediaQuery.of(menuContext).size;
 
-                          final selected = await showMenu<String>(
-                            context: menuContext,
-                            position: RelativeRect.fromLTRB(
-                              position.dx,
-                              position.dy + box.size.height,
-                              screen.width - (position.dx + box.size.width),
-                              0,
-                            ),
-                            items: controller.remarksOptions.map((option) {
-                              return PopupMenuItem<String>(
-                                value: option,
-                                child: SizedBox(
-                                  width: box.size.width,
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: _menuHorizontalPadding),
-                                    child: Text(
-                                      option,
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                        color: Color(0xFF2F333A),
-                                        fontFamily: 'Poppins',
+                            final selected = await showMenu<String>(
+                              context: menuContext,
+                              position: RelativeRect.fromLTRB(
+                                position.dx,
+                                position.dy + box.size.height,
+                                screen.width - (position.dx + box.size.width),
+                                0,
+                              ),
+                              items: controller.remarksOptions.map((option) {
+                                return PopupMenuItem<String>(
+                                  value: option,
+                                  child: SizedBox(
+                                    width: box.size.width,
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: _menuHorizontalPadding),
+                                      child: Text(
+                                        option,
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                          color: Color(0xFF2F333A),
+                                          fontFamily: 'Poppins',
+                                        ),
                                       ),
                                     ),
                                   ),
+                                );
+                              }).toList(),
+                              color: Colors.white,
+                              elevation: 6,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            );
+
+                            if (selected != null) {
+                              controller.updateRemarks(selected);
+                            }
+                          },
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    selectedRemark.isEmpty
+                                        ? 'Choose preferred remarks'
+                                        : selectedRemark,
+                                    style: selectedRemark.isEmpty ? kHintTextStyle : kInputTextStyle,
+                                  ),
                                 ),
-                              );
-                            }).toList(),
-                            color: Colors.white,
-                            elevation: 6,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
+                                const Icon(
+                                  Icons.keyboard_arrow_down_rounded,
+                                  color: Color(0xFF2F333A),
+                                  size: 30,
+                                ),
+                              ],
                             ),
-                          );
-
-                          if (selected != null) {
-                            controller.updateRemarks(selected);
-                          }
-                        },
-                        child: SizedBox(
-                          width: double.infinity,
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  selectedRemark.isEmpty ? 'Choose preferred remarks' : selectedRemark,
-                                  style: selectedRemark.isEmpty ? kHintTextStyle : kInputTextStyle,
-                                ),
-                              ),
-                              const Icon(
-                                Icons.keyboard_arrow_down_rounded,
-                                color: Color(0xFF2F333A),
-                                size: 30,
-                              ),
-                            ],
                           ),
-                        ),
-                      );
-                    });
-                  }),
+                        );
+                      });
+                    },
+                  ),
                 ),
-
                 const SizedBox(height: 12),
                 const SectionLabel(label: 'Payment Method'),
                 const SizedBox(height: 5),
@@ -288,12 +374,52 @@ class PayNowPage extends GetView<HomeController> {
                 Obx(
                   () {
                     final paymentType = controller.selectedPaymentType.value.trim();
-                    if (paymentType.isEmpty || paymentType.toLowerCase() == 'cash') {
+                    if (paymentType.isEmpty) {
                       return const SizedBox.shrink();
                     }
 
-                    final reference = controller.payNowReferenceController.text.trim();
-                    final phone = controller.phoneNumber.value.trim();
+                    if (paymentType.toLowerCase() == 'cash') {
+                      return SummaryCard(
+                        title: 'Loan Balance',
+                        amount: controller.remainingBalance,
+                        subtitle: 'Selected loan: ${controller.loanId}',
+                        qrWidget: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: const [
+                            Icon(
+                              Icons.payments_outlined,
+                              size: 72,
+                              color: Color(0xFF6B3DF0),
+                            ),
+                            SizedBox(height: 14),
+                            Text(
+                              'Cash payment selected',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF111111),
+                                fontFamily: 'Poppins',
+                              ),
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              'No QR code is required for cash payments.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: Color(0xFF9AA0AC),
+                                fontFamily: 'Poppins',
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    final reference = _referenceController.text.trim();
+                    final phone = _phoneController.text.trim();
                     final remarks = controller.remarksValue.value.trim();
 
                     final payload = buildPayNowPayloadJson(
@@ -304,6 +430,7 @@ class PayNowPage extends GetView<HomeController> {
                       distributor: controller.principalName,
                       phoneNumber: phone,
                       formattedAmount: controller.remainingBalance,
+                      customerName: controller.displayUserName,
                     );
 
                     return SummaryCard(
@@ -325,7 +452,7 @@ class PayNowPage extends GetView<HomeController> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            'Scan this qr code to pay using ${paymentType.isEmpty ? "selected payment method" : paymentType}',
+                            'Scan this qr code to pay using $paymentType',
                             textAlign: TextAlign.center,
                             style: const TextStyle(
                               fontSize: 13,

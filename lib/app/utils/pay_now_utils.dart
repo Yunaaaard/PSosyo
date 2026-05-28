@@ -35,57 +35,69 @@ String buildPayNowPayloadJson({
   required String distributor,
   required String phoneNumber,
   required String formattedAmount,
+  required String customerName,
 }) {
-  final isFailed = remarks.toLowerCase().contains('failed');
   final createdAt = DateTime.now().toUtc();
   final updatedAt = createdAt.add(const Duration(seconds: 2));
   final normalizedReference = referenceId.isEmpty ? loanId : referenceId;
   final amount = _parseAmount(formattedAmount);
   final token = createdAt.microsecondsSinceEpoch.toRadixString(16);
+  final normalizedPaymentType = paymentType.trim().isEmpty ? 'Cash' : paymentType.trim();
 
   final payload = <String, dynamic>{
     'id': 'py-$token',
     'business_id': '5f27a14a9bf05c73dd040bc8',
     'reference_id': normalizedReference,
     'payment_request_id': 'pr-$token',
-    'payment_method': isFailed
-        ? {
-            'type': 'CARD',
-            'card': {
-              'channel_code': 'BANK_TRANSFER',
-              'card_information': {
-                'expiry_month': '12',
-                'expiry_year': '28',
-                'first_6_digits': '411111',
-                'last_4_digits': '1111',
-              },
-            },
-          }
-        : {
-            'type': 'EWALLET',
-            'ewallet': {
-              'channel_code': 'GCASH',
-              'channel_properties': {
-                'success_return_url': 'https://yourwebsite.com/success',
-              },
-            },
-          },
+    'payment_method': _buildPaymentMethodPayload(normalizedPaymentType),
     'amount': amount,
     'currency': 'IDR',
-    'status': isFailed ? 'FAILED' : 'SUCCEEDED',
-    'failure_code': isFailed ? 'CARD_DECLINED' : null,
+    'status': normalizedPaymentType.toLowerCase() == 'cash' ? 'PENDING' : 'SUCCEEDED',
+    'failure_code': null,
     'created': createdAt.toIso8601String(),
     'updated': updatedAt.toIso8601String(),
     'metadata': {
-      'customer_name': 'John Doe',
+      'customer_name': customerName,
       'distributor': distributor,
       'cart_id': 'cart_$loanId',
       'phone_number': phoneNumber,
       'remarks': remarks,
+      'payment_method_label': normalizedPaymentType,
     },
   };
 
   return jsonEncode(payload);
+}
+
+Map<String, dynamic> _buildPaymentMethodPayload(String paymentType) {
+  switch (paymentType.toLowerCase()) {
+    case 'bank transfer':
+      return <String, dynamic>{
+        'type': 'BANK_TRANSFER',
+        'bank_transfer': <String, dynamic>{
+          'channel_code': 'BANK_TRANSFER',
+        },
+      };
+    case 'inventory financing':
+      return <String, dynamic>{
+        'type': 'INVENTORY_FINANCING',
+      };
+    case 'cash':
+      return <String, dynamic>{
+        'type': 'CASH',
+      };
+    case 'gcash':
+    default:
+      return <String, dynamic>{
+        'type': 'EWALLET',
+        'ewallet': <String, dynamic>{
+          'channel_code': 'GCASH',
+          'channel_properties': <String, dynamic>{
+            'success_return_url': 'https://yourwebsite.com/success',
+          },
+        },
+      };
+  }
 }
 
 double _parseAmount(String formattedAmount) {

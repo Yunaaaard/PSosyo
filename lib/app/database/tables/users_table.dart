@@ -124,4 +124,62 @@ class UsersTable {
       country: '',
     );
   }
+
+  Future<String?> getFullNameByPhone(String? phoneNumber) async {
+    final normalizedPhone = phoneNumber?.trim();
+    if (normalizedPhone == null || normalizedPhone.isEmpty) {
+      return null;
+    }
+
+    final db = await _database();
+    final rows = await db.query(
+      tableName,
+      columns: <String>['full_name'],
+      where: 'phone_number = ?',
+      whereArgs: <Object?>[normalizedPhone],
+      limit: 1,
+    );
+    if (rows.isEmpty) {
+      return null;
+    }
+
+    final fullName = rows.first['full_name']?.toString().trim() ?? '';
+    return fullName.isEmpty ? null : fullName;
+  }
+
+  Future<String?> getLatestFullName() async {
+    final db = await _database();
+    final rows = await db.query(
+      tableName,
+      columns: <String>['full_name'],
+      where: 'full_name <> ?',
+      whereArgs: <Object?>[''],
+      orderBy: 'updated_at DESC, created_at DESC',
+      limit: 1,
+    );
+    if (rows.isEmpty) {
+      return null;
+    }
+
+    final fullName = rows.first['full_name']?.toString().trim() ?? '';
+    return fullName.isEmpty ? null : fullName;
+  }
+
+  Future<String?> getLatestPhoneNumber() async {
+    final db = await _database();
+    final rows = await db.query(
+      tableName,
+      columns: <String>['phone_number'],
+      where: 'phone_number <> ?',
+      whereArgs: <Object?>[''],
+      orderBy: 'updated_at DESC, created_at DESC',
+      limit: 1,
+    );
+    if (rows.isEmpty) {
+      return null;
+    }
+
+    final phoneNumber = rows.first['phone_number']?.toString().trim() ?? '';
+    return phoneNumber.isEmpty ? null : phoneNumber;
+  }
 }

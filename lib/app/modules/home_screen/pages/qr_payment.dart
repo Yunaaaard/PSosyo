@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:p_sosyo/app/modules/home_screen/controllers/home_controller.dart';
 import 'package:p_sosyo/app/modules/check_eligiblity/controllers/about_yourself_controller.dart';
+import 'package:p_sosyo/app/routes/app_routes.dart';
 import 'package:p_sosyo/app/services/id_verification_service.dart';
 import 'package:p_sosyo/app/utils/peso_formatter.dart';
 import 'package:p_sosyo/app/utils/themes/theme_colors.dart';
@@ -208,7 +209,7 @@ class QrPaymentPage extends StatelessWidget {
         child: SizedBox(
           height: 68,
           child: ElevatedButton(
-            onPressed: () => Get.toNamed('/home'),
+            onPressed: () => Get.back(),
             style: AppThemes.primaryButtonStyle,
             child: const Text(
               'Back to Home',

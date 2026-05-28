@@ -22,6 +22,8 @@ class PsosyoBalanceCard extends StatelessWidget {
   final String amountDue;
   final VoidCallback onPayNow;
 
+  static const String _fallbackAsset = 'assets/images/PSosyo-Logo.png';
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -188,31 +190,30 @@ class PsosyoBalanceCard extends StatelessWidget {
   }
 
   Widget _buildLogoImage() {
-    final uri = Uri.tryParse(logoAsset);
+    final asset = logoAsset.trim();
+    if (asset.isEmpty) {
+      return Image.asset(_fallbackAsset, fit: BoxFit.contain);
+    }
+
+    final uri = Uri.tryParse(asset);
     final isNetworkLogo =
         uri != null && (uri.scheme == 'http' || uri.scheme == 'https');
 
     if (isNetworkLogo) {
       return Image.network(
-        logoAsset,
+        asset,
         fit: BoxFit.contain,
         errorBuilder: (_, __, ___) {
-          return const Icon(
-            Icons.image_not_supported_outlined,
-            color: Color(0xFFB8BCC7),
-          );
+          return Image.asset(_fallbackAsset, fit: BoxFit.contain);
         },
       );
     }
 
     return Image.asset(
-      logoAsset,
+      asset,
       fit: BoxFit.contain,
       errorBuilder: (_, __, ___) {
-        return const Icon(
-          Icons.image_not_supported_outlined,
-          color: Color(0xFFB8BCC7),
-        );
+        return Image.asset(_fallbackAsset, fit: BoxFit.contain);
       },
     );
   }

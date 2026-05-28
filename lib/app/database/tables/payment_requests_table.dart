@@ -57,12 +57,23 @@ class PaymentRequestsTable {
         'failure_code': _stringValue(payload['failure_code']),
         'created_at': _stringValue(payload['created']) ?? now,
         'updated_at': _stringValue(payload['updated']) ?? now,
-        'metadata_json': payload['metadata'] == null
-            ? null
-            : jsonEncode(payload['metadata']),
+        'metadata_json': jsonEncode({
+          if (payload['metadata'] is Map) ...Map<String, dynamic>.from(payload['metadata'] as Map),
+          if (payload['logo_asset'] != null) 'logo_asset': payload['logo_asset'],
+        }),
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
+  }
+
+  Future<List<Map<String, Object?>>> loadRecentPaymentRequests({int limit = 50}) async {
+    final db = await _database();
+    final rows = await db.query(
+      tableName,
+      orderBy: 'datetime(created_at) DESC, id DESC',
+      limit: limit,
+    );
+    return rows;
   }
 
   String? _stringValue(dynamic value) {

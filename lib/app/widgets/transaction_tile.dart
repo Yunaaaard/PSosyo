@@ -20,6 +20,8 @@ class TransactionTile extends StatelessWidget {
   final String logoAsset;
   final bool compact;
 
+  static const String _fallbackAsset = 'assets/images/PSosyo-Logo.png';
+
   String get _signedPlainAmount {
     final cleaned = amount.replaceAll(',', '').trim();
     final parsed = double.tryParse(cleaned);
@@ -72,7 +74,7 @@ class TransactionTile extends StatelessWidget {
               ],
             ),
             padding: EdgeInsets.all(compact ? 5 : 8),
-            child: Image.asset(logoAsset, fit: BoxFit.contain),
+            child: _buildLogo(),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -124,6 +126,32 @@ class TransactionTile extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildLogo() {
+    final asset = logoAsset.trim();
+    if (asset.isEmpty) {
+      return Image.asset(_fallbackAsset, fit: BoxFit.contain);
+    }
+
+    final uri = Uri.tryParse(asset);
+    if (uri != null && (uri.scheme == 'http' || uri.scheme == 'https')) {
+      return Image.network(
+        asset,
+        fit: BoxFit.contain,
+        errorBuilder: (_, __, ___) {
+          return Image.asset(_fallbackAsset, fit: BoxFit.contain);
+        },
+      );
+    }
+
+    return Image.asset(
+      asset,
+      fit: BoxFit.contain,
+      errorBuilder: (_, __, ___) {
+        return Image.asset(_fallbackAsset, fit: BoxFit.contain);
+      },
     );
   }
 }

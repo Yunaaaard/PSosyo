@@ -1,7 +1,9 @@
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:p_sosyo/app/database/psosyo_database_service.dart';
 import 'package:p_sosyo/app/modules/home_screen/models/scan_success_receipt_model.dart';
 import 'package:p_sosyo/app/routes/app_routes.dart';
+import 'package:p_sosyo/app/services/user_phone_service.dart';
 
 class ScanSuccessController extends GetxController {
   ScanSuccessController({
@@ -27,12 +29,37 @@ class ScanSuccessController extends GetxController {
   final String? dateTime;
   final double amountSent;
   final ScanSuccessReceiptModel receipt;
+  final RxString senderName = ''.obs;
+
+  late final PsosyoDatabaseService _databaseService;
+  late final UserPhoneService _userPhoneService;
+
+  @override
+  void onInit() {
+    super.onInit();
+    _databaseService = Get.find<PsosyoDatabaseService>();
+    _userPhoneService = Get.find<UserPhoneService>();
+    senderName.value = from?.trim().isNotEmpty == true ? from!.trim() : 'Psosyo User';
+    _loadLocalSenderName();
+  }
+
+  Future<void> _loadLocalSenderName() async {
+    var registeredPhone = _userPhoneService.getRegisteredPhone();
+    if (registeredPhone.isEmpty) {
+      registeredPhone = (await _databaseService.loadLatestRegisteredPhone()) ?? '';
+      if (registeredPhone.isNotEmpty) {
+        _userPhoneService.setRegisteredPhone(registeredPhone);
+      }
+    }
+    final localName = await _databaseService.loadUserFullName(phoneNumber: registeredPhone);
+    if (localName != null && localName.trim().isNotEmpty) {
+      senderName.value = localName.trim();
+    }
+  }
 
   String get loanId => receipt.loanId;
 
   String get recipientName => receipt.principalTitle;
-
-  String get senderName => receipt.from ?? '';
 
   String get principalLogo => receipt.principalLogo;
 

@@ -29,6 +29,9 @@ class PsosyoDatabaseService extends GetxService {
   Future<List<LoanOrderCard>> loadActiveLoanOrders() =>
       loansTable.loadActiveLoanOrders();
 
+    Future<List<LoanOrderCard>> loadAllLoanOrders() =>
+      loansTable.loadAllLoanOrders();
+
   Future<bool> hasActiveLoanForPrincipal(String principalTitle) =>
       loansTable.hasActiveLoanForPrincipal(principalTitle);
 
@@ -104,7 +107,27 @@ class PsosyoDatabaseService extends GetxService {
   Future<void> saveRegisteredPhone(String phoneNumber) =>
       usersTable.saveRegisteredPhone(phoneNumber);
 
+  Future<String?> loadUserFullName({String? phoneNumber}) async {
+    final fullName = await usersTable.getFullNameByPhone(phoneNumber);
+    if (fullName != null && fullName.trim().isNotEmpty) {
+      return fullName.trim();
+    }
+
+    final latestFullName = await usersTable.getLatestFullName();
+    if (latestFullName != null && latestFullName.trim().isNotEmpty) {
+      return latestFullName.trim();
+    }
+
+    return null;
+  }
+
+  Future<String?> loadLatestRegisteredPhone() =>
+      usersTable.getLatestPhoneNumber();
+
   Future<void> savePaymentRequest(Map<String, dynamic> payload,
           {String? loanId}) =>
       paymentRequestsTable.savePaymentRequest(payload, loanId: loanId);
+
+    Future<List<Map<String, Object?>>> loadPaymentRequests({int limit = 50}) =>
+      paymentRequestsTable.loadRecentPaymentRequests(limit: limit);
 }

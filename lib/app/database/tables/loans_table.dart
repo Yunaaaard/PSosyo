@@ -85,6 +85,16 @@ class LoansTable {
     return rows.map(_loanOrderFromRow).toList();
   }
 
+  Future<List<LoanOrderCard>> loadAllLoanOrders() async {
+    final db = await _database();
+    final rows = await db.query(
+      tableName,
+      orderBy: 'datetime(created_at) DESC, id DESC',
+    );
+
+    return rows.map(_loanOrderFromRow).toList();
+  }
+
   Future<bool> hasActiveLoanForPrincipal(String principalTitle) async {
     final db = await _database();
     final rows = await db.query(

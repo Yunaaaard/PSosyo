@@ -8,6 +8,7 @@ import 'package:p_sosyo/app/services/payment_service.dart';
 import 'package:p_sosyo/app/modules/home_screen/models/loan_order.dart';
 import 'package:p_sosyo/app/widgets/loan_agreement_sheet.dart';
 import 'package:p_sosyo/app/modules/home_screen/pages/pay_now.dart';
+import 'package:p_sosyo/app/routes/app_routes.dart';
 import 'package:p_sosyo/app/services/user_phone_service.dart';
 
 class HomeController extends GetxController {
@@ -21,14 +22,15 @@ class HomeController extends GetxController {
   final Rxn<LoanOrderCard> selectedLoanOrder = Rxn<LoanOrderCard>();
   final RxList<TransactionItem> transactionHistory = <TransactionItem>[].obs;
   late final PsosyoDatabaseService _database;
+  late final UserPhoneService _userPhoneService;
 
   // Payment form state for QR payment page
   final RxString paymentReference = ''.obs;
   final Rxn<String> attachedReceiptPath = Rxn<String>();
+  final RxString currentUserName = ''.obs;
   // Pay Now UI bindings
-  late final TextEditingController payNowReferenceController;
   final RxBool useAutoReference = true.obs;
-  late final TextEditingController payNowPhoneController;
+  final RxBool useAutoPhone = true.obs;
   final RxString phoneNumber = ''.obs;
 
   final List<String> remarksOptions = const [
@@ -104,34 +106,98 @@ class HomeController extends GetxController {
   void onInit() {
     super.onInit();
     _database = Get.find<PsosyoDatabaseService>();
+    _userPhoneService = Get.find<UserPhoneService>();
     unawaited(_bootstrapFromDatabase());
-    payNowReferenceController = TextEditingController(text: paymentReference.value);
-    payNowPhoneController = TextEditingController(text: phoneNumber.value);
+    unawaited(_bootstrapCurrentUser());
+    // TextEditingControllers for Pay Now are managed by the PayNowPage widget.
   }
 
   @override
   void onClose() {
-    try {
-      payNowReferenceController.dispose();
-    } catch (_) {}
-    try {
-      payNowPhoneController.dispose();
-    } catch (_) {}
+    // UI controllers are disposed by their owning widget.
     super.onClose();
   }
 
   Future<void> _bootstrapFromDatabase() async {
     final savedLoans = await _database.loadActiveLoanOrders();
-    if (savedLoans.isNotEmpty) {
-      loanOrders.assignAll(savedLoans);
-      selectedLoanOrder.value = savedLoans.first;
-      _syncAvailableCredit();
-      return;
+    loanOrders.assignAll(savedLoans);
+    selectedLoanOrder.value = savedLoans.isNotEmpty ? savedLoans.first : null;
+    _syncAvailableCredit();
+
+    // Load persisted loan orders and payment requests, then rebuild transaction history.
+    try {
+      final loanRows = await _database.loadAllLoanOrders();
+      final paymentRows = await _database.loadPaymentRequests(limit: 100);
+
+      final items = <_HistoryEntry>[];
+
+      for (final loan in loanRows) {
+        items.add(
+          _HistoryEntry(
+            sortKey: loan.appliedAt,
+            item: TransactionItem(
+              title: 'Loan Order',
+              dateTime: formatLoanDate(loan.appliedAt),
+              amount: _formatAmount(loan.originalAmount),
+              sign: '- ',
+              status: 'SUCCESS',
+              logoAsset: loan.logoAsset,
+            ),
+          ),
+        );
+      }
+
+      for (final row in paymentRows) {
+        final amount = double.tryParse(row['amount']?.toString() ?? '') ?? 0.0;
+        final createdAt = DateTime.tryParse(row['created_at']?.toString() ?? '') ?? DateTime.now();
+        final loanId = row['loan_id']?.toString();
+        final reference = row['reference_id']?.toString();
+        final status = row['status']?.toString() ?? 'SUCCESS';
+        final logoAsset = _safeLogoAsset(_logoAssetFromMetadata(row['metadata_json']?.toString()));
+        final title = (loanId != null && loanId.isNotEmpty)
+            ? 'Loan Payment - $loanId'
+            : (reference != null && reference.isNotEmpty)
+                ? 'Payment - $reference'
+                : 'Payment';
+
+        items.add(
+          _HistoryEntry(
+            sortKey: createdAt,
+            item: TransactionItem(
+              title: title,
+              dateTime: formatLoanDate(createdAt),
+              amount: _formatAmount(amount),
+              sign: '+ ',
+              status: status,
+              logoAsset: logoAsset,
+            ),
+          ),
+        );
+      }
+
+      items.sort((a, b) => b.sortKey.compareTo(a.sortKey));
+      transactionHistory.assignAll(items.map((entry) => entry.item));
+    } catch (_) {
+      // Ignore DB errors here; transactionHistory will remain empty if load fails.
+    }
+  }
+
+  Future<void> _bootstrapCurrentUser() async {
+    var registeredPhone = _userPhoneService.getRegisteredPhone();
+    if (registeredPhone.isEmpty) {
+      registeredPhone = (await _database.loadLatestRegisteredPhone()) ?? '';
+      if (registeredPhone.isNotEmpty) {
+        _userPhoneService.setRegisteredPhone(registeredPhone);
+      }
+    }
+    if (registeredPhone.isNotEmpty) {
+      phoneNumber.value = registeredPhone;
     }
 
-    loanOrders.clear();
-    selectedLoanOrder.value = null;
-    _syncAvailableCredit();
+    final loadedName = await _database.loadUserFullName(phoneNumber: registeredPhone);
+    if (loadedName != null && loadedName.trim().isNotEmpty) {
+      currentUserName.value = loadedName.trim();
+    }
   }
 
   void _syncAvailableCredit() {
@@ -680,6 +746,21 @@ class HomeController extends GetxController {
       remainingAmount: order.remainingAmount,
     );
 
+    // Persist a payment request record so transaction history survives app restarts
+    try {
+      final nowIso = createdAt.toIso8601String();
+      final payload = <String, dynamic>{
+        'id': 'local-${DateTime.now().millisecondsSinceEpoch}',
+        'loan_id': order.loanId,
+        'amount': paidAmount,
+        'logo_asset': order.logoAsset,
+        'status': 'SUCCESS',
+        'created': nowIso,
+        'updated': nowIso,
+      };
+      await _database.savePaymentRequest(payload, loanId: order.loanId);
+    } catch (_) {}
+
     transactionHistory.insert(
       0,
       TransactionItem(
@@ -764,13 +845,28 @@ class HomeController extends GetxController {
     if (value) {
       final generated = 'REF${DateTime.now().millisecondsSinceEpoch % 100000}';
       paymentReference.value = generated;
-      payNowReferenceController.text = generated;
     }
   }
 
   void updatePhoneNumber(String value) {
+    if (useAutoPhone.value) {
+      final registeredPhone = _userPhoneService.getRegisteredPhone();
+      if (registeredPhone.isNotEmpty) {
+        phoneNumber.value = registeredPhone;
+        return;
+      }
+    }
     phoneNumber.value = value;
-    payNowPhoneController.text = value;
+    
+  }
+
+  void toggleAutoPhone(bool value) {
+    useAutoPhone.value = value;
+    if (value) {
+      final registeredPhone = _userPhoneService.getRegisteredPhone();
+      phoneNumber.value = registeredPhone;
+      
+    }
   }
 
   void updateRemarks(String value) {
@@ -788,6 +884,30 @@ class HomeController extends GetxController {
       return;
     }
 
+    final paymentType = selectedPaymentType.value.trim();
+    if (paymentType.isEmpty) {
+      Get.snackbar(
+        'Select payment method',
+        'Choose how you want to pay before continuing.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
+
+    if (paymentType.toLowerCase() == 'cash') {
+      await recordLoanPaymentSuccess(
+        order: order,
+        amount: order.remainingAmount,
+      );
+      Get.snackbar(
+        'Payment recorded',
+        'Cash payment was recorded successfully.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      Get.back();
+      return;
+    }
+
     final amount = order.remainingAmount;
     final reference = paymentReference.value.trim();
 
@@ -801,6 +921,7 @@ class HomeController extends GetxController {
 
     if (success) {
       Get.snackbar('Payment recorded', 'Payment was recorded successfully.', snackPosition: SnackPosition.BOTTOM);
+      Get.back();
     }
   }
 
@@ -830,6 +951,43 @@ class HomeController extends GetxController {
 
     return '${buffer.toString()}.$decimals';
   }
+
+  String get displayUserName {
+    final name = currentUserName.value.trim();
+    return name.isEmpty ? 'Psosyo User' : name;
+  }
+
+  String _safeLogoAsset(String? value) {
+    final asset = value?.trim() ?? '';
+    if (asset.isEmpty) {
+      return 'assets/images/PSosyo-Logo.png';
+    }
+
+    final uri = Uri.tryParse(asset);
+    if (uri != null && (uri.scheme == 'http' || uri.scheme == 'https')) {
+      return asset;
+    }
+
+    return asset;
+  }
+
+  String? _logoAssetFromMetadata(String? metadataJson) {
+    if (metadataJson == null || metadataJson.trim().isEmpty) {
+      return null;
+    }
+
+    try {
+      final decoded = jsonDecode(metadataJson);
+      if (decoded is Map) {
+        final value = decoded['logo_asset']?.toString().trim();
+        if (value != null && value.isNotEmpty) {
+          return value;
+        }
+      }
+    } catch (_) {}
+
+    return null;
+  }
 }
 
 class TransactionItem {
@@ -848,4 +1006,11 @@ class TransactionItem {
   final String sign;
   final String status;
   final String logoAsset;
+}
+
+class _HistoryEntry {
+  _HistoryEntry({required this.sortKey, required this.item});
+
+  final DateTime sortKey;
+  final TransactionItem item;
 }
