@@ -79,6 +79,9 @@ class PsosyoDatabaseService extends GetxService {
         remainingAmount: remainingAmount,
       );
 
+  Future<List<LoanItemRecord>> loadLoanItemsForLoan(String loanId) =>
+      loanItemsTable.loadLoanItemsForLoan(loanId);
+
   Future<void> saveUserProfile({
     String? phoneNumber,
     required String fullName,
