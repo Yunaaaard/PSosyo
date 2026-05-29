@@ -28,7 +28,7 @@ String assetPathForOption(String option) {
 }
 
 String buildPayNowPayloadJson({
-  required String referenceId,
+  required String paymentReferenceId,
   required String paymentType,
   required String remarks,
   required String loanId,
@@ -39,7 +39,8 @@ String buildPayNowPayloadJson({
 }) {
   final createdAt = DateTime.now().toUtc();
   final updatedAt = createdAt.add(const Duration(seconds: 2));
-  final normalizedReference = referenceId.isEmpty ? loanId : referenceId;
+  final normalizedPaymentReferenceId =
+      paymentReferenceId.isEmpty ? loanId : paymentReferenceId;
   final amount = _parseAmount(formattedAmount);
   final token = createdAt.microsecondsSinceEpoch.toRadixString(16);
   final normalizedPaymentType = paymentType.trim().isEmpty ? 'Cash' : paymentType.trim();
@@ -47,9 +48,11 @@ String buildPayNowPayloadJson({
   final payload = <String, dynamic>{
     'id': 'py-$token',
     'business_id': '5f27a14a9bf05c73dd040bc8',
-    'reference_id': normalizedReference,
+    'reference_id': normalizedPaymentReferenceId,
     'payment_request_id': 'pr-$token',
-    'payment_method': _buildPaymentMethodPayload(normalizedPaymentType),
+    'payment_method': <String, dynamic>{
+      'method': normalizedPaymentType,
+    },
     'amount': amount,
     'currency': 'IDR',
     'status': normalizedPaymentType.toLowerCase() == 'cash' ? 'PENDING' : 'SUCCEEDED',
@@ -67,37 +70,6 @@ String buildPayNowPayloadJson({
   };
 
   return jsonEncode(payload);
-}
-
-Map<String, dynamic> _buildPaymentMethodPayload(String paymentType) {
-  switch (paymentType.toLowerCase()) {
-    case 'bank transfer':
-      return <String, dynamic>{
-        'type': 'BANK_TRANSFER',
-        'bank_transfer': <String, dynamic>{
-          'channel_code': 'BANK_TRANSFER',
-        },
-      };
-    case 'inventory financing':
-      return <String, dynamic>{
-        'type': 'INVENTORY_FINANCING',
-      };
-    case 'cash':
-      return <String, dynamic>{
-        'type': 'CASH',
-      };
-    case 'gcash':
-    default:
-      return <String, dynamic>{
-        'type': 'EWALLET',
-        'ewallet': <String, dynamic>{
-          'channel_code': 'GCASH',
-          'channel_properties': <String, dynamic>{
-            'success_return_url': 'https://yourwebsite.com/success',
-          },
-        },
-      };
-  }
 }
 
 double _parseAmount(String formattedAmount) {

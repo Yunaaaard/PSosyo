@@ -2,7 +2,6 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/liveness_controller.dart';
-import 'package:p_sosyo/app/widgets/countdown_badge.dart';
 import 'package:p_sosyo/app/widgets/challenge_pills.dart';
 import 'package:p_sosyo/app/widgets/instruction_card.dart';
 
@@ -16,7 +15,7 @@ class LivenessVerificationPage extends StatelessWidget {
       builder: (ctrl) => Scaffold(
         backgroundColor: Colors.black,
         body: SafeArea(
-          child: ctrl.cameraController != null && ctrl.cameraInitialized.value
+            child: ctrl.cameraController != null && ctrl.cameraInitialized.value
               ? _buildLivenessUI(ctrl)
               : const Center(child: CircularProgressIndicator(color: Colors.white)),
         ),
@@ -41,7 +40,6 @@ class LivenessVerificationPage extends StatelessWidget {
                 icon: const Icon(Icons.close, color: Colors.white, size: 28),
                 onPressed: () => Get.back(result: null),
               ),
-              if (!ctrl.timedOut.value) CountdownBadge(seconds: ctrl.secondsLeft.value),
             ],
           ),
         ),
@@ -62,14 +60,12 @@ class LivenessVerificationPage extends StatelessWidget {
           left: 24,
           right: 24,
           child: InstructionCard(
-            message: ctrl.timedOut.value
-                ? 'Time\'s up. Try again.'
-                : ctrl.succeeded.value
-                    ? '✅ Capturing selfie…'
-                    : ctrl.statusMessage.value,
+            message: ctrl.succeeded.value
+                ? '✅ Capturing selfie…'
+                : ctrl.statusMessage.value,
             isSuccess: ctrl.succeeded.value,
-            isError: ctrl.timedOut.value,
-            showRetry: ctrl.timedOut.value,
+            isError: false,
+            showRetry: false,
             onRetry: ctrl.retry,
           ),
         ),

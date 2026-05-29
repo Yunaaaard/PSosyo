@@ -299,12 +299,12 @@ class PayNowPage extends StatelessWidget {
                       );
                     }
 
-                    final reference = controller.paymentReferenceController.text.trim();
+                    final paymentReferenceId = controller.paymentReferenceController.text.trim();
                     final phone = controller.phoneNumberController.text.trim();
                     final remarks = controller.remarksValue.value.trim();
 
                     final payload = buildPayNowPayloadJson(
-                      referenceId: reference,
+                      paymentReferenceId: paymentReferenceId,
                       paymentType: paymentType,
                       remarks: remarks,
                       loanId: controller.loanId,

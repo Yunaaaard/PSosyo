@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class LoanPrincipalOption {
   const LoanPrincipalOption({
     required this.title,
-    required this.logoAsset,
+    this.logoAsset = 'assets/images/PSosyo-Logo.png',
   });
 
   final String title;
@@ -16,7 +16,7 @@ class LoanOrderCard {
   LoanOrderCard({
     required this.title,
     required this.loanId,
-    required this.logoAsset,
+    this.logoAsset = 'assets/images/PSosyo-Logo.png',
     required this.appliedAt,
     required this.dueAt,
     required this.originalAmount,

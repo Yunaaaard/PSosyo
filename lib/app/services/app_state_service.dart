@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class AppStateService extends GetxService {
   static const String _lastRouteKey = 'last_route';
+  static const String _eligibilityCompletedKey = 'eligibility_completed';
 
   late final SharedPreferences _preferences;
 
@@ -27,5 +28,13 @@ class AppStateService extends GetxService {
     }
 
     return route;
+  }
+
+  Future<void> setEligibilityCompleted(bool completed) async {
+    await _preferences.setBool(_eligibilityCompletedKey, completed);
+  }
+
+  bool hasCompletedEligibility() {
+    return _preferences.getBool(_eligibilityCompletedKey) ?? false;
   }
 }

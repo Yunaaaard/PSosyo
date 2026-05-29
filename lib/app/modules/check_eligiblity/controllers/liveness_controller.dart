@@ -31,11 +31,7 @@ class LivenessController extends GetxController with WidgetsBindingObserver {
   final statusMessage = 'Position your face in the circle'.obs;
   final faceDetected = false.obs;
   final succeeded = false.obs;
-  final timedOut = false.obs;
 
-  // Timeout
-  Timer? _timeoutTimer;
-  final secondsLeft = 40.obs;
 
   var _isProcessingFrame = false;
 
@@ -49,13 +45,11 @@ class LivenessController extends GetxController with WidgetsBindingObserver {
     super.onInit();
     WidgetsBinding.instance.addObserver(this);
     _initCamera();
-    _startTimeout();
   }
 
   @override
   void onClose() {
     WidgetsBinding.instance.removeObserver(this);
-    _timeoutTimer?.cancel();
     cameraService.dispose();
     super.onClose();
   }
@@ -82,20 +76,11 @@ class LivenessController extends GetxController with WidgetsBindingObserver {
   }
 
   void _startTimeout() {
-    _timeoutTimer = Timer.periodic(const Duration(seconds: 1), (t) {
-      secondsLeft.value--;
-      update(); // Notify GetBuilder of countdown change
-      if (secondsLeft.value <= 0) {
-        t.cancel();
-        timedOut.value = true;
-        cameraService.stopImageStream();
-        update();
-      }
-    });
+    // No timeout: removed countdown logic per requirements.
   }
 
   Future<void> _processFrame(CameraImage image) async {
-    if (_isProcessingFrame || succeeded.value || timedOut.value) return;
+    if (_isProcessingFrame || succeeded.value) return;
     _isProcessingFrame = true;
 
     try {
@@ -162,7 +147,6 @@ class LivenessController extends GetxController with WidgetsBindingObserver {
   Future<void> _captureAndFinish() async {
     succeeded.value = true;
     update();
-    _timeoutTimer?.cancel();
 
     try {
       await cameraService.stopImageStream();
@@ -181,13 +165,10 @@ class LivenessController extends GetxController with WidgetsBindingObserver {
     currentChallengeIndex.value = 0;
     challengeComplete.value = false;
     succeeded.value = false;
-    timedOut.value = false;
     movementStarted.value = false;
-    secondsLeft.value = 40;
     faceDetected.value = false;
     statusMessage.value = 'Position your face in the circle';
     update();
-    _startTimeout();
     cameraService.startImageStream(_processFrame);
   }
 }

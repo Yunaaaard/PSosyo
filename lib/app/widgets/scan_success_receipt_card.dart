@@ -26,7 +26,7 @@ class ScanSuccessReceiptCard extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final double cardWidth = (constraints.maxWidth * 0.96).clamp(320.0, 520.0).toDouble();
-        final double cardHeight = cardWidth * 1.88;
+        final double cardHeight = cardWidth * 1.86;
         final double scale = (cardWidth / 320).clamp(0.95, 1.32).toDouble();
 
         return SizedBox(
@@ -42,7 +42,7 @@ class ScanSuccessReceiptCard extends StatelessWidget {
                 ),
               ),
               Padding(
-                padding: EdgeInsets.fromLTRB(18 * scale, 42 * scale, 18 * scale, 22 * scale),
+                padding: EdgeInsets.fromLTRB(18 * scale, 40 * scale, 18 * scale, 18 * scale),
                 child: Column(
                   children: [
                     Text(
@@ -65,16 +65,16 @@ class ScanSuccessReceiptCard extends StatelessWidget {
                         height: 1.2,
                       ),
                     ),
-                    SizedBox(height: 22 * scale),
+                    SizedBox(height: 18 * scale),
                     SizedBox(
-                      width: 180 * scale,
-                      height: 180 * scale,
+                      width: 174 * scale,
+                      height: 174 * scale,
                       child: Stack(
                         alignment: Alignment.center,
                         children: [
                           QrImageView(
                             data: qrData,
-                            size: 164 * scale,
+                            size: 158 * scale,
                             backgroundColor: Colors.white,
                             version: QrVersions.auto,
                             gapless: true,
@@ -108,7 +108,7 @@ class ScanSuccessReceiptCard extends StatelessWidget {
                         ],
                       ),
                     ),
-                    SizedBox(height: 40 * scale),
+                    SizedBox(height: 34 * scale),
                     ScanSuccessReceiptInfoRow(label: 'From:', value: from, scale: scale),
                     SizedBox(height: 14 * scale),
                     ScanSuccessReceiptInfoRow(label: 'To:', value: to, scale: scale),

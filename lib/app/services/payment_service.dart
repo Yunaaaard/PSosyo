@@ -14,7 +14,7 @@ class PaymentService {
   Future<bool> processPayment({
     required String loanId,
     required double amount,
-    String? reference,
+    String? paymentReferenceId,
     String? receiptPath,
   }) async {
     if (loanId.isEmpty || amount <= 0) return false;
@@ -23,7 +23,7 @@ class PaymentService {
     final payload = {
       'loanId': loanId,
       'amount': amount,
-      if (reference != null) 'reference': reference,
+      if (paymentReferenceId != null) 'reference': paymentReferenceId,
       if (receiptPath != null) 'receiptPath': receiptPath,
     };
 

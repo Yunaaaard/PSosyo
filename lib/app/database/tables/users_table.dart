@@ -182,4 +182,12 @@ class UsersTable {
     final phoneNumber = rows.first['phone_number']?.toString().trim() ?? '';
     return phoneNumber.isEmpty ? null : phoneNumber;
   }
+
+  Future<List<Map<String, Object?>>> loadAllUsers() async {
+    final db = await _database();
+    return db.query(
+      tableName,
+      orderBy: 'datetime(updated_at) DESC, id DESC',
+    );
+  }
 }

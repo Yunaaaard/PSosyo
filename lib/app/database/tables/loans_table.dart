@@ -53,7 +53,6 @@ class LoansTable {
         loan_id TEXT NOT NULL UNIQUE,
         user_id INTEGER,
         principal_title TEXT NOT NULL,
-        principal_logo TEXT NOT NULL DEFAULT '',
         amount_due REAL NOT NULL,
         remaining_amount REAL NOT NULL,
         applied_date TEXT NOT NULL,
@@ -115,6 +114,14 @@ class LoansTable {
     }
 
     return _loanOrderFromRow(rows.first);
+  }
+
+  Future<List<Map<String, Object?>>> loadAllLoanRows() async {
+    final db = await _database();
+    return db.query(
+      tableName,
+      orderBy: 'datetime(created_at) DESC, id DESC',
+    );
   }
 
   Future<bool> hasActiveLoanForPrincipal(String principalTitle) async {
