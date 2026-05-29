@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
-
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
+import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:p_sosyo/app/database/psosyo_database_service.dart';
 import 'package:p_sosyo/app/database/tables/loan_items_table.dart';
 import 'package:p_sosyo/app/services/payment_service.dart';
@@ -10,9 +10,13 @@ import 'package:p_sosyo/app/modules/home_screen/models/loan_order.dart';
 import 'package:p_sosyo/app/widgets/loan_agreement_sheet.dart';
 import 'package:p_sosyo/app/widgets/loan_details_sheet.dart';
 import 'package:p_sosyo/app/modules/home_screen/pages/pay_now.dart';
-import 'package:p_sosyo/app/routes/app_routes.dart';
+import 'package:p_sosyo/app/services/qr_scanner.dart';
 import 'package:p_sosyo/app/services/user_phone_service.dart';
 import 'package:p_sosyo/app/utils/principal_logo_resolver.dart';
+import 'package:p_sosyo/app/utils/peso_formatter.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
+import 'package:p_sosyo/app/utils/themes/theme_colors.dart';
 
 class HomeController extends GetxController {
   final RxBool showAllBalanceCards = true.obs;
@@ -30,7 +34,15 @@ class HomeController extends GetxController {
   // Payment form state for QR payment page
   final RxString paymentReference = ''.obs;
   final Rxn<String> attachedReceiptPath = Rxn<String>();
+  final RxString receiptOcrReferenceNumber = ''.obs;
+  final RxString receiptOcrPhoneNumber = ''.obs;
+  final RxString receiptOcrAmount = ''.obs;
   final RxString currentUserName = ''.obs;
+  final TextEditingController paymentReferenceController = TextEditingController();
+  final TextEditingController phoneNumberController = TextEditingController();
+  late final Worker _paymentReferenceWorker;
+  late final Worker _phoneNumberWorker;
+  late final TextRecognizer _receiptTextRecognizer;
   // Pay Now UI bindings
   final RxBool useAutoReference = true.obs;
   final RxBool useAutoPhone = true.obs;
@@ -115,6 +127,27 @@ class HomeController extends GetxController {
     super.onInit();
     _database = Get.find<PsosyoDatabaseService>();
     _userPhoneService = Get.find<UserPhoneService>();
+    _receiptTextRecognizer = TextRecognizer();
+    paymentReferenceController.text = paymentReference.value;
+    phoneNumberController.text = phoneNumber.value;
+    _paymentReferenceWorker = ever<String>(paymentReference, (value) {
+      final text = value;
+      if (paymentReferenceController.text != text) {
+        paymentReferenceController.value = TextEditingValue(
+          text: text,
+          selection: TextSelection.collapsed(offset: text.length),
+        );
+      }
+    });
+    _phoneNumberWorker = ever<String>(phoneNumber, (value) {
+      final text = value;
+      if (phoneNumberController.text != text) {
+        phoneNumberController.value = TextEditingValue(
+          text: text,
+          selection: TextSelection.collapsed(offset: text.length),
+        );
+      }
+    });
     unawaited(_bootstrapFromDatabase());
     unawaited(_bootstrapCurrentUser());
     // TextEditingControllers for Pay Now are managed by the PayNowPage widget.
@@ -122,6 +155,11 @@ class HomeController extends GetxController {
 
   @override
   void onClose() {
+    _paymentReferenceWorker.dispose();
+    _phoneNumberWorker.dispose();
+    _receiptTextRecognizer.close();
+    paymentReferenceController.dispose();
+    phoneNumberController.dispose();
     // UI controllers are disposed by their owning widget.
     super.onClose();
   }
@@ -129,7 +167,12 @@ class HomeController extends GetxController {
   Future<void> _bootstrapFromDatabase() async {
     final savedLoans = await _database.loadActiveLoanOrders();
     loanOrders.assignAll(savedLoans);
-    selectedLoanOrder.value = savedLoans.isNotEmpty ? savedLoans.first : null;
+    final routeSelectedLoanId = _selectedLoanIdFromRoute();
+    if (routeSelectedLoanId != null && _selectLoanOrderById(routeSelectedLoanId)) {
+      showAllBalanceCards.value = true;
+    } else {
+      selectedLoanOrder.value = savedLoans.isNotEmpty ? savedLoans.first : null;
+    }
     _syncAvailableCredit();
 
     // Load persisted loan orders and payment requests, then rebuild transaction history.
@@ -227,6 +270,511 @@ class HomeController extends GetxController {
     Get.to(() => const PayNowPage());
   }
 
+  void openQrScannerPage() {
+    Get.to(() => const QrScannerPage());
+  }
+
+  Future<void> openReceiptCaptureUploadOptions() async {
+    await Get.bottomSheet(
+      SafeArea(
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 44,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE3E6EE),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+              const SizedBox(height: 18),
+              const Text(
+                'Attach E-receipt Photo',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF2F333A),
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Capture a new photo or upload one from your gallery.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF7C828E),
+                ),
+              ),
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    Get.back();
+                    await _attachReceiptFromCamera();
+                  },
+                  style: AppThemes.primaryButtonStyle,
+                  icon: const Icon(Icons.photo_camera_outlined),
+                  label: const Text('Capture Photo'),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    Get.back();
+                    await _attachReceiptFromGallery();
+                  },
+                  style: AppThemes.primaryButtonStyle,
+                  icon: const Icon(Icons.upload_file_outlined),
+                  label: const Text('Upload Photo'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+    );
+  }
+
+  Future<void> _attachReceiptFromCamera() async {
+    final picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.camera);
+    if (image == null) {
+      return;
+    }
+
+    await _attachReceiptAndReadOcr(image);
+  }
+
+  Future<void> _attachReceiptFromGallery() async {
+    final picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+    if (image == null) {
+      return;
+    }
+
+    await _attachReceiptAndReadOcr(image);
+  }
+
+  Future<void> _attachReceiptAndReadOcr(XFile image) async {
+    attachReceipt(image.path);
+    receiptOcrReferenceNumber.value = '';
+    receiptOcrPhoneNumber.value = '';
+    receiptOcrAmount.value = '';
+
+    try {
+      final recognized = await _readReceiptOcr(image.path);
+      final reference = recognized.referenceNumber?.trim() ?? '';
+      final phoneNumber = recognized.phoneNumber?.trim() ?? '';
+      final amount = recognized.amount;
+
+      receiptOcrReferenceNumber.value = reference;
+      receiptOcrPhoneNumber.value = phoneNumber;
+      receiptOcrAmount.value = amount != null ? _formatAmount(amount) : '';
+
+      if (reference.isEmpty && amount == null) {
+        await _showReceiptOcrDialog(
+          referenceNumber: null,
+          phoneNumber: null,
+          amountText: null,
+          isSuccess: false,
+        );
+        return;
+      }
+
+      if (reference.isNotEmpty) {
+        useAutoReference.value = false;
+        paymentReference.value = reference;
+        paymentReferenceController.text = reference;
+      }
+
+      if (phoneNumber.isNotEmpty) {
+        useAutoPhone.value = false;
+        this.phoneNumber.value = phoneNumber;
+        phoneNumberController.text = phoneNumber;
+      }
+
+      await _showReceiptOcrDialog(
+        referenceNumber: reference.isEmpty ? null : reference,
+        phoneNumber: phoneNumber.isEmpty ? null : phoneNumber,
+        amountText: amount == null ? null : _formatAmount(amount),
+        isSuccess: true,
+      );
+    } catch (e) {
+      await _showReceiptOcrDialog(
+        referenceNumber: null,
+        phoneNumber: null,
+        amountText: null,
+        isSuccess: false,
+        errorMessage: e.toString(),
+      );
+    }
+  }
+
+  Future<_ReceiptOcrResult> _readReceiptOcr(String path) async {
+    final inputImage = InputImage.fromFilePath(path);
+    final recognizedText = await _receiptTextRecognizer.processImage(inputImage);
+    return _extractReceiptOcrResult(recognizedText.text);
+  }
+
+  _ReceiptOcrResult _extractReceiptOcrResult(String rawText) {
+    final lines = _splitReceiptLines(rawText);
+    final reference = _extractReceiptReference(lines);
+    final phoneNumber = _extractReceiptPhoneNumber(lines);
+    final amount = _extractReceiptAmount(lines);
+
+    return _ReceiptOcrResult(
+      referenceNumber: reference,
+      phoneNumber: phoneNumber,
+      amount: amount,
+    );
+  }
+
+  String? _extractReceiptReference(List<String> lines) {
+    for (var index = 0; index < lines.length; index++) {
+      final current = lines[index];
+      if (!_isReferenceLabel(current)) {
+        continue;
+      }
+
+      final sameLine = _stripLabelPrefix(current, _referenceLabelPatterns);
+      final nextLine = index + 1 < lines.length ? lines[index + 1] : '';
+      final candidate = sameLine.isNotEmpty ? sameLine : nextLine;
+      final digits = _extractReferenceDigits(candidate);
+      if (digits.length >= 10) {
+        return _formatReferenceDigits(digits);
+      }
+    }
+
+    return null;
+  }
+
+  double? _extractReceiptAmount(List<String> lines) {
+    for (var index = 0; index < lines.length; index++) {
+      final current = lines[index];
+      if (!_isAmountLabel(current)) {
+        continue;
+      }
+
+      final sameLine = _stripLabelPrefix(current, _amountLabelPatterns);
+      final sameLineAmount = _extractAmountFromText(sameLine);
+      if (sameLineAmount != null) {
+        return sameLineAmount;
+      }
+
+      if (index + 1 < lines.length) {
+        final nextLine = lines[index + 1];
+        if (_isLikelyAmountLine(nextLine)) {
+          final nextAmount = _extractAmountFromText(nextLine);
+          if (nextAmount != null) {
+            return nextAmount;
+          }
+        }
+      }
+
+      if (index + 2 < lines.length) {
+        final skipLine = lines[index + 2];
+        if (_isLikelyAmountLine(skipLine)) {
+          final skipAmount = _extractAmountFromText(skipLine);
+          if (skipAmount != null) {
+            return skipAmount;
+          }
+        }
+      }
+    }
+
+    final fallbackValues = <double>[];
+    for (var index = 0; index < lines.length; index++) {
+      final current = lines[index];
+      if (!_isLikelyAmountLine(current)) {
+        continue;
+      }
+
+      final parsed = _extractAmountFromText(current);
+      if (parsed != null) {
+        fallbackValues.add(parsed);
+      }
+
+      if (index + 1 < lines.length && _isLikelyAmountLine(lines[index + 1])) {
+        final nextParsed = _extractAmountFromText(lines[index + 1]);
+        if (nextParsed != null) {
+          fallbackValues.add(nextParsed);
+        }
+      }
+    }
+
+    if (fallbackValues.isEmpty) {
+      return null;
+    }
+
+    fallbackValues.sort((a, b) => b.compareTo(a));
+    return fallbackValues.first;
+  }
+
+  String? _extractReceiptPhoneNumber(List<String> lines) {
+    for (final line in lines) {
+      final phone = _extractPlus63PhoneNumber(line);
+      if (phone != null) {
+        return phone;
+      }
+    }
+
+    return null;
+  }
+
+  String? _extractPlus63PhoneNumber(String text) {
+    final normalized = _normalizeOcrWhitespace(text);
+    if (normalized.isEmpty) {
+      return null;
+    }
+
+    final match = RegExp(r'(?:\+63|63)[\s\-()]*(9\d{2})[\s\-()]*?(\d{3})[\s\-()]*?(\d{4})').firstMatch(normalized);
+    if (match == null) {
+      return null;
+    }
+
+    final prefix = match.group(1);
+    final middle = match.group(2);
+    final last = match.group(3);
+    if (prefix == null || middle == null || last == null) {
+      return null;
+    }
+
+    return '+63 $prefix $middle $last';
+  }
+
+  double? _extractAmountFromText(String text) {
+    final normalized = text.trim();
+    if (normalized.isEmpty) {
+      return null;
+    }
+
+    final hasMoneyMarker =
+        normalized.contains('₱') ||
+        normalized.toLowerCase().contains('php') ||
+        normalized.toLowerCase().contains('p ');
+    final hasDecimalOrGrouping =
+        normalized.contains('.') || normalized.contains(',');
+
+    if (!hasMoneyMarker && !hasDecimalOrGrouping) {
+      return null;
+    }
+
+    final amountRegex = RegExp(
+      r'(?:₱|php|p)?\s*([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{2})?)|([0-9]+\.[0-9]{2})',
+      caseSensitive: false,
+    );
+    final match = amountRegex.firstMatch(normalized);
+    if (match == null) {
+      return null;
+    }
+
+    final value = match.group(1) ?? match.group(2) ?? '';
+    final cleaned = value.replaceAll(',', '').trim();
+    return double.tryParse(cleaned);
+  }
+
+  bool _isReferenceLabel(String value) {
+    final normalized = value.toLowerCase();
+    return _referenceLabelPatterns.any((pattern) => pattern.hasMatch(normalized));
+  }
+
+  bool _isAmountLabel(String value) {
+    final normalized = value.toLowerCase();
+    return _amountLabelPatterns.any((pattern) => pattern.hasMatch(normalized));
+  }
+
+  bool _isLikelyAmountSectionLine(String value) {
+    final normalized = value.toLowerCase();
+    return normalized.contains('amount') ||
+        normalized.contains('sent') ||
+        normalized.contains('php') ||
+        normalized.contains('₱');
+  }
+
+  String _formatReferenceDigits(String digits) {
+    final cleaned = digits.replaceAll(RegExp(r'[^0-9]'), '');
+    if (cleaned.isEmpty) {
+      return digits;
+    }
+
+    if (cleaned.length == 13) {
+      return '${cleaned.substring(0, 4)} ${cleaned.substring(4, 7)} ${cleaned.substring(7)}';
+    }
+
+    final buffer = StringBuffer();
+    for (var index = 0; index < cleaned.length; index++) {
+      buffer.write(cleaned[index]);
+      if ((index + 1) % 4 == 0 && index != cleaned.length - 1) {
+        buffer.write(' ');
+      }
+    }
+    return buffer.toString();
+  }
+
+  List<String> _splitReceiptLines(String rawText) {
+    return rawText
+        .replaceAll('\r', '\n')
+        .split(RegExp(r'\n+'))
+        .map((line) => _normalizeOcrWhitespace(line))
+        .where((line) => line.isNotEmpty)
+        .toList();
+  }
+
+  String _extractReferenceDigits(String text) {
+    final normalized = _normalizeOcrWhitespace(text);
+    if (normalized.isEmpty) {
+      return '';
+    }
+
+    final match = RegExp(r'^[0-9][0-9\s-]*').firstMatch(normalized);
+    if (match != null) {
+      return match.group(0)?.replaceAll(RegExp(r'[^0-9]'), '') ?? '';
+    }
+
+    final looseMatch = RegExp(r'(\d[\d\s-]{7,}\d)').firstMatch(normalized);
+    if (looseMatch != null) {
+      return looseMatch.group(1)?.replaceAll(RegExp(r'[^0-9]'), '') ?? '';
+    }
+
+    return '';
+  }
+
+  String get displayOcrAmount => receiptOcrAmount.value;
+
+  String get displayOcrReferenceNumber => receiptOcrReferenceNumber.value;
+
+  final List<RegExp> _referenceLabelPatterns = [
+    RegExp(r'\bref\s*no\.?\b', caseSensitive: false),
+    RegExp(r'\breference\s*no\.?\b', caseSensitive: false),
+  ];
+
+  final List<RegExp> _amountLabelPatterns = [
+    RegExp(r'\btotal\s*amount\s*sent\b', caseSensitive: false),
+  ];
+
+  String _normalizeOcrWhitespace(String value) {
+    return value.replaceAll(RegExp(r'\s+'), ' ').trim();
+  }
+
+  bool _isLikelyAmountLine(String value) {
+    final normalized = value.toLowerCase();
+    return _isLikelyAmountSectionLine(normalized) ||
+        RegExp(r'\b[0-9]{1,3}(?:,[0-9]{3})*\.[0-9]{2}\b').hasMatch(normalized) ||
+        normalized.contains('₱');
+  }
+
+  String _stripLabelPrefix(String value, List<RegExp> patterns) {
+    var output = value.trim();
+    for (final pattern in patterns) {
+      output = output.replaceFirst(pattern, '').trim();
+    }
+    output = output.replaceFirst(RegExp(r'^[:\-\s]+'), '').trim();
+    return output;
+  }
+
+  Future<void> _showReceiptOcrDialog({
+    required String? referenceNumber,
+    required String? phoneNumber,
+    required String? amountText,
+    required bool isSuccess,
+    String? errorMessage,
+  }) async {
+    await Get.dialog(
+      Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(22, 22, 22, 18),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 58,
+                height: 58,
+                decoration: BoxDecoration(
+                  color: isSuccess ? const Color(0xFFEAF1FF) : const Color(0xFFFFF0F0),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  isSuccess ? Icons.receipt_long_rounded : Icons.info_outline_rounded,
+                  color: isSuccess ? const Color(0xFF2E5DC8) : const Color(0xFFEA4335),
+                  size: 32,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                isSuccess ? 'Receipt details detected' : 'Receipt text not recognized',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1F2430),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                isSuccess
+                    ? 'Only Ref No. and Total Amount Sent from the GCash receipt were read.'
+                    : (errorMessage?.trim().isNotEmpty == true
+                        ? errorMessage!
+                        : 'Make sure the receipt is clear and includes Ref No. and Total Amount Sent.'),
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 13.5,
+                  color: Color(0xFF6D7480),
+                  height: 1.35,
+                ),
+              ),
+              const SizedBox(height: 18),
+              if (referenceNumber != null) ...[
+                _ReceiptDetailRow(label: 'Ref No.', value: referenceNumber),
+                const SizedBox(height: 10),
+              ],
+              if (phoneNumber != null) ...[
+                _ReceiptDetailRow(label: 'Phone Number', value: phoneNumber),
+                const SizedBox(height: 10),
+              ],
+              if (amountText != null) ...[
+                _ReceiptDetailRow(
+                  label: 'Total Amount Sent',
+                  valueWidget: PesoFormatter.buildPesoText(
+                    amount: amountText,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF1F2430),
+                  ),
+                ),
+                const SizedBox(height: 10),
+              ],
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Get.back(),
+                  style: AppThemes.primaryButtonStyle,
+                  child: const Text('OK'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
+  }
+
   void openLoanAgreementSheet() {
     Get.bottomSheet(
       const LoanAgreementSheet(),
@@ -240,6 +788,118 @@ class HomeController extends GetxController {
 
   Future<bool> importLoanOrderFromQrPayload(String rawPayload) async {
     final userPhone = Get.find<UserPhoneService>().getRegisteredPhone();
+    final decodedPayload = _decodeQrPayload(rawPayload);
+
+    if (decodedPayload != null && _looksLikeImportableLoanPayload(decodedPayload)) {
+      final result = await _database.importLoanOrderPayload(
+        decodedPayload,
+        userPhone: userPhone,
+        rawPayload: rawPayload,
+      );
+
+      if (!result.success || result.loanOrder == null) {
+        Get.snackbar(
+          'Loan blocked',
+          result.message ?? 'The scanned QR code could not be imported.',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        return false;
+      }
+
+      final savedLoans = await _database.loadActiveLoanOrders();
+      loanOrders.assignAll(savedLoans);
+      _selectLoanOrderById(result.loanOrder!.loanId);
+      _syncAvailableCredit();
+      transactionHistory.insert(
+        0,
+        TransactionItem(
+          title: 'Loan Order',
+          dateTime: formatLoanDate(result.loanOrder!.appliedAt),
+          amount: _formatAmount(result.loanOrder!.originalAmount),
+          sign: '- ',
+          status: 'SUCCESS',
+          logoAsset: result.loanOrder!.logoAsset,
+        ),
+      );
+      return true;
+    }
+
+    final loanId = _extractLoanIdFromPayload(rawPayload, decodedPayload);
+    if (loanId != null) {
+      final storedLoan = await _database.loadLoanOrderByLoanId(loanId);
+      if (storedLoan != null) {
+        final savedLoans = await _database.loadActiveLoanOrders();
+        loanOrders.assignAll(savedLoans);
+        _selectLoanOrderById(storedLoan.loanId);
+        _syncAvailableCredit();
+        return true;
+      }
+
+      final trimmed = rawPayload.trim();
+      final uri = Uri.tryParse(trimmed);
+      if (uri != null && (uri.scheme == 'http' || uri.scheme == 'https')) {
+        try {
+          final resp = await http.get(uri).timeout(const Duration(seconds: 8));
+          if (resp.statusCode == 200 && resp.body.trim().isNotEmpty) {
+            try {
+              final decodedRemote = jsonDecode(resp.body);
+              // Some hosts wrap the record payload (e.g., jsonbin.io)
+              final payload = decodedRemote is Map && decodedRemote.containsKey('record')
+                  ? decodedRemote['record']
+                  : decodedRemote;
+
+              if (payload is Map<String, dynamic>) {
+                final result = await _database.importLoanOrderPayload(
+                  Map<String, dynamic>.from(payload),
+                  userPhone: userPhone,
+                  rawPayload: resp.body,
+                );
+
+                if (result.success && result.loanOrder != null) {
+                  final savedLoans = await _database.loadActiveLoanOrders();
+                  loanOrders.assignAll(savedLoans);
+                  _selectLoanOrderById(result.loanOrder!.loanId);
+                  _syncAvailableCredit();
+                  return true;
+                }
+              }
+            } catch (_) {
+              // If JSON decode failed, try importing raw JSON string.
+              final fallback = await _database.importLoanOrderFromRawJson(
+                resp.body,
+                userPhone: userPhone,
+              );
+              if (fallback.success && fallback.loanOrder != null) {
+                final savedLoans = await _database.loadActiveLoanOrders();
+                loanOrders.assignAll(savedLoans);
+                _selectLoanOrderById(fallback.loanOrder!.loanId);
+                _syncAvailableCredit();
+                return true;
+              }
+            }
+          }
+        } catch (_) {}
+      }
+
+      if (decodedPayload == null) {
+        Get.snackbar(
+          'Loan not found',
+          'The scanned QR only contains a loan ID, but that loan is not stored locally yet.',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        return false;
+      }
+    }
+
+    if (decodedPayload != null) {
+      Get.snackbar(
+        'Unsupported QR',
+        'The scanned QR does not include enough loan details to import or resolve locally.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return false;
+    }
+
     final result = await _database.importLoanOrderFromRawJson(
       rawPayload,
       userPhone: userPhone,
@@ -256,10 +916,7 @@ class HomeController extends GetxController {
 
     final savedLoans = await _database.loadActiveLoanOrders();
     loanOrders.assignAll(savedLoans);
-    selectedLoanOrder.value = savedLoans.firstWhere(
-      (order) => order.loanId == result.loanOrder!.loanId,
-      orElse: () => result.loanOrder!,
-    );
+    _selectLoanOrderById(result.loanOrder!.loanId);
     _syncAvailableCredit();
     transactionHistory.insert(
       0,
@@ -273,6 +930,87 @@ class HomeController extends GetxController {
       ),
     );
     return true;
+  }
+
+  bool _selectLoanOrderById(String loanId) {
+    final index = loanOrders.indexWhere((order) => order.loanId == loanId);
+    if (index == -1) {
+      return false;
+    }
+
+    final selectedOrder = loanOrders[index];
+    if (index != 0) {
+      loanOrders.removeAt(index);
+      loanOrders.insert(0, selectedOrder);
+    }
+
+    selectedLoanOrder.value = selectedOrder;
+    showAllBalanceCards.value = true;
+    return true;
+  }
+
+  String? _selectedLoanIdFromRoute() {
+    final args = Get.arguments;
+    if (args is Map<String, dynamic>) {
+      final rawValue = args['selectedLoanId'] ?? args['loanId'];
+      final loanId = rawValue?.toString().trim() ?? '';
+      return loanId.isEmpty ? null : loanId;
+    }
+
+    if (args is String) {
+      final loanId = args.trim();
+      return loanId.isEmpty ? null : loanId;
+    }
+
+    return null;
+  }
+
+  bool _looksLikeImportableLoanPayload(Map<String, dynamic> payload) {
+    final loanId = _findString(payload, ['loanId', 'loan_id', 'id']);
+    final principalTitle =
+        _findString(payload, ['principalTitle', 'principal_title', 'title']);
+    final dueDate = _findDate(payload, ['dueDate', 'due_date']);
+    final amountDue = _findAmount(payload, ['amountDue', 'amount_due', 'amount']);
+    final products = payload['products'];
+
+    return loanId != null &&
+        principalTitle != null &&
+        dueDate != null &&
+        (amountDue != null || products is List);
+  }
+
+  String? _extractLoanIdFromPayload(
+    String rawPayload,
+    Map<String, dynamic>? decodedPayload,
+  ) {
+    final fromJson = decodedPayload == null
+        ? null
+        : _findString(decodedPayload, ['loanId', 'loan_id', 'id']);
+    if (fromJson != null) {
+      return fromJson;
+    }
+
+    final trimmed = rawPayload.trim();
+    if (trimmed.isEmpty) {
+      return null;
+    }
+
+    final uri = Uri.tryParse(trimmed);
+    if (uri != null) {
+      for (final key in <String>['loanId', 'loan_id', 'id']) {
+        final value = uri.queryParameters[key];
+        if (value != null && value.trim().isNotEmpty) {
+          return value.trim();
+        }
+      }
+
+      final lastSegment = uri.pathSegments.isNotEmpty ? uri.pathSegments.last : '';
+      if (lastSegment.trim().isNotEmpty) {
+        return lastSegment.trim();
+      }
+    }
+
+    return trimmed;
   }
 
   Map<String, dynamic>? _decodeQrPayload(String rawPayload) {
@@ -835,8 +1573,9 @@ class HomeController extends GetxController {
   void toggleAutoReference(bool value) {
     useAutoReference.value = value;
     if (value) {
-      final generated = 'REF${DateTime.now().millisecondsSinceEpoch % 100000}';
-      paymentReference.value = generated;
+      final ocrReference = receiptOcrReferenceNumber.value.trim();
+      paymentReference.value = ocrReference;
+      paymentReferenceController.text = ocrReference;
     }
   }
 
@@ -901,7 +1640,15 @@ class HomeController extends GetxController {
     }
 
     final amount = order.remainingAmount;
-    final reference = paymentReference.value.trim();
+    final ocrReference = receiptOcrReferenceNumber.value.trim();
+    final reference = ocrReference.isNotEmpty
+        ? ocrReference
+        : paymentReference.value.trim();
+    if (ocrReference.isNotEmpty) {
+      paymentReference.value = ocrReference;
+      paymentReferenceController.text = ocrReference;
+      useAutoReference.value = false;
+    }
 
     final success = await processPayment(
       order: order,
@@ -1005,4 +1752,57 @@ class _HistoryEntry {
 
   final DateTime sortKey;
   final TransactionItem item;
+}
+
+class _ReceiptOcrResult {
+  const _ReceiptOcrResult({this.referenceNumber, this.phoneNumber, this.amount});
+
+  final String? referenceNumber;
+  final String? phoneNumber;
+  final double? amount;
+}
+
+class _ReceiptDetailRow extends StatelessWidget {
+  const _ReceiptDetailRow({required this.label, this.value, this.valueWidget});
+
+  final String label;
+  final String? value;
+  final Widget? valueWidget;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF7F8FB),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFE5E8EF)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF6D7480),
+            ),
+          ),
+          Flexible(
+            child: valueWidget ?? Text(
+              value ?? '',
+              textAlign: TextAlign.right,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF1F2430),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

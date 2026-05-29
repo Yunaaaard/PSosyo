@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:p_sosyo/app/database/psosyo_database_service.dart';
 import 'package:p_sosyo/app/modules/landing_page/controller/landing_controller.dart';
 import 'package:p_sosyo/app/routes/app_routes.dart';
-import 'package:p_sosyo/app/database/psosyo_database_service.dart';
 import 'package:p_sosyo/app/widgets/app_snackbar.dart';
 import 'package:p_sosyo/app/services/user_phone_service.dart';
+
 class RegisterController extends GetxController {
   var isLoading = false.obs;
   var phoneNumber = ''.obs;
@@ -32,9 +33,19 @@ class RegisterController extends GetxController {
   }
 
   void sendCode() async {
-    if (!isPhoneValid) return;
-
     final phone = phoneController.text.trim();
+    if (phone.isEmpty) {
+      AppSnackbar.show(title: 'Error', message: 'Please enter your phone number');
+      return;
+    }
+    if (phone.length != requiredPhoneLength) {
+      AppSnackbar.show(
+        title: 'Error',
+        message: 'Phone number must be $requiredPhoneLength digits',
+      );
+      return;
+    }
+
     // Set phone and navigate immediately (temporary flow)
     phoneNumber.value = phone;
     Get.find<UserPhoneService>().setRegisteredPhone(phone);
@@ -47,6 +58,6 @@ class RegisterController extends GetxController {
     } catch (_) {}
 
     // Navigate to OTP page and clear previous routes to avoid returning to landing
-    Get.toNamed(AppRoutes.verifyOtp, arguments: phoneNumber.value);
+    Get.offAllNamed(AppRoutes.verifyOtp, arguments: phoneNumber.value);
   }
 }

@@ -96,6 +96,27 @@ class LoansTable {
     return rows.map(_loanOrderFromRow).toList();
   }
 
+  Future<LoanOrderCard?> loadLoanOrderByLoanId(String loanId) async {
+    final trimmedLoanId = loanId.trim();
+    if (trimmedLoanId.isEmpty) {
+      return null;
+    }
+
+    final db = await _database();
+    final rows = await db.query(
+      tableName,
+      where: 'loan_id = ?',
+      whereArgs: <Object?>[trimmedLoanId],
+      limit: 1,
+    );
+
+    if (rows.isEmpty) {
+      return null;
+    }
+
+    return _loanOrderFromRow(rows.first);
+  }
+
   Future<bool> hasActiveLoanForPrincipal(String principalTitle) async {
     final db = await _database();
     final rows = await db.query(

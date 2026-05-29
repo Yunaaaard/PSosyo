@@ -4,68 +4,20 @@ import 'package:get/get.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:p_sosyo/app/modules/home_screen/controllers/home_controller.dart';
-import 'package:p_sosyo/app/utils/themes/theme_colors.dart';
 import 'package:p_sosyo/app/utils/pay_now_utils.dart';
+import 'package:p_sosyo/app/utils/themes/theme_colors.dart';
 import 'package:p_sosyo/app/widgets/pay_now_widgets.dart';
 import 'package:p_sosyo/app/widgets/psosyo_app_bar.dart';
 
 const double _menuHorizontalPadding = 1.0;
-const double _qrSize = 240.0;
-class PayNowPage extends StatefulWidget {
+const double _qrSize = 290.0;
+class PayNowPage extends StatelessWidget {
   const PayNowPage({super.key});
 
   @override
-  State<PayNowPage> createState() => _PayNowPageState();
-}
-
-class _PayNowPageState extends State<PayNowPage> {
-  late final HomeController controller;
-  late final TextEditingController _referenceController;
-  late final TextEditingController _phoneController;
-
-  @override
-  void initState() {
-    super.initState();
-    controller = Get.find<HomeController>();
-    _referenceController = TextEditingController(text: controller.paymentReference.value);
-    _phoneController = TextEditingController(text: controller.phoneNumber.value);
-
-    // Keep controllers in sync with controller observables
-    ever(controller.paymentReference, (val) {
-      final text = (val ?? '').toString();
-      if (_referenceController.text != text) {
-        _referenceController.text = text;
-      }
-    });
-    ever(controller.phoneNumber, (val) {
-      final text = (val ?? '').toString();
-      if (_phoneController.text != text) {
-        _phoneController.text = text;
-      }
-    });
-
-    _referenceController.addListener(() {
-      if (controller.paymentReference.value != _referenceController.text) {
-        controller.updateReference(_referenceController.text);
-      }
-    });
-
-    _phoneController.addListener(() {
-      if (controller.phoneNumber.value != _phoneController.text) {
-        controller.updatePhoneNumber(_phoneController.text);
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _referenceController.dispose();
-    _phoneController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final controller = Get.find<HomeController>();
+
     return Scaffold(
       backgroundColor: const Color(0xFFF7F7F9),
       resizeToAvoidBottomInset: false,
@@ -86,108 +38,37 @@ class _PayNowPageState extends State<PayNowPage> {
               children: [
                 const SectionLabel(label: 'Reference Number'),
                 const SizedBox(height: 5),
-                Obx(
-                  () => FieldShell(
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _referenceController,
-                            readOnly: controller.useAutoReference.value,
-                            decoration: kBaseDecoration.copyWith(
-                              hintText: 'Input Text',
-                              hintStyle: kHintTextStyle,
-                            ),
-                            style: kInputTextStyle,
+                FieldShell(
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: controller.paymentReferenceController,
+                          readOnly: true,
+                          onChanged: controller.updateReference,
+                          decoration: kBaseDecoration.copyWith(
+                            hintText: 'Captured from receipt OCR',
+                            hintStyle: kHintTextStyle,
                           ),
+                          style: kInputTextStyle,
                         ),
-                        const SizedBox(width: 14),
-                        const Text(
-                          'Auto',
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Color(0xFF8E94A0),
-                            fontWeight: FontWeight.w500,
-                            fontFamily: 'Poppins',
-                          ),
-                        ),
-                        Transform.scale(
-                          scale: 0.92,
-                          child: Checkbox(
-                            value: controller.useAutoReference.value,
-                            onChanged: (value) {
-                              controller.toggleAutoReference(value ?? false);
-                            },
-                            activeColor: AppColors.primary,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            side: const BorderSide(
-                              color: Color(0xFFD8DBE2),
-                              width: 1.4,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 12),
                 const SectionLabel(label: 'Phone Number'),
                 const SizedBox(height: 5),
-                Obx(
-                  () => FieldShell(
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _phoneController,
-                            readOnly: controller.useAutoPhone.value,
-                            keyboardType: TextInputType.phone,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                              LengthLimitingTextInputFormatter(11),
-                            ],
-                            decoration: kBaseDecoration.copyWith(
-                              hintText: controller.useAutoPhone.value
-                                  ? 'Auto-filled from profile'
-                                  : 'Enter 11-digit phone number',
-                              hintStyle: kHintTextStyle,
-                              suffixText: '${controller.phoneNumber.value.length}/11',
-                              suffixStyle: kHintTextStyle,
-                            ),
-                            style: kInputTextStyle,
-                          ),
-                        ),
-                        const SizedBox(width: 14),
-                        const Text(
-                          'Auto',
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Color(0xFF8E94A0),
-                            fontWeight: FontWeight.w500,
-                            fontFamily: 'Poppins',
-                          ),
-                        ),
-                        Transform.scale(
-                          scale: 0.92,
-                          child: Checkbox(
-                            value: controller.useAutoPhone.value,
-                            onChanged: (value) {
-                              controller.toggleAutoPhone(value ?? false);
-                            },
-                            activeColor: AppColors.primary,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            side: const BorderSide(
-                              color: Color(0xFFD8DBE2),
-                              width: 1.4,
-                            ),
-                          ),
-                        ),
-                      ],
+                FieldShell(
+                  child: TextField(
+                    controller: controller.phoneNumberController,
+                    readOnly: true,
+                    keyboardType: TextInputType.phone,
+                    decoration: kBaseDecoration.copyWith(
+                      hintText: 'Captured from receipt OCR',
+                      hintStyle: kHintTextStyle,
                     ),
+                    style: kInputTextStyle,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -383,9 +264,9 @@ class _PayNowPageState extends State<PayNowPage> {
                         title: 'Loan Balance',
                         amount: controller.remainingBalance,
                         subtitle: 'Selected loan: ${controller.loanId}',
-                        qrWidget: Column(
+                        qrWidget: const Column(
                           mainAxisSize: MainAxisSize.min,
-                          children: const [
+                          children: [
                             Icon(
                               Icons.payments_outlined,
                               size: 72,
@@ -418,8 +299,8 @@ class _PayNowPageState extends State<PayNowPage> {
                       );
                     }
 
-                    final reference = _referenceController.text.trim();
-                    final phone = _phoneController.text.trim();
+                    final reference = controller.paymentReferenceController.text.trim();
+                    final phone = controller.phoneNumberController.text.trim();
                     final remarks = controller.remarksValue.value.trim();
 
                     final payload = buildPayNowPayloadJson(
@@ -492,21 +373,11 @@ class _PayNowPageState extends State<PayNowPage> {
         minimum: const EdgeInsets.fromLTRB(24, 0, 24, 18),
         child: SizedBox(
           height: 66,
-          child: ElevatedButton(
-            onPressed: controller.submitPayNow,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(18),
-              ),
-              textStyle: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                fontFamily: 'Poppins',
-              ),
-            ),
-            child: const Text('Pay Now'),
+          child: ElevatedButton.icon(
+            onPressed: controller.openReceiptCaptureUploadOptions,
+            style: AppThemes.primaryButtonStyle,
+            icon: const Icon(Icons.camera_alt_outlined),
+            label: const Text('Capture / Upload Photo'),
           ),
         ),
       ),

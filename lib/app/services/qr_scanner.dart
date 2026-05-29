@@ -136,6 +136,9 @@ class _QrScannerPageState extends State<QrScannerPage> {
     final controller = Get.find<HomeController>();
     final imported = await controller.importLoanOrderFromQrPayload(raw);
     if (imported) {
+      final selectedAmount = controller.selectedLoanOrder.value?.originalAmount ??
+          controller.activeLoanOrder?.originalAmount ??
+          0.0;
       // Navigate to receipt page with success binding
       await Get.to(
         () => const ScanSuccessPage(),
@@ -146,7 +149,7 @@ class _QrScannerPageState extends State<QrScannerPage> {
           'to': 'PSosyo Service',
           'referenceNo': _extractReferenceNo(raw),
           'dateTime': null,
-          'amountSent': 1834.08,
+          'amountSent': selectedAmount,
         },
       );
       return;

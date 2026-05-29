@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:p_sosyo/app/database/psosyo_database_service.dart';
+import 'package:p_sosyo/app/modules/home_screen/models/loan_order.dart';
 import 'package:p_sosyo/app/modules/home_screen/models/scan_success_receipt_model.dart';
 import 'package:p_sosyo/app/routes/app_routes.dart';
 import 'package:p_sosyo/app/services/user_phone_service.dart';
@@ -30,6 +31,7 @@ class ScanSuccessController extends GetxController {
   final double amountSent;
   final ScanSuccessReceiptModel receipt;
   final RxString senderName = ''.obs;
+  final Rxn<LoanOrderCard> resolvedLoanOrder = Rxn<LoanOrderCard>();
 
   late final PsosyoDatabaseService _databaseService;
   late final UserPhoneService _userPhoneService;
@@ -41,6 +43,19 @@ class ScanSuccessController extends GetxController {
     _userPhoneService = Get.find<UserPhoneService>();
     senderName.value = from?.trim().isNotEmpty == true ? from!.trim() : 'Psosyo User';
     _loadLocalSenderName();
+    _loadResolvedLoanData();
+  }
+
+  Future<void> _loadResolvedLoanData() async {
+    final loanId = _extractLoanIdFromQrData(qrData) ?? receipt.loanId;
+    if (loanId.trim().isEmpty || loanId == 'N/A') {
+      return;
+    }
+
+    final loanOrder = await _databaseService.loadLoanOrderByLoanId(loanId);
+    if (loanOrder != null) {
+      resolvedLoanOrder.value = loanOrder;
+    }
   }
 
   Future<void> _loadLocalSenderName() async {
@@ -57,17 +72,18 @@ class ScanSuccessController extends GetxController {
     }
   }
 
-  String get loanId => receipt.loanId;
+  String get loanId => resolvedLoanOrder.value?.loanId ?? receipt.loanId;
 
-  String get recipientName => receipt.principalTitle;
+  String get recipientName => resolvedLoanOrder.value?.title ?? receipt.principalTitle;
 
-  String get principalLogo => receipt.principalLogo;
+  String get principalLogo => resolvedLoanOrder.value?.logoAsset ?? receipt.principalLogo;
 
-  double get amountDueFromQr => receipt.amountDueFromQr;
+  double get amountDueFromQr =>
+      resolvedLoanOrder.value?.originalAmount ?? receipt.amountDueFromQr;
 
-  String get appliedDate => receipt.appliedDate;
+  String get appliedDate => resolvedLoanOrder.value?.appliedAt.toIso8601String() ?? receipt.appliedDate;
 
-  String get dueDate => receipt.dueDate;
+  String get dueDate => resolvedLoanOrder.value?.dueAt.toIso8601String() ?? receipt.dueDate;
 
   List<dynamic>? get products => receipt.products;
 
@@ -123,6 +139,30 @@ class ScanSuccessController extends GetxController {
     return chunks.join(' ');
   }
 
+  String? _extractLoanIdFromQrData(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      return null;
+    }
+
+    final uri = Uri.tryParse(trimmed);
+    if (uri != null) {
+      for (final key in <String>['loanId', 'loan_id', 'id']) {
+        final queryValue = uri.queryParameters[key];
+        if (queryValue != null && queryValue.trim().isNotEmpty) {
+          return queryValue.trim();
+        }
+      }
+
+      final lastSegment = uri.pathSegments.isNotEmpty ? uri.pathSegments.last.trim() : '';
+      if (lastSegment.isNotEmpty) {
+        return lastSegment;
+      }
+    }
+
+    return trimmed;
+  }
+
   String? _referenceFromUri(Uri? uri) {
     if (uri == null) {
       return null;
@@ -160,6 +200,15 @@ class ScanSuccessController extends GetxController {
   }
 
   void goHome() {
+    final loanId = resolvedLoanOrder.value?.loanId ?? receipt.loanId;
+    if (loanId.trim().isNotEmpty && loanId != 'N/A') {
+      Get.offNamed(
+        AppRoutes.homeScreen,
+        arguments: {'selectedLoanId': loanId.trim()},
+      );
+      return;
+    }
+
     Get.offNamed(AppRoutes.homeScreen);
   }
 }
