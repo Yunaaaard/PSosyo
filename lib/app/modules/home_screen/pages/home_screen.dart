@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:p_sosyo/app/modules/home_screen/controllers/home_controller.dart';
+import 'package:p_sosyo/app/routes/app_routes.dart';
 import 'package:p_sosyo/app/utils/peso_formatter.dart';
 import 'package:p_sosyo/app/widgets/psosyo_app_bar.dart';
 import 'package:p_sosyo/app/widgets/transaction_tile.dart';
@@ -17,7 +18,9 @@ class HomeScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF6F6F8),
-      appBar: const PsosyoAppBar(),
+      appBar: PsosyoAppBar(
+        onBack: () => Get.offAllNamed(AppRoutes.dashboard),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(24, 14, 24, 28),
