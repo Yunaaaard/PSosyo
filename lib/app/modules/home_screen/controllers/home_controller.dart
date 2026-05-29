@@ -136,6 +136,10 @@ class HomeController extends GetxController {
     try {
       final loanRows = await _database.loadAllLoanOrders();
       final paymentRows = await _database.loadPaymentRequests(limit: 100);
+      final loanLogoById = <String, String>{
+        for (final loan in loanRows)
+          if (loan.loanId.trim().isNotEmpty) loan.loanId.trim(): loan.logoAsset,
+      };
 
       final items = <_HistoryEntry>[];
 
@@ -161,7 +165,11 @@ class HomeController extends GetxController {
         final loanId = row['loan_id']?.toString();
         final reference = row['reference_id']?.toString();
         final status = row['status']?.toString() ?? 'SUCCESS';
-        final logoAsset = _safeLogoAsset(_logoAssetFromMetadata(row['metadata_json']?.toString()));
+        final logoAsset = _safeLogoAsset(
+          loanId != null && loanLogoById.containsKey(loanId.trim())
+              ? loanLogoById[loanId.trim()]
+              : _logoAssetFromMetadata(row['metadata_json']?.toString()),
+        );
         final title = (loanId != null && loanId.isNotEmpty)
             ? 'Loan Payment - $loanId'
             : (reference != null && reference.isNotEmpty)
