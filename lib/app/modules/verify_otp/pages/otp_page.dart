@@ -22,10 +22,17 @@ class OtpVerificationPage extends GetView<OtpController> {
         final subtitle = controller.displayPhone.value.isNotEmpty
             ? controller.subtitle
             : '${controller.subtitlePrefix}${controller.formatDisplayNumber(phoneNumber)}';
+        final variant = controller.isLoanOfferEsign
+            ? OtpVerificationVariant.register
+            : OtpVerificationVariant.eligibility;
+
+        final illustration = controller.isLoanOfferEsign
+            ? 'assets/icons/otp-verification-page.svg'
+            : 'assets/images/otp_verification_eligibility.svg';
 
         return OtpVerificationLayout(
-          variant: OtpVerificationVariant.eligibility,
-          illustrationAsset: 'assets/images/otp_verification_eligibility.svg',
+          variant: variant,
+          illustrationAsset: illustration,
           pageTitle: controller.pageTitle,
           subtitle: subtitle,
           controllers: controller.otpControllers,
