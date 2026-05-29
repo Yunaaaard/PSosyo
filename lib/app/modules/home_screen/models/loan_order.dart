@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 class LoanPrincipalOption {
   const LoanPrincipalOption({
     required this.title,

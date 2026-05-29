@@ -202,49 +202,64 @@ class HomeScreen extends StatelessWidget {
                 );
               }),
               const SizedBox(height: 26),
-              const Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Transaction History',
-                    style: TextStyle(
-                      fontSize: 21,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF4B4F57),
-                    ),
-                  ),
-                  Text(
-                    'View All',
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: Color(0xFF2F65F4),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
               Obx(
-                () => Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    for (int index = 0;
-                        index < controller.transactionHistory.length;
-                        index++) ...[
-                      TransactionTile(
-                        title: controller.transactionHistory[index].title,
-                        dateTime: controller.transactionHistory[index].dateTime,
-                        amount: controller.transactionHistory[index].amount,
-                        sign: controller.transactionHistory[index].sign,
-                        status: controller.transactionHistory[index].status,
-                        logoAsset:
-                            controller.transactionHistory[index].logoAsset,
-                        compact: true,
+                () {
+                  final visibleHistory = controller.showAllTransactionHistory.value
+                      ? controller.transactionHistory
+                      : controller.transactionHistory.take(3).toList();
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Transaction History',
+                            style: TextStyle(
+                              fontSize: 21,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF4B4F57),
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: controller.toggleTransactionHistoryVisibility,
+                            child: Text(
+                              controller.showAllTransactionHistory.value
+                                  ? 'Hide'
+                                  : 'View All',
+                              style: const TextStyle(
+                                fontSize: 15,
+                                color: Color(0xFF2F65F4),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      if (index != controller.transactionHistory.length - 1)
-                        const SizedBox(height: 16),
+                      const SizedBox(height: 16),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          for (int index = 0;
+                              index < visibleHistory.length;
+                              index++) ...[
+                            TransactionTile(
+                              title: visibleHistory[index].title,
+                              dateTime: visibleHistory[index].dateTime,
+                              amount: visibleHistory[index].amount,
+                              sign: visibleHistory[index].sign,
+                              status: visibleHistory[index].status,
+                              logoAsset: visibleHistory[index].logoAsset,
+                              compact: true,
+                            ),
+                            if (index != visibleHistory.length - 1)
+                              const SizedBox(height: 16),
+                          ],
+                        ],
+                      ),
                     ],
-                  ],
-                ),
+                  );
+                },
               ),
             ],
           ),

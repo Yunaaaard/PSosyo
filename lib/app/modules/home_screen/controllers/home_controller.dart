@@ -20,6 +20,7 @@ import 'package:p_sosyo/app/utils/themes/theme_colors.dart';
 
 class HomeController extends GetxController {
   final RxBool showAllBalanceCards = true.obs;
+  final RxBool showAllTransactionHistory = false.obs;
 
   static const double creditLimit = 25000.00;
 
@@ -45,7 +46,6 @@ class HomeController extends GetxController {
   late final TextRecognizer _receiptTextRecognizer;
   // Pay Now UI bindings
   final RxBool useAutoReference = true.obs;
-  final RxBool useAutoPhone = true.obs;
   final RxString phoneNumber = ''.obs;
 
   final List<String> remarksOptions = const [
@@ -249,10 +249,6 @@ class HomeController extends GetxController {
         _userPhoneService.setRegisteredPhone(registeredPhone);
       }
     }
-    if (registeredPhone.isNotEmpty) {
-      phoneNumber.value = registeredPhone;
-    }
-
     final loadedName = await _database.loadUserFullName(phoneNumber: registeredPhone);
     if (loadedName != null && loadedName.trim().isNotEmpty) {
       currentUserName.value = loadedName.trim();
@@ -409,7 +405,6 @@ class HomeController extends GetxController {
       }
 
       if (phoneNumber.isNotEmpty) {
-        useAutoPhone.value = false;
         this.phoneNumber.value = phoneNumber;
         phoneNumberController.text = phoneNumber;
       }
@@ -772,7 +767,7 @@ class HomeController extends GetxController {
                 child: ElevatedButton(
                   onPressed: () => Get.back(),
                   style: AppThemes.primaryButtonStyle,
-                  child: const Text('OK'),
+                  child: const Text('Pay Now'),
                 ),
               ),
             ],
@@ -792,6 +787,10 @@ class HomeController extends GetxController {
 
   void toggleBalanceCardsVisibility() {
     showAllBalanceCards.toggle();
+  }
+
+  void toggleTransactionHistoryVisibility() {
+    showAllTransactionHistory.toggle();
   }
 
   Future<bool> importLoanOrderFromQrPayload(String rawPayload) async {
@@ -1631,27 +1630,6 @@ class HomeController extends GetxController {
       final ocrReference = receiptOcrReferenceNumber.value.trim();
       paymentReference.value = ocrReference;
       paymentReferenceController.text = ocrReference;
-    }
-  }
-
-  void updatePhoneNumber(String value) {
-    if (useAutoPhone.value) {
-      final registeredPhone = _userPhoneService.getRegisteredPhone();
-      if (registeredPhone.isNotEmpty) {
-        phoneNumber.value = registeredPhone;
-        return;
-      }
-    }
-    phoneNumber.value = value;
-    
-  }
-
-  void toggleAutoPhone(bool value) {
-    useAutoPhone.value = value;
-    if (value) {
-      final registeredPhone = _userPhoneService.getRegisteredPhone();
-      phoneNumber.value = registeredPhone;
-      
     }
   }
 
