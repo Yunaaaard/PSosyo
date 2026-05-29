@@ -17,10 +17,16 @@ class _VerifyingProcessPageState extends State<VerifyingProcessPage>
     with SingleTickerProviderStateMixin {
   late final AnimationController _animationController;
   Timer? _stopTimer;
+  late final String _nextRoute;
 
   @override
   void initState() {
     super.initState();
+    final arguments = Get.arguments;
+    final nextRoute =
+        arguments is Map ? arguments['nextRoute']?.toString().trim() ?? '' : '';
+    _nextRoute = nextRoute.isNotEmpty ? nextRoute : AppRoutes.loanOffer;
+
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1200),
@@ -35,7 +41,7 @@ class _VerifyingProcessPageState extends State<VerifyingProcessPage>
         // animations or layout are still finishing.
         WidgetsBinding.instance.addPostFrameCallback((_) {
           Future.delayed(const Duration(milliseconds: 400), () {
-            if (mounted) Get.offAllNamed(AppRoutes.loanOffer);
+            if (mounted) Get.offAllNamed(_nextRoute);
           });
         });
       }

@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import 'package:p_sosyo/app/routes/app_routes.dart';
+import 'package:p_sosyo/app/services/app_state_service.dart';
 
 class DashboardController extends GetxController {
   // Carousel data
@@ -63,6 +64,18 @@ class DashboardController extends GetxController {
   }
 
   void openPsosyoEligibility() {
+    final appStateService = Get.find<AppStateService>();
+
+    if (appStateService.hasCompletedEligibility()) {
+      Get.toNamed(
+        AppRoutes.psosyoLanding,
+        arguments: {
+          'nextRoute': AppRoutes.homeScreen,
+        },
+      );
+      return;
+    }
+
     Get.toNamed(AppRoutes.psosyoLanding);
   }
 }
