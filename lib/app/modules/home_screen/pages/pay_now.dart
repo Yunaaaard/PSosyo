@@ -418,12 +418,12 @@ class _PayNowPageState extends State<PayNowPage> {
                       );
                     }
 
-                    final reference = _referenceController.text.trim();
+                    final paymentReferenceId = _referenceController.text.trim();
                     final phone = _phoneController.text.trim();
                     final remarks = controller.remarksValue.value.trim();
 
                     final payload = buildPayNowPayloadJson(
-                      referenceId: reference,
+                      paymentReferenceId: paymentReferenceId,
                       paymentType: paymentType,
                       remarks: remarks,
                       loanId: controller.loanId,

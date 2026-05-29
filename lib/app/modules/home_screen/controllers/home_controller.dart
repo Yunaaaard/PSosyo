@@ -682,6 +682,9 @@ class HomeController extends GetxController {
   Future<void> recordLoanPaymentSuccess({
     required LoanOrderCard order,
     required double amount,
+    String? paymentReferenceId,
+    String? paymentRequestId,
+    String? paymentMethod,
     DateTime? when,
   }) async {
     final createdAt = when ?? DateTime.now();
@@ -723,11 +726,33 @@ class HomeController extends GetxController {
     // Persist a payment request record so transaction history survives app restarts
     try {
       final nowIso = createdAt.toIso8601String();
+      final localPaymentRequestId = paymentRequestId ??
+          'pr-local-${DateTime.now().millisecondsSinceEpoch}';
+      final localPaymentReferenceId = paymentReferenceId?.trim().isNotEmpty == true
+          ? paymentReferenceId!.trim()
+          : 'PAY-${DateTime.now().millisecondsSinceEpoch}';
+      final selectedMethod = paymentMethod?.trim().isNotEmpty == true
+          ? paymentMethod!.trim()
+          : selectedPaymentType.value.trim();
       final payload = <String, dynamic>{
         'id': 'local-${DateTime.now().millisecondsSinceEpoch}',
         'loan_id': order.loanId,
+        'reference_id': localPaymentReferenceId,
+        'payment_request_id': localPaymentRequestId,
+        if (selectedMethod.isNotEmpty)
+          'payment_method': <String, dynamic>{
+            'method': selectedMethod,
+          },
+        'metadata': <String, dynamic>{
+          if (selectedMethod.isNotEmpty) 'payment_method_label': selectedMethod,
+          'remarks': remarksValue.value.trim(),
+          'phone_number': phoneNumber.value.trim(),
+          'customer_name': currentUserName.value.trim(),
+          'payment_reference_id': localPaymentReferenceId,
+          'payment_request_id': localPaymentRequestId,
+          'loan_id': order.loanId,
+        },
         'amount': paidAmount,
-        'logo_asset': order.logoAsset,
         'status': 'SUCCESS',
         'created': nowIso,
         'updated': nowIso,
@@ -770,7 +795,8 @@ class HomeController extends GetxController {
   Future<bool> processPayment({
     required LoanOrderCard order,
     required double amount,
-    String? reference,
+    String? paymentReferenceId,
+    String? paymentMethod,
     String? receiptPath,
     bool allowLocalFallback = false,
   }) async {
@@ -779,17 +805,31 @@ class HomeController extends GetxController {
       final success = await service.processPayment(
         loanId: order.loanId,
         amount: amount,
-        reference: reference,
+        paymentReferenceId: paymentReferenceId,
         receiptPath: receiptPath,
       );
 
       if (success) {
-        await recordLoanPaymentSuccess(order: order, amount: amount);
+        await recordLoanPaymentSuccess(
+          order: order,
+          amount: amount,
+          paymentReferenceId: paymentReferenceId,
+          paymentRequestId:
+              'pr-local-${DateTime.now().millisecondsSinceEpoch}',
+          paymentMethod: paymentMethod,
+        );
         return true;
       }
 
       if (allowLocalFallback) {
-        await recordLoanPaymentSuccess(order: order, amount: amount);
+        await recordLoanPaymentSuccess(
+          order: order,
+          amount: amount,
+          paymentReferenceId: paymentReferenceId,
+          paymentRequestId:
+              'pr-local-${DateTime.now().millisecondsSinceEpoch}',
+          paymentMethod: paymentMethod,
+        );
         Get.snackbar(
           'Payment Completed',
           'QR matched the active loan and payment was recorded locally.',
@@ -803,7 +843,14 @@ class HomeController extends GetxController {
       return false;
     } catch (e) {
       if (allowLocalFallback) {
-        await recordLoanPaymentSuccess(order: order, amount: amount);
+        await recordLoanPaymentSuccess(
+          order: order,
+          amount: amount,
+          paymentReferenceId: paymentReferenceId,
+          paymentRequestId:
+              'pr-local-${DateTime.now().millisecondsSinceEpoch}',
+          paymentMethod: paymentMethod,
+        );
         Get.snackbar(
           'Payment Completed',
           'QR matched the active loan and payment was recorded locally.',
@@ -887,9 +934,15 @@ class HomeController extends GetxController {
     }
 
     if (paymentType.toLowerCase() == 'cash') {
+      final cashPaymentReferenceId = paymentReference.value.trim().isEmpty
+          ? 'PAY-${DateTime.now().millisecondsSinceEpoch}'
+          : paymentReference.value.trim();
       await recordLoanPaymentSuccess(
         order: order,
         amount: order.remainingAmount,
+        paymentReferenceId: cashPaymentReferenceId,
+        paymentRequestId: 'pr-local-${DateTime.now().millisecondsSinceEpoch}',
+        paymentMethod: paymentType,
       );
       Get.snackbar(
         'Payment recorded',
@@ -901,12 +954,14 @@ class HomeController extends GetxController {
     }
 
     final amount = order.remainingAmount;
-    final reference = paymentReference.value.trim();
+    final paymentReferenceId = paymentReference.value.trim();
 
     final success = await processPayment(
       order: order,
       amount: amount,
-      reference: reference.isEmpty ? null : reference,
+      paymentReferenceId:
+          paymentReferenceId.isEmpty ? null : paymentReferenceId,
+      paymentMethod: paymentType,
       receiptPath: attachedReceiptPath.value,
       allowLocalFallback: true,
     );
@@ -923,7 +978,15 @@ class HomeController extends GetxController {
       return;
     }
 
-    recordLoanPaymentSuccess(amount: order.remainingAmount, order: order);
+    recordLoanPaymentSuccess(
+      amount: order.remainingAmount,
+      order: order,
+      paymentReferenceId: 'PAY-${DateTime.now().millisecondsSinceEpoch}',
+      paymentRequestId: 'pr-local-${DateTime.now().millisecondsSinceEpoch}',
+      paymentMethod: selectedPaymentType.value.trim().isEmpty
+          ? null
+          : selectedPaymentType.value.trim(),
+    );
   }
 
   String _formatAmount(double value) {

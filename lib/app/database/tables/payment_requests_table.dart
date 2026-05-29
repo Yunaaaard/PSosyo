@@ -49,8 +49,8 @@ class PaymentRequestsTable {
         'reference_id': _stringValue(payload['reference_id']),
         'payment_request_id': _stringValue(payload['payment_request_id']),
         'payment_method_json': payload['payment_method'] == null
-            ? null
-            : jsonEncode(payload['payment_method']),
+          ? null
+          : jsonEncode(payload['payment_method']),
         'amount': _doubleValue(payload['amount']) ?? 0,
         'currency': _stringValue(payload['currency']) ?? '',
         'status': _stringValue(payload['status']) ?? '',
@@ -74,6 +74,14 @@ class PaymentRequestsTable {
       limit: limit,
     );
     return rows;
+  }
+
+  Future<List<Map<String, Object?>>> loadAllPaymentRequests() async {
+    final db = await _database();
+    return db.query(
+      tableName,
+      orderBy: 'datetime(created_at) DESC, id DESC',
+    );
   }
 
   String? _stringValue(dynamic value) {
