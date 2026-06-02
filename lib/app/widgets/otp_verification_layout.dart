@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
-import 'package:p_sosyo/app/utils/themes/theme_colors.dart';
+import 'package:p_sosyo/app/core/themes/theme_colors.dart';
 
 enum OtpVerificationVariant {
   /// Register / send-code flow — purple theme.

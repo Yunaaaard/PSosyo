@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:p_sosyo/app/utils/principal_logo_resolver.dart';
+import 'package:p_sosyo/app/core/utils/principal_logo_resolver.dart';
 
 class ScanSuccessReceiptModel {
   const ScanSuccessReceiptModel._({

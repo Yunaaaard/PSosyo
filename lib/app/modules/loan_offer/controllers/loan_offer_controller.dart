@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:p_sosyo/app/routes/app_routes.dart';
-import 'package:p_sosyo/app/services/user_phone_service.dart';
+import 'package:p_sosyo/app/data/services/user_phone_service.dart';
 import 'package:p_sosyo/app/widgets/loan_agreement_sheet.dart';
 
 class LoanOfferController extends GetxController {

@@ -287,7 +287,7 @@ class _SnackLayout extends StatelessWidget {
                         child: const Icon(
                           Icons.close_rounded,
                           size: 16,
-                          color: const Color(0xFF94A3B8),
+                          color: Color(0xFF94A3B8),
                         ),
                       ),
                     ],

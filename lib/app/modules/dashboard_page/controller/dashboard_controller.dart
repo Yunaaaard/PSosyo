@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 import 'package:p_sosyo/app/routes/app_routes.dart';
-import 'package:p_sosyo/app/services/app_state_service.dart';
+import 'package:p_sosyo/app/data/services/app_state_service.dart';
 
 class DashboardController extends GetxController {
   // Carousel data

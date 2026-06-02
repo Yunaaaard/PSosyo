@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../services/id_scan_service.dart';
+import '../data/services/id_scan_service.dart';
 
 class IdQrVerifierWidget extends StatefulWidget {
   const IdQrVerifierWidget({super.key});
@@ -53,7 +53,7 @@ class _IdQrVerifierWidgetState extends State<IdQrVerifierWidget> {
       setState(() => _log = 'Reading QR from back image...');
       final rawQr = await service.readQrRaw(_back!);
       final rawDisplay = rawQr ?? '<no-qr-detected>';
-      setState(() => _log = '${_log}\nQR raw payload: $rawDisplay');
+      setState(() => _log = '$_log\nQR raw payload: $rawDisplay');
 
       // Try parse JSON from QR (many PhilSys QR payloads are JSON)
       String parsedName = '<none parsed>';
@@ -84,21 +84,21 @@ class _IdQrVerifierWidgetState extends State<IdQrVerifierWidget> {
             }
           }
         } catch (e) {
-          setState(() => _log = '${_log}\nFailed to parse QR as JSON: $e');
+          setState(() => _log = '$_log\nFailed to parse QR as JSON: $e');
         }
       }
 
-      setState(() => _log = '${_log}\nParsed full name from QR: $parsedName');
+      setState(() => _log = '$_log\nParsed full name from QR: $parsedName');
 
       // Compare names (use the service's approximate match)
       final matches = (frontName != '<none>' && parsedName != '<none parsed>')
           ? service.namesMatchApproximately(frontName, parsedName)
           : false;
 
-      setState(() => _log = '${_log}\nNames match: $matches');
+      setState(() => _log = '$_log\nNames match: $matches');
 
       if (parsedJson != null) {
-        setState(() => _log = '${_log}\n\nParsed JSON (pretty):\n${const JsonEncoder.withIndent('  ').convert(parsedJson)}');
+        setState(() => _log = '$_log\n\nParsed JSON (pretty):\n${const JsonEncoder.withIndent('  ').convert(parsedJson)}');
       }
     } catch (e) {
       setState(() => _log = 'Error during verify: $e');

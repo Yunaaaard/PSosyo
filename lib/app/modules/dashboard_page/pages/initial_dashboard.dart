@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import 'package:p_sosyo/app/widgets/custom_app_bar.dart';
 import 'package:p_sosyo/app/widgets/custom_navbar.dart';
 import 'package:p_sosyo/app/widgets/carousel_widget.dart';
-import 'package:p_sosyo/app/utils/peso_formatter.dart';
+import 'package:p_sosyo/app/core/utils/peso_formatter.dart';
 import 'package:p_sosyo/app/modules/dashboard_page/controller/dashboard_controller.dart';
 
 class InitialDashboard extends StatelessWidget {

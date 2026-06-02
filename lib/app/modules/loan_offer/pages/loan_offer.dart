@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:p_sosyo/app/modules/loan_offer/controllers/loan_offer_controller.dart';
-import 'package:p_sosyo/app/utils/peso_formatter.dart';
-import 'package:p_sosyo/app/utils/themes/theme_colors.dart';
+import 'package:p_sosyo/app/core/utils/peso_formatter.dart';
+import 'package:p_sosyo/app/core/themes/theme_colors.dart';
 import 'package:p_sosyo/app/widgets/loan_offer_app_bar.dart';
 
 class LoanOfferPage extends StatelessWidget {

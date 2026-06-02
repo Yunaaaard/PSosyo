@@ -5,8 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:p_sosyo/app/modules/check_eligiblity/controllers/employment_income_controller.dart';
 import 'package:p_sosyo/app/routes/app_routes.dart';
-import 'package:p_sosyo/app/utils/peso_formatter.dart';
-import 'package:p_sosyo/app/utils/themes/theme_colors.dart';
+import 'package:p_sosyo/app/core/utils/peso_formatter.dart';
+import 'package:p_sosyo/app/core/themes/theme_colors.dart';
 import 'package:p_sosyo/app/widgets/basic_info_appbar.dart';
 
 class EmploymentIncomePage extends StatelessWidget {

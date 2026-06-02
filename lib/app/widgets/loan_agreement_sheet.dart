@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'app_snackbar.dart';
-import 'package:p_sosyo/app/services/id_verification_service.dart';
-import 'package:p_sosyo/app/services/loan_agreement_pdf_service.dart';
-import 'package:p_sosyo/app/utils/themes/theme_colors.dart';
-import 'package:p_sosyo/app/utils/peso_formatter.dart';
+import 'package:p_sosyo/app/data/services/id_verification_service.dart';
+import 'package:p_sosyo/app/data/services/loan_agreement_pdf_service.dart';
+import 'package:p_sosyo/app/core/themes/theme_colors.dart';
+import 'package:p_sosyo/app/core/utils/peso_formatter.dart';
 
 class LoanAgreementSheet extends StatefulWidget {
   const LoanAgreementSheet({super.key, this.onAgreementAccepted});

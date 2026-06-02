@@ -9,11 +9,10 @@ class ShrinkOnKeyboard extends StatefulWidget {
   final double shrinkFactor;
 
   const ShrinkOnKeyboard(
-      {Key? key,
+      {super.key,
       required this.child,
       this.duration = const Duration(milliseconds: 200),
-      this.shrinkFactor = 0.94})
-      : super(key: key);
+      this.shrinkFactor = 0.94});
 
   @override
   State<ShrinkOnKeyboard> createState() => _ShrinkOnKeyboardState();

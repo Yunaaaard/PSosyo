@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:p_sosyo/app/database/psosyo_database_service.dart';
-import 'package:p_sosyo/app/services/id_verification_service.dart';
-import 'package:p_sosyo/app/services/user_phone_service.dart';
+import 'package:p_sosyo/app/data/database/psosyo_database_service.dart';
+import 'package:p_sosyo/app/data/services/id_verification_service.dart';
+import 'package:p_sosyo/app/data/services/user_phone_service.dart';
 
 class AboutYourselfController extends GetxController {
   final TextEditingController fullnameController = TextEditingController();

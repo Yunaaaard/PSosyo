@@ -1,11 +1,11 @@
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:p_sosyo/app/services/drivers_license_service.dart';
-import 'package:p_sosyo/app/services/id_scan_service.dart';
-import 'package:p_sosyo/app/services/national_id_service.dart';
-import 'package:p_sosyo/app/services/other_id_service.dart';
-import 'package:p_sosyo/app/services/upload_id_service.dart';
-import 'package:p_sosyo/app/services/id_verification_service.dart';
+import 'package:p_sosyo/app/data/models/id_scan_result.dart';
+import 'package:p_sosyo/app/data/services/drivers_license_service.dart';
+import 'package:p_sosyo/app/data/services/national_id_service.dart';
+import 'package:p_sosyo/app/data/services/other_id_service.dart';
+import 'package:p_sosyo/app/data/services/upload_id_service.dart';
+import 'package:p_sosyo/app/data/services/id_verification_service.dart';
 
 class UploadIdController extends GetxController {
   final UploadIdService _service = UploadIdService();

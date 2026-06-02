@@ -1,7 +1,7 @@
-import 'package:p_sosyo/app/database/tables/loan_items_table.dart';
-import 'package:p_sosyo/app/database/tables/loans_table.dart';
-import 'package:p_sosyo/app/database/tables/payment_requests_table.dart';
-import 'package:p_sosyo/app/database/tables/users_table.dart';
+import 'package:p_sosyo/app/data/database/tables/loan_items_table.dart';
+import 'package:p_sosyo/app/data/database/tables/loans_table.dart';
+import 'package:p_sosyo/app/data/database/tables/payment_requests_table.dart';
+import 'package:p_sosyo/app/data/database/tables/users_table.dart';
 import 'package:sqflite/sqflite.dart';
 
 class PsosyoDbCreator {

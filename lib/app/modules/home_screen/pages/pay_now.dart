@@ -4,13 +4,14 @@ import 'package:get/get.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:p_sosyo/app/modules/home_screen/controllers/home_controller.dart';
-import 'package:p_sosyo/app/utils/pay_now_utils.dart';
-import 'package:p_sosyo/app/utils/themes/theme_colors.dart';
+import 'package:p_sosyo/app/core/utils/pay_now_utils.dart';
+import 'package:p_sosyo/app/core/themes/theme_colors.dart';
 import 'package:p_sosyo/app/widgets/pay_now_widgets.dart';
 import 'package:p_sosyo/app/widgets/psosyo_app_bar.dart';
 
 const double _menuHorizontalPadding = 1.0;
 const double _qrSize = 290.0;
+
 class PayNowPage extends StatelessWidget {
   const PayNowPage({super.key});
 
@@ -39,36 +40,40 @@ class PayNowPage extends StatelessWidget {
                 const SectionLabel(label: 'Reference Number'),
                 const SizedBox(height: 5),
                 FieldShell(
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: controller.paymentReferenceController,
-                          readOnly: true,
-                          onChanged: controller.updateReference,
-                          decoration: kBaseDecoration.copyWith(
-                            hintText: 'Captured from receipt OCR',
-                            hintStyle: kHintTextStyle,
-                          ),
-                          style: kInputTextStyle,
+                  child: Obx(
+                    () {
+                      final text = controller.paymentReference.value.trim();
+                      return SizedBox(
+                        width: double.infinity,
+                        child: Text(
+                          text.isEmpty ? 'Captured from receipt OCR' : text,
+                          textAlign: TextAlign.left,
+                          style: text.isEmpty ? kHintTextStyle : kInputTextStyle,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                         ),
-                      ),
-                    ],
+                      );
+                    },
                   ),
                 ),
                 const SizedBox(height: 12),
                 const SectionLabel(label: 'Phone Number'),
                 const SizedBox(height: 5),
                 FieldShell(
-                  child: TextField(
-                    controller: controller.phoneNumberController,
-                    readOnly: true,
-                    keyboardType: TextInputType.phone,
-                    decoration: kBaseDecoration.copyWith(
-                      hintText: 'Captured from receipt OCR',
-                      hintStyle: kHintTextStyle,
-                    ),
-                    style: kInputTextStyle,
+                  child: Obx(
+                    () {
+                      final text = controller.phoneNumber.value.trim();
+                      return SizedBox(
+                        width: double.infinity,
+                        child: Text(
+                          text.isEmpty ? 'Captured from receipt OCR' : text,
+                          textAlign: TextAlign.left,
+                          style: text.isEmpty ? kHintTextStyle : kInputTextStyle,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                      );
+                    },
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -299,8 +304,8 @@ class PayNowPage extends StatelessWidget {
                       );
                     }
 
-                    final paymentReferenceId = controller.paymentReferenceController.text.trim();
-                    final phone = controller.phoneNumberController.text.trim();
+                    final paymentReferenceId = controller.paymentReference.value.trim();
+                    final phone = controller.phoneNumber.value.trim();
                     final remarks = controller.remarksValue.value.trim();
 
                     final payload = buildPayNowPayloadJson(

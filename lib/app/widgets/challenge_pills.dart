@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:p_sosyo/app/modules/check_eligiblity/models/liveness_models.dart';
+import 'package:p_sosyo/app/data/models/liveness_models.dart';
 
 class ChallengePills extends StatelessWidget {
   final List<Challenge> challenges;

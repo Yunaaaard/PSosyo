@@ -4,10 +4,9 @@ import 'package:camera/camera.dart';
 import 'package:get/get.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:path_provider/path_provider.dart';
-
-import '../models/liveness_models.dart';
-import '../../../services/camera_service.dart';
-import '../../../services/face_detection_service.dart';
+import 'package:p_sosyo/app/data/models/liveness_models.dart';
+import '../../../data/services/camera_service.dart';
+import '../../../data/services/face_detection_service.dart';
 
 /// Orchestrates the liveness verification flow.
 /// Coordinates camera service, face detection service, and challenge logic.

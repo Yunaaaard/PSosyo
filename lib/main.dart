@@ -2,12 +2,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:p_sosyo/app/database/psosyo_database_service.dart';
-import 'package:p_sosyo/app/services/app_state_service.dart';
-import 'app/routes/app_pages.dart';
-import 'app/routes/app_routes.dart';
-import 'app/services/user_phone_service.dart';
-import 'app/utils/themes/theme_colors.dart';
+import 'package:p_sosyo/app/data/database/psosyo_database_service.dart';
+import 'package:p_sosyo/app/data/services/app_state_service.dart';
+import 'package:p_sosyo/app/data/services/user_phone_service.dart';
+import 'package:p_sosyo/app/core/themes/theme_colors.dart';
+import 'package:p_sosyo/app/routes/app_routes.dart';
+import 'package:p_sosyo/app/routes/app_pages.dart';
+
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

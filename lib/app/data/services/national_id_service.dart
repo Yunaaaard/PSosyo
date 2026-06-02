@@ -1,8 +1,10 @@
 import 'package:image_picker/image_picker.dart';
-import 'package:p_sosyo/app/services/id_scan_service.dart';
+import 'package:p_sosyo/app/data/models/id_scan_result.dart';
+import 'package:p_sosyo/app/data/services/id_scan_service.dart';
 
 class NationalIdService {
-  NationalIdService({IdScanService? scanService}) : _scanService = scanService ?? IdScanService();
+  NationalIdService({IdScanService? scanService})
+      : _scanService = scanService ?? IdScanService();
 
   final IdScanService _scanService;
 

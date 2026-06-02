@@ -3,11 +3,11 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:p_sosyo/app/modules/home_screen/controllers/home_controller.dart';
 import 'package:p_sosyo/app/routes/app_routes.dart';
-import 'package:p_sosyo/app/utils/peso_formatter.dart';
+import 'package:p_sosyo/app/core/utils/peso_formatter.dart';
 import 'package:p_sosyo/app/widgets/psosyo_app_bar.dart';
 import 'package:p_sosyo/app/widgets/transaction_tile.dart';
 import 'package:p_sosyo/app/widgets/psosyo_balance_card.dart';
-import 'package:p_sosyo/app/services/qr_scanner.dart';
+import 'package:p_sosyo/app/data/services/qr_scanner.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});

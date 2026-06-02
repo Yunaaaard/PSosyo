@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:p_sosyo/app/routes/app_routes.dart';
-import 'package:p_sosyo/app/utils/themes/theme_colors.dart';
+import 'package:p_sosyo/app/core/themes/theme_colors.dart';
 
 import '../controllers/register_controller.dart';
 
@@ -92,7 +92,10 @@ class RegisterPage extends GetView<RegisterController> {
                             'assets/icons/Star.svg',
                             height: 20,
                             width: 20,
-                            color: primaryBlue70,
+                            colorFilter: ColorFilter.mode(
+                              primaryBlue70,
+                              BlendMode.srcIn,
+                            ),
                           ),
                           const SizedBox(width: 4),
                           const Text(

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:p_sosyo/app/database/tables/loan_items_table.dart';
+import 'package:p_sosyo/app/data/models/loan_item_record.dart';
 
 class LoanDetailsSheet extends StatelessWidget {
   const LoanDetailsSheet({

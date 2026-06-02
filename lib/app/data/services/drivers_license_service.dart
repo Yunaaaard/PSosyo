@@ -1,8 +1,10 @@
 import 'package:image_picker/image_picker.dart';
-import 'package:p_sosyo/app/services/id_scan_service.dart';
+import 'package:p_sosyo/app/data/models/id_scan_result.dart';
+import 'package:p_sosyo/app/data/services/id_scan_service.dart';
 
 class DriversLicenseService {
-  DriversLicenseService({IdScanService? scanService}) : _scanService = scanService ?? IdScanService();
+  DriversLicenseService({IdScanService? scanService})
+      : _scanService = scanService ?? IdScanService();
 
   final IdScanService _scanService;
 

@@ -1,10 +1,10 @@
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:p_sosyo/app/database/psosyo_database_service.dart';
-import 'package:p_sosyo/app/modules/home_screen/models/loan_order.dart';
-import 'package:p_sosyo/app/modules/home_screen/models/scan_success_receipt_model.dart';
+import 'package:p_sosyo/app/data/database/psosyo_database_service.dart';
+import 'package:p_sosyo/app/data/models/loan_order.dart';
+import 'package:p_sosyo/app/data/models/scan_success_receipt_model.dart';
 import 'package:p_sosyo/app/routes/app_routes.dart';
-import 'package:p_sosyo/app/services/user_phone_service.dart';
+import 'package:p_sosyo/app/data/services/user_phone_service.dart';
 
 class ScanSuccessController extends GetxController {
   ScanSuccessController({

@@ -1,5 +1,5 @@
 import 'package:path/path.dart' as p;
-import 'package:p_sosyo/app/database/psosyo_db_creator.dart';
+import 'package:p_sosyo/app/data/database/psosyo_db_creator.dart';
 import 'package:sqflite/sqflite.dart';
 
 class PsosyoDbHelper {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:p_sosyo/app/utils/themes/theme_colors.dart';
+import 'package:p_sosyo/app/core/themes/theme_colors.dart';
 
 class BasicInfoAppBar extends StatelessWidget {
   final VoidCallback? onBack;

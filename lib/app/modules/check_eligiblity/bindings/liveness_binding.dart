@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
 import '../controllers/liveness_controller.dart';
-import '../../../services/camera_service.dart';
-import '../../../services/face_detection_service.dart';
+import '../../../data/services/camera_service.dart';
+import '../../../data/services/face_detection_service.dart';
 
 /// Binding for LivenessVerificationPage.
 /// Manages dependency injection for camera and face detection services,

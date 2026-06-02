@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:p_sosyo/app/routes/app_routes.dart';
-import 'package:p_sosyo/app/services/qr_payment_live_scanner.dart';
+import 'package:p_sosyo/app/data/services/qr_payment_live_scanner.dart';
 import 'package:p_sosyo/app/modules/home_screen/controllers/home_controller.dart';
 import 'package:p_sosyo/app/modules/home_screen/pages/scan_success_page.dart';
 import 'package:p_sosyo/app/modules/home_screen/bindings/scan_success_binding.dart';

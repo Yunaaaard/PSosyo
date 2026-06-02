@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:p_sosyo/app/utils/themes/theme_colors.dart';
+import 'package:p_sosyo/app/core/themes/theme_colors.dart';
 
 class LoanOfferAppBar extends StatelessWidget {
   const LoanOfferAppBar({super.key, required this.colors});

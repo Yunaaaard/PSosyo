@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:p_sosyo/app/utils/peso_formatter.dart';
+import 'package:p_sosyo/app/core/utils/peso_formatter.dart';
 import 'package:p_sosyo/app/widgets/dashed_line.dart';
 
 class PsosyoBalanceCard extends StatelessWidget {

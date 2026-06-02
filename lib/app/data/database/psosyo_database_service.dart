@@ -1,10 +1,12 @@
 import 'package:get/get.dart';
-import 'package:p_sosyo/app/database/psosyo_db_helper.dart';
-import 'package:p_sosyo/app/database/tables/loan_items_table.dart';
-import 'package:p_sosyo/app/database/tables/loans_table.dart';
-import 'package:p_sosyo/app/database/tables/payment_requests_table.dart';
-import 'package:p_sosyo/app/database/tables/users_table.dart';
-import 'package:p_sosyo/app/modules/home_screen/models/loan_order.dart';
+import 'package:p_sosyo/app/data/database/psosyo_db_helper.dart';
+import 'package:p_sosyo/app/data/database/tables/loan_items_table.dart';
+import 'package:p_sosyo/app/data/database/tables/loans_table.dart';
+import 'package:p_sosyo/app/data/database/tables/payment_requests_table.dart';
+import 'package:p_sosyo/app/data/database/tables/users_table.dart';
+import 'package:p_sosyo/app/data/models/loan_import_result.dart';
+import 'package:p_sosyo/app/data/models/loan_item_record.dart';
+import 'package:p_sosyo/app/data/models/loan_order.dart';
 
 class PsosyoDatabaseService extends GetxService {
   final PsosyoDbHelper _dbHelper = PsosyoDbHelper();
@@ -32,10 +34,10 @@ class PsosyoDatabaseService extends GetxService {
   Future<List<LoanOrderCard>> loadAllLoanOrders() =>
       loansTable.loadAllLoanOrders();
 
-    Future<LoanOrderCard?> loadLoanOrderByLoanId(String loanId) =>
+  Future<LoanOrderCard?> loadLoanOrderByLoanId(String loanId) =>
       loansTable.loadLoanOrderByLoanId(loanId);
 
-    Future<List<Map<String, Object?>>> loadAllLoanRows() =>
+  Future<List<Map<String, Object?>>> loadAllLoanRows() =>
       loansTable.loadAllLoanRows();
 
   Future<bool> hasActiveLoanForPrincipal(String principalTitle) =>

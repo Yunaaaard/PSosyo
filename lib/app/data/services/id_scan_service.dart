@@ -1,29 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
-
 import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:image/image.dart' as img_pkg;
 import 'package:image_picker/image_picker.dart';
-
-class IdScanResult {
-  const IdScanResult({
-    required this.detectedIdType,
-    required this.matchesSelectedType,
-    this.extractedName,
-    this.extractedBirthDate,
-    this.extractedGender,
-    this.warningMessage,
-  });
-
-  final String? extractedName;
-  final String? extractedBirthDate;
-  final String? extractedGender;
-  final String detectedIdType;
-  final bool matchesSelectedType;
-  final String? warningMessage;
-}
+import 'package:p_sosyo/app/data/models/id_scan_result.dart';
 
 class IdScanService {
   static final IdScanService _instance = IdScanService._internal();
@@ -444,7 +426,7 @@ class IdScanService {
       if (labelIndex >= 0) {
         final endIndex = min(labelIndex + 20, line.length);
         final relevantPart = line.substring(labelIndex, endIndex);
-        
+
         // Look for M or F, but skip if it's part of a word (like "Male", "Female")
         final tokenRegex = RegExp(r'\b([MF])\b(?!ale)', caseSensitive: false);
         final tokenMatch = tokenRegex.firstMatch(relevantPart);

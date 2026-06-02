@@ -1,35 +1,11 @@
 import 'dart:convert';
-import 'package:p_sosyo/app/database/tables/loan_items_table.dart';
-import 'package:p_sosyo/app/database/tables/users_table.dart';
-import 'package:p_sosyo/app/modules/home_screen/models/loan_order.dart';
-import 'package:p_sosyo/app/utils/principal_logo_resolver.dart';
+import 'package:p_sosyo/app/data/database/tables/loan_items_table.dart';
+import 'package:p_sosyo/app/data/database/tables/users_table.dart';
+import 'package:p_sosyo/app/data/models/loan_import_result.dart';
+import 'package:p_sosyo/app/data/models/loan_item_record.dart';
+import 'package:p_sosyo/app/data/models/loan_order.dart';
+import 'package:p_sosyo/app/core/utils/principal_logo_resolver.dart';
 import 'package:sqflite/sqflite.dart';
-
-class LoanImportResult {
-  const LoanImportResult._({
-    required this.success,
-    this.message,
-    this.loanOrder,
-  });
-
-  factory LoanImportResult.success(LoanOrderCard order) {
-    return LoanImportResult._(
-      success: true,
-      loanOrder: order,
-    );
-  }
-
-  factory LoanImportResult.failure(String message) {
-    return LoanImportResult._(
-      success: false,
-      message: message,
-    );
-  }
-
-  final bool success;
-  final String? message;
-  final LoanOrderCard? loanOrder;
-}
 
 class LoansTable {
   LoansTable(

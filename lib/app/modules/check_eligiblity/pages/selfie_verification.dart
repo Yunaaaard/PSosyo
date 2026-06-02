@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:p_sosyo/app/modules/check_eligiblity/controllers/selfie_verification_controller.dart';
 import 'package:p_sosyo/app/routes/app_routes.dart';
-import 'package:p_sosyo/app/utils/themes/theme_colors.dart';
+import 'package:p_sosyo/app/core/themes/theme_colors.dart';
 import 'package:p_sosyo/app/widgets/basic_info_appbar.dart';
 
 class SelfieVerificationPage extends StatelessWidget {
