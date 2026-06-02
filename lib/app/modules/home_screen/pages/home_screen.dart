@@ -178,6 +178,9 @@ class HomeScreen extends StatelessWidget {
                                       visibleCards[index].appliedDateTime,
                                   dueDateTime: visibleCards[index].dueDateTime,
                                   amountDue: visibleCards[index].amountDueText,
+                                  isPayNowEnabled: controller.isPayNowAvailableForLoan(
+                                    visibleCards[index].loanId,
+                                  ),
                                   onPayNow: () => controller.openPayNowPage(
                                     visibleCards[index],
                                   ),

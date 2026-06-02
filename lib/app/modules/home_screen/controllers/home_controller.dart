@@ -10,10 +10,11 @@ import 'package:p_sosyo/app/modules/home_screen/models/loan_order.dart';
 import 'package:p_sosyo/app/widgets/loan_agreement_sheet.dart';
 import 'package:p_sosyo/app/widgets/loan_details_sheet.dart';
 import 'package:p_sosyo/app/modules/home_screen/pages/pay_now.dart';
+import 'package:p_sosyo/app/routes/app_routes.dart';
 import 'package:p_sosyo/app/services/qr_scanner.dart';
 import 'package:p_sosyo/app/services/user_phone_service.dart';
-import 'package:p_sosyo/app/utils/principal_logo_resolver.dart';
 import 'package:p_sosyo/app/utils/peso_formatter.dart';
+import 'package:p_sosyo/app/widgets/app_snackbar.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:p_sosyo/app/utils/themes/theme_colors.dart';
@@ -21,6 +22,7 @@ import 'package:p_sosyo/app/utils/themes/theme_colors.dart';
 class HomeController extends GetxController {
   final RxBool showAllBalanceCards = true.obs;
   final RxBool showAllTransactionHistory = false.obs;
+  final RxSet<String> _pendingPaymentLoanIds = <String>{}.obs;
 
   static const double creditLimit = 25000.00;
 
@@ -31,6 +33,7 @@ class HomeController extends GetxController {
   final RxList<TransactionItem> transactionHistory = <TransactionItem>[].obs;
   late final PsosyoDatabaseService _database;
   late final UserPhoneService _userPhoneService;
+  late final Future<void> _bootstrapFuture;
 
   // Payment form state for QR payment page
   final RxString paymentReference = ''.obs;
@@ -148,7 +151,7 @@ class HomeController extends GetxController {
         );
       }
     });
-    unawaited(_bootstrapFromDatabase());
+    _bootstrapFuture = _bootstrapFromDatabase();
     unawaited(_bootstrapCurrentUser());
     // TextEditingControllers for Pay Now are managed by the PayNowPage widget.
   }
@@ -183,6 +186,7 @@ class HomeController extends GetxController {
         for (final loan in loanRows)
           if (loan.loanId.trim().isNotEmpty) loan.loanId.trim(): loan.logoAsset,
       };
+      final latestStatusByLoanId = <String, String>{};
 
       final items = <_HistoryEntry>[];
 
@@ -205,9 +209,13 @@ class HomeController extends GetxController {
       for (final row in paymentRows) {
         final amount = double.tryParse(row['amount']?.toString() ?? '') ?? 0.0;
         final createdAt = DateTime.tryParse(row['created_at']?.toString() ?? '') ?? DateTime.now();
-        final loanId = row['loan_id']?.toString();
+        final loanId = row['loan_id']?.toString().trim();
         final reference = row['reference_id']?.toString();
         final status = row['status']?.toString() ?? 'SUCCESS';
+        final normalizedStatus = status.trim().toUpperCase();
+        if (loanId != null && loanId.isNotEmpty && !latestStatusByLoanId.containsKey(loanId)) {
+          latestStatusByLoanId[loanId] = normalizedStatus;
+        }
         final logoAsset = _safeLogoAsset(
           loanId != null && loanLogoById.containsKey(loanId.trim())
               ? loanLogoById[loanId.trim()]
@@ -236,6 +244,13 @@ class HomeController extends GetxController {
 
       items.sort((a, b) => b.sortKey.compareTo(a.sortKey));
       transactionHistory.assignAll(items.map((entry) => entry.item));
+      _pendingPaymentLoanIds
+        ..clear()
+        ..addAll(
+          latestStatusByLoanId.entries
+              .where((entry) => entry.value == 'PENDING')
+              .map((entry) => entry.key),
+        );
     } catch (_) {
       // Ignore DB errors here; transactionHistory will remain empty if load fails.
     }
@@ -269,9 +284,25 @@ class HomeController extends GetxController {
     if (selectedOrder == null) {
       return;
     }
+    if (!isPayNowAvailableForLoan(selectedOrder.loanId)) {
+      Get.snackbar(
+        'Payment pending',
+        'This loan has a pending payment request. Wait until it becomes successful before paying again.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
 
     selectedLoanOrder.value = selectedOrder;
     Get.to(() => const PayNowPage());
+  }
+
+  bool isPayNowAvailableForLoan(String loanId) {
+    final key = loanId.trim();
+    if (key.isEmpty) {
+      return true;
+    }
+    return !_pendingPaymentLoanIds.contains(key);
   }
 
   void openQrScannerPage() {
@@ -699,82 +730,162 @@ class HomeController extends GetxController {
       Dialog(
         insetPadding: const EdgeInsets.symmetric(horizontal: 24),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(22, 22, 22, 18),
+        child: Obx(
+          () {
+            final paymentType = selectedPaymentType.value.trim();
+            final remarks = remarksValue.value.trim();
+            final canProceed = paymentType.isNotEmpty && remarks.isNotEmpty;
+
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(22, 22, 22, 18),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 58,
+                    height: 58,
+                    decoration: BoxDecoration(
+                      color: isSuccess ? const Color(0xFFEAF1FF) : const Color(0xFFFFF0F0),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      isSuccess ? Icons.receipt_long_rounded : Icons.info_outline_rounded,
+                      color: isSuccess ? const Color(0xFF2E5DC8) : const Color(0xFFEA4335),
+                      size: 32,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    isSuccess ? 'Receipt details detected' : 'Receipt text not recognized',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF1F2430),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    isSuccess
+                        ? 'Only Ref No. and Total Amount Sent from the GCash receipt were read.'
+                        : (errorMessage?.trim().isNotEmpty == true
+                            ? errorMessage!
+                            : 'Make sure the receipt is clear and includes Ref No. and Total Amount Sent.'),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 13.5,
+                      color: Color(0xFF6D7480),
+                      height: 1.35,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  if (referenceNumber != null) ...[
+                    _ReceiptDetailRow(label: 'Ref No.', value: referenceNumber),
+                    const SizedBox(height: 10),
+                  ],
+                  if (phoneNumber != null) ...[
+                    _ReceiptDetailRow(label: 'Phone Number', value: phoneNumber),
+                    const SizedBox(height: 10),
+                  ],
+                  if (amountText != null) ...[
+                    _ReceiptDetailRow(
+                      label: 'Total Amount Sent',
+                      valueWidget: PesoFormatter.buildPesoText(
+                        amount: amountText,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF1F2430),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                  ],
+                  _ReceiptSelectionField(
+                    label: 'Remarks',
+                    value: remarks.isEmpty ? 'Select remarks' : remarks,
+                    isSelected: remarks.isNotEmpty,
+                    onTap: () async {
+                      final selected = await _showReceiptSelectionMenu(
+                        title: 'Remarks',
+                        options: remarksOptions,
+                      );
+                      if (selected != null) {
+                        updateRemarks(selected);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  _ReceiptSelectionField(
+                    label: 'Payment Method',
+                    value: paymentType.isEmpty ? 'Select payment method' : paymentType,
+                    isSelected: paymentType.isNotEmpty,
+                    onTap: () async {
+                      final selected = await _showReceiptSelectionMenu(
+                        title: 'Payment Method',
+                        options: paymentTypeOptions,
+                      );
+                      if (selected != null) {
+                        updatePaymentType(selected);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: canProceed ? () => submitPayNow() : null,
+                      style: AppThemes.primaryButtonStyle,
+                      child: const Text('Pay Now'),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+      barrierDismissible: false,
+    );
+  }
+
+  Future<String?> _showReceiptSelectionMenu({
+    required String title,
+    required List<String> options,
+  }) async {
+    return showModalBottomSheet<String>(
+      context: Get.context!,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Container(
-                width: 58,
-                height: 58,
-                decoration: BoxDecoration(
-                  color: isSuccess ? const Color(0xFFEAF1FF) : const Color(0xFFFFF0F0),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  isSuccess ? Icons.receipt_long_rounded : Icons.info_outline_rounded,
-                  color: isSuccess ? const Color(0xFF2E5DC8) : const Color(0xFFEA4335),
-                  size: 32,
-                ),
-              ),
-              const SizedBox(height: 16),
               Text(
-                isSuccess ? 'Receipt details detected' : 'Receipt text not recognized',
+                title,
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                  fontSize: 20,
+                  fontSize: 18,
                   fontWeight: FontWeight.w700,
                   color: Color(0xFF1F2430),
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                isSuccess
-                    ? 'Only Ref No. and Total Amount Sent from the GCash receipt were read.'
-                    : (errorMessage?.trim().isNotEmpty == true
-                        ? errorMessage!
-                        : 'Make sure the receipt is clear and includes Ref No. and Total Amount Sent.'),
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 13.5,
-                  color: Color(0xFF6D7480),
-                  height: 1.35,
+              const SizedBox(height: 14),
+              for (final option in options) ...[
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(option),
+                  onTap: () => Navigator.of(context).pop(option),
                 ),
-              ),
-              const SizedBox(height: 18),
-              if (referenceNumber != null) ...[
-                _ReceiptDetailRow(label: 'Ref No.', value: referenceNumber),
-                const SizedBox(height: 10),
               ],
-              if (phoneNumber != null) ...[
-                _ReceiptDetailRow(label: 'Phone Number', value: phoneNumber),
-                const SizedBox(height: 10),
-              ],
-              if (amountText != null) ...[
-                _ReceiptDetailRow(
-                  label: 'Total Amount Sent',
-                  valueWidget: PesoFormatter.buildPesoText(
-                    amount: amountText,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF1F2430),
-                  ),
-                ),
-                const SizedBox(height: 10),
-              ],
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Get.back(),
-                  style: AppThemes.primaryButtonStyle,
-                  child: const Text('Pay Now'),
-                ),
-              ),
             ],
           ),
-        ),
-      ),
-      barrierDismissible: false,
+        );
+      },
     );
   }
 
@@ -805,10 +916,11 @@ class HomeController extends GetxController {
       );
 
       if (!result.success || result.loanOrder == null) {
-        Get.snackbar(
-          'Loan blocked',
-          result.message ?? 'The scanned QR code could not be imported.',
-          snackPosition: SnackPosition.BOTTOM,
+        AppSnackbar.error(
+          title: 'Loan blocked',
+          message: result.message ?? 'The scanned QR code could not be imported.',
+          position: SnackPosition.TOP,
+          duration: const Duration(seconds: 5),
         );
         return false;
       }
@@ -889,20 +1001,24 @@ class HomeController extends GetxController {
       }
 
       if (decodedPayload == null) {
-        Get.snackbar(
-          'Loan not found',
-          'The scanned QR only contains a loan ID, but that loan is not stored locally yet.',
-          snackPosition: SnackPosition.BOTTOM,
+        AppSnackbar.warning(
+          title: 'Loan not found',
+          message:
+              'The scanned QR only contains a loan ID, but that loan is not stored locally yet.',
+          position: SnackPosition.TOP,
+          duration: const Duration(seconds: 5),
         );
         return false;
       }
     }
 
     if (decodedPayload != null) {
-      Get.snackbar(
-        'Unsupported QR',
-        'The scanned QR does not include enough loan details to import or resolve locally.',
-        snackPosition: SnackPosition.BOTTOM,
+      AppSnackbar.warning(
+        title: 'Unsupported QR',
+        message:
+            'The scanned QR does not include enough loan details to import or resolve locally.',
+        position: SnackPosition.TOP,
+        duration: const Duration(seconds: 5),
       );
       return false;
     }
@@ -913,10 +1029,11 @@ class HomeController extends GetxController {
     );
 
     if (!result.success || result.loanOrder == null) {
-      Get.snackbar(
-        'Loan blocked',
-        result.message ?? 'The scanned QR code could not be imported.',
-        snackPosition: SnackPosition.BOTTOM,
+      AppSnackbar.error(
+        title: 'Loan blocked',
+        message: result.message ?? 'The scanned QR code could not be imported.',
+        position: SnackPosition.TOP,
+        duration: const Duration(seconds: 5),
       );
       return false;
     }
@@ -1113,34 +1230,34 @@ class HomeController extends GetxController {
     return payload;
   }
 
-  LoanOrderCard? _loanOrderFromQrPayload(Map<String, dynamic> payload) {
-    final loanId = _findString(payload, ['loanId', 'loan_id', 'id']);
-    final principalTitle =
-        _findString(payload, ['principalTitle', 'principal_title', 'title']);
-    final principalLogo = principalLogoUrlForTitle(principalTitle);
-    final amountDue =
-        _findAmount(payload, ['amountDue', 'amount_due', 'amount']);
-    final appliedDate = DateTime.now();
-    final dueDate = _findDate(payload, ['dueDate', 'due_date']);
+  // LoanOrderCard? _loanOrderFromQrPayload(Map<String, dynamic> payload) {
+  //   final loanId = _findString(payload, ['loanId', 'loan_id', 'id']);
+  //   final principalTitle =
+  //       _findString(payload, ['principalTitle', 'principal_title', 'title']);
+  //   final principalLogo = principalLogoUrlForTitle(principalTitle);
+  //   final amountDue =
+  //       _findAmount(payload, ['amountDue', 'amount_due', 'amount']);
+  //   final appliedDate = DateTime.now();
+  //   final dueDate = _findDate(payload, ['dueDate', 'due_date']);
 
-    if (loanId == null ||
-        principalTitle == null ||
-        principalLogo == null ||
-        amountDue == null ||
-        dueDate == null) {
-      return null;
-    }
+  //   if (loanId == null ||
+  //       principalTitle == null ||
+  //       principalLogo == null ||
+  //       amountDue == null ||
+  //       dueDate == null) {
+  //     return null;
+  //   }
 
-    return LoanOrderCard(
-      title: principalTitle,
-      loanId: loanId,
-      logoAsset: principalLogo,
-      appliedAt: appliedDate,
-      dueAt: dueDate,
-      originalAmount: amountDue,
-      remainingAmount: amountDue,
-    );
-  }
+  //   return LoanOrderCard(
+  //     title: principalTitle,
+  //     loanId: loanId,
+  //     logoAsset: principalLogo,
+  //     appliedAt: appliedDate,
+  //     dueAt: dueDate,
+  //     originalAmount: amountDue,
+  //     remainingAmount: amountDue,
+  //   );
+  // }
 
   String? _findString(Map<String, dynamic> payload, List<String> keys) {
     final value = _findValue(payload, keys);
@@ -1231,6 +1348,7 @@ class HomeController extends GetxController {
     DateTime? appliedAt,
     bool seed = false,
   }) async {
+    await _bootstrapFuture;
     final createdAt = appliedAt ?? DateTime.now();
 
     if (amount <= 0) {
@@ -1254,9 +1372,7 @@ class HomeController extends GetxController {
       }
       return false;
     }
-
-    // Prevent creating a new loan order for the same principal while an existing
-    // loan for that principal still has a remaining balance.
+    
     final hasOutstanding = loanOrders
         .any((lo) => lo.title == principal.title && lo.remainingAmount > 0);
     if (hasOutstanding) {
@@ -1516,7 +1632,76 @@ class HomeController extends GetxController {
         logoAsset: order.logoAsset,
       ),
     );
+    _pendingPaymentLoanIds.remove(order.loanId.trim());
   }
+
+    Future<void> recordLoanPaymentPending({
+      required LoanOrderCard order,
+      required double amount,
+      String? paymentReferenceId,
+      String? paymentRequestId,
+      String? paymentMethod,
+      DateTime? when,
+    }) async {
+      final createdAt = when ?? DateTime.now();
+      final pendingAmount = amount <= 0 ? order.remainingAmount : amount;
+      if (pendingAmount <= 0) {
+        return;
+      }
+
+      final nowIso = createdAt.toIso8601String();
+      final localPaymentRequestId = paymentRequestId ??
+          'pr-local-${DateTime.now().millisecondsSinceEpoch}';
+      final localPaymentReferenceId = paymentReferenceId?.trim().isNotEmpty == true
+          ? paymentReferenceId!.trim()
+          : 'PAY-${DateTime.now().millisecondsSinceEpoch}';
+      final selectedMethod = paymentMethod?.trim().isNotEmpty == true
+          ? paymentMethod!.trim()
+          : selectedPaymentType.value.trim();
+
+      try {
+        final payload = <String, dynamic>{
+          'id': 'local-${DateTime.now().millisecondsSinceEpoch}',
+          'loan_id': order.loanId,
+          'reference_id': localPaymentReferenceId,
+          'payment_request_id': localPaymentRequestId,
+          if (selectedMethod.isNotEmpty)
+            'payment_method': <String, dynamic>{
+              'method': selectedMethod,
+            },
+          'metadata': <String, dynamic>{
+            if (selectedMethod.isNotEmpty) 'payment_method_label': selectedMethod,
+            'remarks': remarksValue.value.trim(),
+            'phone_number': phoneNumber.value.trim(),
+            'customer_name': currentUserName.value.trim(),
+            'payment_reference_id': localPaymentReferenceId,
+            'payment_request_id': localPaymentRequestId,
+            'loan_id': order.loanId,
+          },
+          'amount': pendingAmount,
+          'status': 'PENDING',
+          'created': nowIso,
+          'updated': nowIso,
+        };
+        await _database.savePaymentRequest(payload, loanId: order.loanId);
+      } catch (_) {}
+
+      transactionHistory.insert(
+        0,
+        TransactionItem(
+          title: 'Loan Payment - ${order.title}',
+          dateTime: formatLoanDate(createdAt),
+          amount: _formatAmount(pendingAmount),
+          sign: '+ ',
+          status: 'PENDING',
+          logoAsset: order.logoAsset,
+        ),
+      );
+
+      _pendingPaymentLoanIds.add(order.loanId.trim());
+
+      showAllTransactionHistory.value = true;
+    }
 
   Future<void> openLoanDetailsSheet(LoanOrderCard order) async {
     final List<LoanItemRecord> items =
@@ -1674,7 +1859,8 @@ class HomeController extends GetxController {
         'Cash payment was recorded successfully.',
         snackPosition: SnackPosition.BOTTOM,
       );
-      Get.back();
+      showAllTransactionHistory.value = true;
+      Get.offAllNamed(AppRoutes.homeScreen);
       return;
     }
 
@@ -1689,20 +1875,20 @@ class HomeController extends GetxController {
       useAutoReference.value = false;
     }
 
-    final success = await processPayment(
+    await recordLoanPaymentPending(
       order: order,
       amount: amount,
       paymentReferenceId:
           paymentReferenceId.isEmpty ? null : paymentReferenceId,
       paymentMethod: paymentType,
-      receiptPath: attachedReceiptPath.value,
-      allowLocalFallback: true,
     );
 
-    if (success) {
-      Get.snackbar('Payment recorded', 'Payment was recorded successfully.', snackPosition: SnackPosition.BOTTOM);
-      Get.back();
-    }
+    Get.snackbar(
+      'Payment pending',
+      'Your payment request was submitted and marked as pending.',
+      snackPosition: SnackPosition.BOTTOM,
+    );
+    Get.offAllNamed(AppRoutes.homeScreen);
   }
 
   void payRemainingBalance() {
@@ -1794,6 +1980,60 @@ class TransactionItem {
   final String sign;
   final String status;
   final String logoAsset;
+}
+
+class _ReceiptSelectionField extends StatelessWidget {
+  const _ReceiptSelectionField({
+    required this.label,
+    required this.value,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  final String label;
+  final String value;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF7F8FB),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFFE5E8EF)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF6D7480),
+              ),
+            ),
+            Flexible(
+              child: Text(
+                value,
+                textAlign: TextAlign.right,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: isSelected ? const Color(0xFF1F2430) : const Color(0xFF9AA0AC),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _HistoryEntry {

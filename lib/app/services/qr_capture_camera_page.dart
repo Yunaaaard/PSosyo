@@ -1,6 +1,7 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:p_sosyo/app/widgets/app_snackbar.dart';
 
 class QrCaptureCameraPage extends StatefulWidget {
   const QrCaptureCameraPage({super.key});
@@ -25,7 +26,12 @@ class _QrCaptureCameraPageState extends State<QrCaptureCameraPage> {
       final cameras = await availableCameras();
       if (cameras.isEmpty) {
         if (mounted) {
-          Get.snackbar('Camera unavailable', 'No camera was detected on this device.');
+          AppSnackbar.error(
+            title: 'Camera unavailable',
+            message: 'No camera was detected on this device.',
+            position: SnackPosition.TOP,
+            duration: const Duration(seconds: 5),
+          );
           Get.back<XFile?>();
         }
         return;
@@ -54,7 +60,12 @@ class _QrCaptureCameraPageState extends State<QrCaptureCameraPage> {
       });
     } catch (_) {
       if (mounted) {
-        Get.snackbar('Camera error', 'Failed to initialize camera. Please try again.');
+        AppSnackbar.error(
+          title: 'Camera error',
+          message: 'Failed to initialize camera. Please try again.',
+          position: SnackPosition.TOP,
+          duration: const Duration(seconds: 5),
+        );
         Get.back<XFile?>();
       }
     }
@@ -76,7 +87,12 @@ class _QrCaptureCameraPageState extends State<QrCaptureCameraPage> {
       }
     } catch (_) {
       if (mounted) {
-        Get.snackbar('Capture failed', 'Unable to capture image. Please try again.');
+        AppSnackbar.error(
+          title: 'Capture failed',
+          message: 'Unable to capture image. Please try again.',
+          position: SnackPosition.TOP,
+          duration: const Duration(seconds: 5),
+        );
       }
     } finally {
       if (mounted) {
@@ -151,7 +167,12 @@ class _QrCaptureCameraPageState extends State<QrCaptureCameraPage> {
                           ),
                         ),
                         _ControlButton(icon: Icons.help_outline_rounded, onTap: () {
-                          Get.snackbar('Tip', 'Ensure QR is well-lit and fully inside the frame.', snackPosition: SnackPosition.BOTTOM);
+                          AppSnackbar.info(
+                            title: 'Tip',
+                            message: 'Ensure QR is well-lit and fully inside the frame.',
+                            position: SnackPosition.TOP,
+                            duration: const Duration(seconds: 4),
+                          );
                         }),
                       ],
                     ),

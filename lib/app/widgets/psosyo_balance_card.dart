@@ -12,6 +12,7 @@ class PsosyoBalanceCard extends StatelessWidget {
     required this.dueDateTime,
     required this.amountDue,
     required this.onPayNow,
+    this.isPayNowEnabled = true,
   });
 
   final String title;
@@ -21,6 +22,7 @@ class PsosyoBalanceCard extends StatelessWidget {
   final String dueDateTime;
   final String amountDue;
   final VoidCallback onPayNow;
+  final bool isPayNowEnabled;
 
   static const String _fallbackAsset = 'assets/images/PSosyo-Logo.png';
 
@@ -164,21 +166,46 @@ class PsosyoBalanceCard extends StatelessWidget {
                 height: 52,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF6B3DF0),
-                    foregroundColor: Colors.white,
+                    backgroundColor: isPayNowEnabled
+                        ? const Color(0xFF6B3DF0)
+                        : const Color(0xFFFFF3DD),
+                    disabledBackgroundColor: const Color(0xFFFFF3DD),
+                    foregroundColor: isPayNowEnabled
+                        ? Colors.white
+                        : const Color(0xFFB86A00),
+                    disabledForegroundColor: const Color(0xFFB86A00),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(14),
+                      side: BorderSide(
+                        color: isPayNowEnabled
+                            ? Colors.transparent
+                            : const Color(0xFFF1D49E),
+                      ),
                     ),
-                    elevation: 0,
+                    elevation: isPayNowEnabled ? 0 : 0,
+                    shadowColor:
+                        isPayNowEnabled ? Colors.transparent : Colors.transparent,
                   ),
-                  onPressed: onPayNow,
-                  child: const Text(
-                    'Pay Now',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      fontFamily: 'Poppins',
-                    ),
+                  onPressed: isPayNowEnabled ? onPayNow : null,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (!isPayNowEnabled) ...[
+                        const Icon(
+                          Icons.hourglass_top_rounded,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                      Text(
+                        isPayNowEnabled ? 'Pay Now' : 'Pending',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: 'Poppins',
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),

@@ -80,26 +80,54 @@ class AppSnackbar {
   static void info({
     String title = '',
     required String message,
+    SnackPosition position = SnackPosition.BOTTOM,
     Duration duration = const Duration(seconds: 4),
-  }) => show(title: title, message: message, type: SnackType.info, duration: duration);
+  }) => show(
+        title: title,
+        message: message,
+        type: SnackType.info,
+        position: position,
+        duration: duration,
+      );
 
   static void success({
     String title = '',
     required String message,
+    SnackPosition position = SnackPosition.BOTTOM,
     Duration duration = const Duration(seconds: 4),
-  }) => show(title: title, message: message, type: SnackType.success, duration: duration);
+  }) => show(
+        title: title,
+        message: message,
+        type: SnackType.success,
+        position: position,
+        duration: duration,
+      );
 
   static void warning({
     String title = '',
     required String message,
+    SnackPosition position = SnackPosition.BOTTOM,
     Duration duration = const Duration(seconds: 5),
-  }) => show(title: title, message: message, type: SnackType.warning, duration: duration);
+  }) => show(
+        title: title,
+        message: message,
+        type: SnackType.warning,
+        position: position,
+        duration: duration,
+      );
 
   static void error({
     String title = '',
     required String message,
+    SnackPosition position = SnackPosition.BOTTOM,
     Duration duration = const Duration(seconds: 5),
-  }) => show(title: title, message: message, type: SnackType.error, duration: duration);
+  }) => show(
+        title: title,
+        message: message,
+        type: SnackType.error,
+        position: position,
+        duration: duration,
+      );
 
   // ── Internal config resolver ────────────────────────────────────────────────
 
