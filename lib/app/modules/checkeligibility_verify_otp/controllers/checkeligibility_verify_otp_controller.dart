@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:p_sosyo/app/mixins/otp_input_mixin.dart';
+import 'package:p_sosyo/app/widgets/otp_input_mixin.dart';
 import 'package:p_sosyo/app/routes/app_routes.dart';
 import 'package:p_sosyo/app/data/services/user_phone_service.dart';
 import 'package:p_sosyo/app/widgets/app_snackbar.dart';

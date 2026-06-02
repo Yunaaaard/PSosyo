@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:p_sosyo/app/mixins/otp_input_mixin.dart';
+import 'package:p_sosyo/app/widgets/otp_input_mixin.dart';
 import 'package:p_sosyo/app/widgets/otp_verification_layout.dart';
 
 import '../controller/otp_controller.dart';
