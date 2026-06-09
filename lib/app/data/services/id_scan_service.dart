@@ -85,7 +85,26 @@ class IdScanService {
           );
         }
 
-        final name = _extractFromPhilSys(lines);
+        final lastName = _extractNextValueAfterLabel(lines, [
+          'apelyido',
+          'last name',
+        ]);
+        final givenNames = _extractNextValueAfterLabel(lines, [
+          'mga pangalan',
+          'given names',
+          'first name',
+        ]);
+        final middleName = _extractNextValueAfterLabel(lines, [
+          'gitnang apelyido',
+          'middle name',
+        ]);
+
+        final parts = <String>[];
+        if (givenNames != null) parts.add(givenNames);
+        if (middleName != null && middleName != givenNames) parts.add(middleName);
+        if (lastName != null) parts.add(lastName);
+
+        final name = parts.isNotEmpty ? _cleanName(parts.join(' ')) : null;
         final birthDate = _extractBirthDateFromPhilSys(lines) ??
             _extractGenericBirthDate(lines);
         final gender =
@@ -95,6 +114,9 @@ class IdScanService {
             extractedName: name,
             extractedBirthDate: birthDate,
             extractedGender: gender,
+            extractedFirstName: givenNames,
+            extractedMiddleName: middleName,
+            extractedLastName: lastName,
             detectedIdType: detectedIdType,
             matchesSelectedType:
                 detectedIdType == 'philsys' || detectedIdType == 'unknown',
@@ -121,6 +143,21 @@ class IdScanService {
           );
         }
 
+        final firstName = _extractNextValueAfterLabel(lines, [
+          'first name',
+          'given name',
+          'firstname',
+        ]);
+        final middleName = _extractNextValueAfterLabel(lines, [
+          'middle name',
+          'middlename',
+        ]);
+        final lastName = _extractNextValueAfterLabel(lines, [
+          'last name',
+          'surname',
+          'lastname',
+        ]);
+
         final driverName = _extractFromDriversLicense(lines);
         final birthDate = _extractBirthDateFromDriversLicense(lines) ??
             _extractGenericBirthDate(lines);
@@ -131,6 +168,9 @@ class IdScanService {
             extractedName: driverName,
             extractedBirthDate: birthDate,
             extractedGender: gender,
+            extractedFirstName: firstName,
+            extractedMiddleName: middleName,
+            extractedLastName: lastName,
             detectedIdType: detectedIdType,
             matchesSelectedType: detectedIdType == 'driver_license' ||
                 detectedIdType == 'unknown',
@@ -1058,6 +1098,230 @@ class IdScanService {
 
     final ratio = intersection / larger;
     return ratio >= 0.6 || na == nb;
+  }
+
+  Future<IdScanResult> scanInputImage(
+    InputImage inputImage, {
+    String? idType,
+  }) async {
+    try {
+      final recognizedText = await _textRecognizer.processImage(inputImage);
+      final lines = recognizedText.text
+          .split('\n')
+          .map((line) => line.trim())
+          .where((line) => line.isNotEmpty)
+          .toList();
+
+      if (lines.isEmpty) {
+        return const IdScanResult(
+          detectedIdType: 'unknown',
+          matchesSelectedType: false,
+          warningMessage: 'No readable text was detected in the frame.',
+        );
+      }
+
+      final normalizedIdType = _normalizeIdType(idType);
+      final detectedIdType = _detectDocumentType(lines);
+
+      if (normalizedIdType.contains('national id') ||
+          normalizedIdType.contains('philsys')) {
+        final lastName = _extractNextValueAfterLabel(lines, [
+          'apelyido',
+          'last name',
+        ]);
+        final givenNames = _extractNextValueAfterLabel(lines, [
+          'mga pangalan',
+          'given names',
+          'first name',
+        ]);
+        final middleName = _extractNextValueAfterLabel(lines, [
+          'gitnang apelyido',
+          'middle name',
+        ]);
+
+        final parts = <String>[];
+        if (givenNames != null) parts.add(givenNames);
+        if (middleName != null && middleName != givenNames) parts.add(middleName);
+        if (lastName != null) parts.add(lastName);
+
+        final name = parts.isNotEmpty ? _cleanName(parts.join(' ')) : null;
+        final birthDate = _extractBirthDateFromPhilSys(lines) ??
+            _extractGenericBirthDate(lines);
+        final gender =
+            _extractGenderFromPhilSys(lines) ?? _extractGenericGender(lines);
+
+        return IdScanResult(
+          extractedName: name,
+          extractedBirthDate: birthDate,
+          extractedGender: gender,
+          extractedFirstName: givenNames,
+          extractedMiddleName: middleName,
+          extractedLastName: lastName,
+          detectedIdType: detectedIdType,
+          matchesSelectedType:
+              detectedIdType == 'philsys' || detectedIdType == 'unknown',
+        );
+      }
+
+      if (normalizedIdType.contains('driver') ||
+          normalizedIdType.contains('license')) {
+        final firstName = _extractNextValueAfterLabel(lines, [
+          'first name',
+          'given name',
+          'firstname',
+        ]);
+        final middleName = _extractNextValueAfterLabel(lines, [
+          'middle name',
+          'middlename',
+        ]);
+        final lastName = _extractNextValueAfterLabel(lines, [
+          'last name',
+          'surname',
+          'lastname',
+        ]);
+
+        final driverName = _extractFromDriversLicense(lines);
+        final birthDate = _extractBirthDateFromDriversLicense(lines) ??
+            _extractGenericBirthDate(lines);
+        final gender = _extractGenderFromDriversLicense(lines) ??
+            _extractGenericGender(lines);
+
+        return IdScanResult(
+          extractedName: driverName,
+          extractedBirthDate: birthDate,
+          extractedGender: gender,
+          extractedFirstName: firstName,
+          extractedMiddleName: middleName,
+          extractedLastName: lastName,
+          detectedIdType: detectedIdType,
+          matchesSelectedType: detectedIdType == 'driver_license' ||
+              detectedIdType == 'unknown',
+        );
+      }
+
+      final genericName = _extractGenericName(lines);
+      final genericBirthDate = _extractGenericBirthDate(lines);
+      final genericGender = _extractGenericGender(lines);
+      return IdScanResult(
+        extractedName: genericName,
+        extractedBirthDate: genericBirthDate,
+        extractedGender: genericGender,
+        detectedIdType: detectedIdType,
+        matchesSelectedType: detectedIdType == 'unknown' ||
+            detectedIdType == _normalizeIdType(idType),
+      );
+    } catch (e) {
+      print('Error scanning InputImage: $e');
+      return const IdScanResult(
+        detectedIdType: 'unknown',
+        matchesSelectedType: false,
+      );
+    }
+  }
+
+  Future<String?> readQrRawFromInputImage(InputImage inputImage) async {
+    try {
+      final barcodes = await _barcodeScanner.processImage(inputImage);
+      for (final bc in barcodes) {
+        if (bc.rawValue != null && bc.rawValue!.trim().isNotEmpty) {
+          return bc.rawValue!.trim();
+        }
+        if (bc.displayValue != null && bc.displayValue!.trim().isNotEmpty) {
+          return bc.displayValue!.trim();
+        }
+      }
+    } catch (e) {
+      print('Error scanning QR from input image: $e');
+    }
+    return null;
+  }
+
+  IdScanResult? extractAllDataFromQrRawContent(String raw) {
+    if (raw.trim().isEmpty) return null;
+
+    try {
+      final decoded = json.decode(raw);
+      if (decoded is Map) {
+        String? fName;
+        String? mName;
+        String? lName;
+        String? dob;
+        String? sex;
+
+        if (decoded['subject'] is Map) {
+          final subject = decoded['subject'] as Map;
+          fName = subject['fName'] as String?;
+          mName = subject['mName'] as String?;
+          lName = subject['lName'] as String?;
+          dob = subject['dob'] as String?;
+          sex = subject['sex'] as String?;
+        }
+
+        final keys = decoded.map((k, v) => MapEntry(k.toString().toLowerCase(), v));
+        
+        fName ??= keys['firstname']?.toString() ??
+            keys['first_name']?.toString() ??
+            keys['givenname']?.toString() ??
+            keys['given_name']?.toString() ??
+            keys['given names']?.toString() ??
+            keys['fname']?.toString();
+        lName ??= keys['lastname']?.toString() ??
+            keys['last_name']?.toString() ??
+            keys['surname']?.toString() ??
+            keys['family_name']?.toString() ??
+            keys['lname']?.toString();
+        mName ??= keys['middlename']?.toString() ??
+            keys['middle_name']?.toString() ??
+            keys['middle']?.toString() ??
+            keys['mname']?.toString();
+        
+        dob ??= keys['dob']?.toString() ??
+            keys['birthdate']?.toString() ??
+            keys['birth_date']?.toString() ??
+            keys['dateofbirth']?.toString() ??
+            keys['date_of_birth']?.toString();
+
+        sex ??= keys['sex']?.toString() ??
+            keys['gender']?.toString();
+
+        String? fullName;
+        final parts = <String>[];
+        if (fName != null && fName.trim().isNotEmpty) parts.add(fName.trim());
+        if (mName != null && mName.trim().isNotEmpty) parts.add(mName.trim());
+        if (lName != null && lName.trim().isNotEmpty) parts.add(lName.trim());
+        if (parts.isNotEmpty) {
+          fullName = _cleanName(parts.join(' '));
+        } else {
+          final full = keys['name'] ?? keys['full_name'];
+          if (full != null && full is String && full.trim().isNotEmpty) {
+            fullName = _cleanName(full);
+          }
+        }
+
+        final genderNormalized = _normalizeGenderValue(sex);
+        final dobNormalized = _normalizeDateString(dob);
+
+        return IdScanResult(
+          detectedIdType: 'philsys_qr',
+          matchesSelectedType: true,
+          extractedName: fullName,
+          extractedBirthDate: dobNormalized,
+          extractedGender: genderNormalized,
+          extractedFirstName: fName,
+          extractedMiddleName: mName,
+          extractedLastName: lName,
+        );
+      }
+    } catch (_) {}
+
+    // Fallback if not JSON or standard format
+    final name = _extractNameFromQrContent(raw);
+    return IdScanResult(
+      detectedIdType: 'philsys_qr',
+      matchesSelectedType: true,
+      extractedName: name,
+      extractedFirstName: name, // fallback
+    );
   }
 
   Future<void> dispose() async {

@@ -480,24 +480,160 @@ class AboutYourselfPage extends StatelessWidget {
                               const SizedBox(width: 12),
                               Expanded(
                                 flex: 2,
-                                child: _LabeledTextField(
-                                  label: 'City',
-                                  controller: controller.cityController,
-                                  hintText: 'e.g. Manila',
-                                  validator: (value) =>
-                                      controller.validateRequired(value, 'City'),
-                                ),
+                                child: Obx(() {
+                                  if (controller.isLoadingCities.value) {
+                                    return Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'City',
+                                          style: TextStyle(
+                                            color: colors.darkText,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Container(
+                                          height: 52,
+                                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius: BorderRadius.circular(12),
+                                            border: Border.all(
+                                              color: const Color(0xFFE3E5EA),
+                                              width: 1.2,
+                                            ),
+                                          ),
+                                          alignment: Alignment.centerLeft,
+                                          child: const SizedBox(
+                                            height: 20,
+                                            width: 20,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    );
+                                  }
+                                  return Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'City',
+                                        style: TextStyle(
+                                          color: colors.darkText,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Container(
+                                        height: 52,
+                                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.circular(12),
+                                          border: Border.all(
+                                            color: const Color(0xFFE3E5EA),
+                                            width: 1.2,
+                                          ),
+                                        ),
+                                        child: DropdownButtonHideUnderline(
+                                          child: DropdownButton<String>(
+                                            isExpanded: true,
+                                            value: controller.selectedCity.value,
+                                            hint: Text(
+                                              'Select City',
+                                              style: TextStyle(
+                                                color: colors.titleGrey,
+                                                fontSize: 18,
+                                              ),
+                                            ),
+                                            items: controller.citiesList
+                                                .map((city) => DropdownMenuItem(
+                                                      value: city,
+                                                      child: Text(
+                                                        city,
+                                                        style: const TextStyle(fontSize: 18),
+                                                        overflow: TextOverflow.ellipsis,
+                                                      ),
+                                                    ))
+                                                .toList(),
+                                            onChanged: controller.setCity,
+                                            icon: Icon(
+                                              Icons.keyboard_arrow_down_rounded,
+                                              color: colors.titleGrey,
+                                              size: 24,
+                                            ),
+                                            style: TextStyle(
+                                              color: colors.darkText,
+                                              fontSize: 18,
+                                              fontFamily: 'Poppins',
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                }),
                               ),
                             ],
                           ),
                           const SizedBox(height: 12),
-                          _LabeledTextField(
-                            label: 'Country',
-                            controller: controller.countryController,
-                            hintText: 'e.g. Philippines',
-                            validator: (value) =>
-                                controller.validateRequired(value, 'Country'),
-                          ),
+                          Obx(() => Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Country',
+                                    style: TextStyle(
+                                      color: colors.darkText,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Container(
+                                    height: 52,
+                                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: const Color(0xFFE3E5EA),
+                                        width: 1.2,
+                                      ),
+                                    ),
+                                    child: DropdownButtonHideUnderline(
+                                      child: DropdownButton<String>(
+                                        isExpanded: true,
+                                        value: controller.selectedCountry.value,
+                                        items: controller.countryOptions
+                                            .map((country) => DropdownMenuItem(
+                                                  value: country,
+                                                  child: Text(
+                                                    country,
+                                                    style: const TextStyle(fontSize: 18),
+                                                  ),
+                                                ))
+                                            .toList(),
+                                        onChanged: controller.setCountry,
+                                        icon: Icon(
+                                          Icons.keyboard_arrow_down_rounded,
+                                          color: colors.titleGrey,
+                                          size: 24,
+                                        ),
+                                        style: TextStyle(
+                                          color: colors.darkText,
+                                          fontSize: 18,
+                                          fontFamily: 'Poppins',
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              )),
                           const SizedBox(height: 24),
 
                           // Privacy notice

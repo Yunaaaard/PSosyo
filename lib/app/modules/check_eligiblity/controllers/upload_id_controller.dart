@@ -181,14 +181,22 @@ class UploadIdController extends GetxController {
         print('QR code found: $rawQrContent');
         scannedQrCode.value = rawQrContent;
 
-        // Extract name from QR content
-        final extractedQrName =
-            _nationalIdService.extractNameFromQrRawContent(rawQrContent);
+        // Extract name, DOB, and gender from QR content
+        final qrResult =
+            _nationalIdService.extractAllDataFromQrRawContent(rawQrContent);
+        final extractedQrName = qrResult?.extractedName;
         scannedQrName.value = extractedQrName;
 
         if (extractedQrName != null && extractedQrName.isNotEmpty) {
           print('QR name extracted: $extractedQrName');
           qrScanWarning.value = null;
+
+          if (qrResult?.extractedBirthDate != null && qrResult!.extractedBirthDate!.isNotEmpty) {
+            _idVerificationService.setScannedBirthDate(qrResult.extractedBirthDate);
+          }
+          if (qrResult?.extractedGender != null && qrResult!.extractedGender!.isNotEmpty) {
+            _idVerificationService.setScannedGender(qrResult.extractedGender);
+          }
 
           // Compare with front image name if available
           // Recompute match using helper to avoid race conditions

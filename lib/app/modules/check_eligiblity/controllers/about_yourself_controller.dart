@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:p_sosyo/app/data/database/psosyo_database_service.dart';
@@ -20,7 +22,26 @@ class AboutYourselfController extends GetxController {
   var isGenderLocked = false.obs;
   var isFormComplete = false.obs;
 
-  final statusOptions = ['Single', 'Married', 'Divorced', 'Widowed'];
+  // Country and City dropdown options & states
+  var selectedCountry = 'Philippines'.obs;
+  var selectedCity = Rx<String?>(null);
+  var citiesList = <String>[].obs;
+  var isLoadingCities = false.obs;
+
+  final countryOptions = const ['Philippines'];
+  static const fallbackCities = [
+    'Caloocan', 'Cebu City', 'Davao City', 'Manila', 'Quezon City',
+    'Zamboanga City', 'Taguig', 'Pasig', 'Cagayan de Oro', 'Parañaque',
+    'Valenzuela', 'Mandaluyong', 'Makati', 'Muntinlupa', 'Marikina',
+    'Las Piñas', 'Pasay', 'Malabon', 'Navotas', 'San Juan',
+    'Bacolod', 'Baguio', 'Batangas City', 'Cabanatuan', 'Calamba',
+    'Cavite City', 'Dagupan', 'General Santos', 'Iligan', 'Iloilo City',
+    'Imus', 'Laoag', 'Lapu-Lapu', 'Legazpi', 'Lucena', 'Mandaue',
+    'Naga', 'Olongapo', 'Ormoc', 'Puerto Princesa', 'Roxas City',
+    'San Fernando', 'Tacloban', 'Tagbilaran', 'Tarlac City'
+  ];
+
+  final statusOptions = const ['Single', 'Married', 'Divorced', 'Widowed'];
   late final IdVerificationService _idVerificationService;
   late final PsosyoDatabaseService _databaseService;
   late final UserPhoneService _userPhoneService;
@@ -79,6 +100,14 @@ class AboutYourselfController extends GetxController {
       _applyScannedGender(value);
     });
 
+    // Initialize default values for dropdowns
+    countryController.text = 'Philippines';
+    selectedCountry.value = 'Philippines';
+    if (cityController.text.isNotEmpty) {
+      selectedCity.value = cityController.text;
+    }
+
+    fetchCities();
     _syncFormState();
   }
 
@@ -132,6 +161,51 @@ class AboutYourselfController extends GetxController {
   void setStatus(String? status) {
     selectedStatus.value = status;
     _syncFormState();
+  }
+
+  void setCity(String? city) {
+    selectedCity.value = city;
+    cityController.text = city ?? '';
+    _syncFormState();
+  }
+
+  void setCountry(String? country) {
+    selectedCountry.value = country ?? 'Philippines';
+    countryController.text = country ?? 'Philippines';
+    _syncFormState();
+  }
+
+  Future<void> fetchCities() async {
+    isLoadingCities.value = true;
+    update();
+    try {
+      final response = await http
+          .get(Uri.parse('https://psgc.gitlab.io/api/cities-and-municipalities.json'))
+          .timeout(const Duration(seconds: 8));
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        final List<String> fetchedCities =
+            data.map((item) => item['name'] as String).toList();
+
+        // Remove duplicates and sort alphabetically
+        final uniqueCities = fetchedCities.toSet().toList()..sort();
+        citiesList.assignAll(uniqueCities);
+      } else {
+        throw Exception('Failed to load cities');
+      }
+    } catch (e) {
+      debugPrint('Error fetching cities: $e. Using fallback.');
+      citiesList.assignAll(fallbackCities);
+    } finally {
+      // Ensure the currently selected city is in the list to avoid dropdown assertion errors
+      if (cityController.text.isNotEmpty && !citiesList.contains(cityController.text)) {
+        citiesList.add(cityController.text);
+        citiesList.sort();
+      }
+      isLoadingCities.value = false;
+      update();
+    }
   }
 
   void setGender(String gender) {

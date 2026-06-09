@@ -31,7 +31,7 @@ class LandingPage extends GetView<LandingController> {
                 fontFamily: 'IT TENOVIANA DEMO',
                 color: Colors.white,
                 fontStyle: FontStyle.italic,
-                fontSize: 24,
+                fontSize: 50,
                 fontWeight: FontWeight.w400,
                 letterSpacing: 4,
               ),
