@@ -105,7 +105,7 @@ class AppThemes {
 			fontWeight: FontWeight.w500,
 			letterSpacing: 1,
 			fontFamily: 'Poppins',
-			fontSize: 25,
+			fontSize: 18,
 		),
 		shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
 		padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
@@ -120,7 +120,7 @@ class AppThemes {
 		textStyle: const TextStyle(
 			fontWeight: FontWeight.w500,
 			fontFamily: 'Poppins',
-			fontSize: 25,
+			fontSize: 18,
 		),
 		shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
 		padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),

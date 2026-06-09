@@ -274,6 +274,7 @@ class HomeController extends GetxController {
           onRemarkTap: () => _handleRemarkTap(),
           onPaymentTypeTap: () => _handlePaymentTypeTap(),
           onSubmit: () => submitPayNow(),
+          onRetry: () => openReceiptCaptureUploadOptions(),
         );
         return;
       }
@@ -300,6 +301,7 @@ class HomeController extends GetxController {
         onRemarkTap: () => _handleRemarkTap(),
         onPaymentTypeTap: () => _handlePaymentTypeTap(),
         onSubmit: () => submitPayNow(),
+        onRetry: () => openReceiptCaptureUploadOptions(),
       );
     } catch (e) {
       await ReceiptOcrDialog.show(
@@ -315,6 +317,7 @@ class HomeController extends GetxController {
         onRemarkTap: () => _handleRemarkTap(),
         onPaymentTypeTap: () => _handlePaymentTypeTap(),
         onSubmit: () => submitPayNow(),
+        onRetry: () => openReceiptCaptureUploadOptions(),
         errorMessage: e.toString(),
       );
     }

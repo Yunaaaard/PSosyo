@@ -65,16 +65,16 @@ class ScanSuccessReceiptCard extends StatelessWidget {
                         height: 1.2,
                       ),
                     ),
-                    SizedBox(height: 18 * scale),
+                    SizedBox(height: 25 * scale),
                     SizedBox(
-                      width: 174 * scale,
-                      height: 174 * scale,
+                      width: 210 * scale,
+                      height: 210 * scale,
                       child: Stack(
                         alignment: Alignment.center,
                         children: [
                           QrImageView(
                             data: qrData,
-                            size: 158 * scale,
+                            size: 270 * scale,
                             backgroundColor: Colors.white,
                             version: QrVersions.auto,
                             gapless: true,

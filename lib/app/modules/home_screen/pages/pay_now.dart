@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -376,15 +375,23 @@ class PayNowPage extends StatelessWidget {
       ),
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.fromLTRB(24, 0, 24, 18),
-        child: SizedBox(
-          height: 66,
-          child: ElevatedButton.icon(
-            onPressed: controller.openReceiptCaptureUploadOptions,
-            style: AppThemes.primaryButtonStyle,
-            icon: const Icon(Icons.camera_alt_outlined),
-            label: const Text('Capture / Upload Photo'),
-          ),
-        ),
+        child: Obx(() {
+          final hasRemarks = controller.remarksValue.value.isNotEmpty;
+          final hasPaymentMethod = controller.selectedPaymentType.value.isNotEmpty;
+          final canCapture = hasRemarks && hasPaymentMethod;
+          return SizedBox(
+            height: 66,
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 200),
+              opacity: canCapture ? 1.0 : 0.45,
+              child: ElevatedButton.icon(
+                onPressed: canCapture ? controller.openReceiptCaptureUploadOptions : null,
+                style: AppThemes.primaryButtonStyle,
+                label: Text(canCapture ? 'Capture / Upload Photo' : 'Missing remarks or payment method'),
+              ),
+            ),
+          );
+        }),
       ),
     );
   }

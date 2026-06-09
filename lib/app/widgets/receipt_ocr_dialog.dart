@@ -16,6 +16,7 @@ class ReceiptOcrDialog extends StatelessWidget {
     required this.onRemarkTap,
     required this.onPaymentTypeTap,
     required this.onSubmit,
+    this.onRetry,
     this.errorMessage,
   });
 
@@ -30,6 +31,7 @@ class ReceiptOcrDialog extends StatelessWidget {
   final VoidCallback onRemarkTap;
   final VoidCallback onPaymentTypeTap;
   final VoidCallback onSubmit;
+  final VoidCallback? onRetry;
   final String? errorMessage;
 
   static Future<void> show(
@@ -45,6 +47,7 @@ class ReceiptOcrDialog extends StatelessWidget {
     required VoidCallback onRemarkTap,
     required VoidCallback onPaymentTypeTap,
     required VoidCallback onSubmit,
+    VoidCallback? onRetry,
     String? errorMessage,
   }) {
     return showDialog<void>(
@@ -63,6 +66,7 @@ class ReceiptOcrDialog extends StatelessWidget {
           onRemarkTap: onRemarkTap,
           onPaymentTypeTap: onPaymentTypeTap,
           onSubmit: onSubmit,
+          onRetry: onRetry,
           errorMessage: errorMessage,
         );
       },
@@ -75,7 +79,12 @@ class ReceiptOcrDialog extends StatelessWidget {
       insetPadding: const EdgeInsets.symmetric(horizontal: 24),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       child: Obx(() {
-        final canProceed = paymentTypeValue.value.isNotEmpty && remarksValue.value.isNotEmpty;
+        final hasSelections = paymentTypeValue.value.isNotEmpty && remarksValue.value.isNotEmpty;
+        // OCR must have extracted reference number, phone number, and amount for Pay Now to be available
+        final hasRequiredOcrData = referenceNumber != null && referenceNumber!.isNotEmpty &&
+            phoneNumber != null && phoneNumber!.isNotEmpty &&
+            amountText != null && amountText!.isNotEmpty;
+        final canProceed = hasSelections && isSuccess && hasRequiredOcrData;
         return Padding(
           padding: const EdgeInsets.fromLTRB(22, 22, 22, 18),
           child: Column(
@@ -108,10 +117,10 @@ class ReceiptOcrDialog extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 isSuccess
-                    ? 'Only Ref No. and Total Amount Sent from the GCash receipt were read.'
+                    ? 'Ref No., Phone Number, and Total Amount Sent from the GCash receipt were read.'
                     : (errorMessage?.trim().isNotEmpty == true
                         ? errorMessage!
-                        : 'Make sure the receipt is clear and includes Ref No. and Total Amount Sent.'),
+                        : 'Make sure the receipt is clear and includes Ref No., Phone Number, and Total Amount Sent.'),
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontSize: 13.5,
@@ -156,11 +165,55 @@ class ReceiptOcrDialog extends StatelessWidget {
                 onTap: onPaymentTypeTap,
               ),
               const SizedBox(height: 16),
+              if (!isSuccess || !hasRequiredOcrData) ...[
+                SizedBox(
+                  width: double.infinity,
+                  child: Text(
+                    !isSuccess
+                        ? 'Receipt could not be read. Please retry.'
+                        : 'Missing receipt data (Ref No., Phone Number, or Amount). Please retry.',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFFEA4335),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: onRetry != null
+                        ? () {
+                            Navigator.of(context).pop();
+                            onRetry!();
+                          }
+                        : () => Navigator.of(context).pop(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFF0F3FA),
+                      foregroundColor: const Color(0xFF2E5DC8),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    icon: const Icon(Icons.refresh_rounded, size: 20),
+                    label: const Text('Retry Capture / Upload'),
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: canProceed ? onSubmit : null,
-                  child: const Text('Pay Now'),
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 200),
+                  opacity: canProceed ? 1.0 : 0.45,
+                  child: ElevatedButton(
+                    onPressed: canProceed ? onSubmit : null,
+                    child: const Text('Pay Now'),
+                  ),
                 ),
               ),
             ],
