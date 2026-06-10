@@ -34,7 +34,7 @@ class ScanSuccessPage extends GetView<ScanSuccessController> {
                           child: Obx(
                             () => SingleChildScrollView(
                               child: ScanSuccessReceiptCard(
-                                qrData: controller.qrData,
+                                qrData: controller.enrichedQrData,
                                 from: controller.senderName.value,
                                 to: controller.recipientName,
                                 referenceNo: controller.displayReferenceNo,

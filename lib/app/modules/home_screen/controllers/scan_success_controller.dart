@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:p_sosyo/app/data/database/psosyo_database_service.dart';
@@ -41,7 +42,9 @@ class ScanSuccessController extends GetxController {
     super.onInit();
     _databaseService = Get.find<PsosyoDatabaseService>();
     _userPhoneService = Get.find<UserPhoneService>();
-    senderName.value = from?.trim().isNotEmpty == true ? from!.trim() : 'Psosyo User';
+    senderName.value = receipt.from?.trim().isNotEmpty == true
+        ? receipt.from!.trim()
+        : 'MIKEL ROBBIE GARCIA ABOYME';
     _loadLocalSenderName();
     _loadResolvedLoanData();
   }
@@ -87,6 +90,34 @@ class ScanSuccessController extends GetxController {
 
   List<dynamic>? get products => receipt.products;
 
+  /// The enriched QR data JSON with from/to/refNo/date nested in.
+  String get enrichedQrData {
+    final Map<String, dynamic> base = Map<String, dynamic>.from(receipt.parsedQrBase);
+    base.remove('products');
+
+    // Customer app expected/display properties
+    base['from'] = senderName.value;
+    base['to'] = recipientName;
+    base['refNo'] = receipt.referenceNo ?? '';
+    base['date'] = receipt.dateTime ?? '';
+    base['amountSent'] = amountDueFromQr;
+
+    // Driver app expected parser properties
+    base['id'] = receipt.referenceNo ?? '';
+    base['amount'] = amountDueFromQr;
+    base['metadata'] = {
+      'customer_name': senderName.value,
+    };
+    base['payment_method'] = {
+      'ewallet': {
+        'channel_code': 'GCASH',
+      }
+    };
+    base['created'] = receipt.dateTime ?? '';
+
+    return jsonEncode(base);
+  }
+
   String get formattedAppliedDate {
     if (appliedDate.isEmpty) {
       return '';
@@ -112,7 +143,7 @@ class ScanSuccessController extends GetxController {
   }
 
   String get formattedDateTime {
-    final String? value = dateTime;
+    final String? value = receipt.dateTime;
     if (value == null || value.isEmpty) {
       return DateFormat('MM-dd-yy | HH:mm').format(DateTime.now());
     }
@@ -121,7 +152,7 @@ class ScanSuccessController extends GetxController {
     return parsed != null ? DateFormat('MM-dd-yy | HH:mm').format(parsed) : value;
   }
 
-  String get displayReferenceNo => formatReferenceNo(referenceNo ?? qrData);
+  String get displayReferenceNo => formatReferenceNo(receipt.referenceNo ?? receipt.qrData);
 
   String formatReferenceNo(String value) {
     final Uri? uri = Uri.tryParse(value);

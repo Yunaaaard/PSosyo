@@ -95,8 +95,6 @@ class HomeController extends GetxController {
     ),
   ];
 
-  final List<int> paymentTermOptions = const [30, 60, 90];
-
   String get maximumCreditLimit =>
       _formatAmount(_maximumCreditLimitValue.value);
   double get availableCreditLimitValue => _maximumCreditLimitValue.value;

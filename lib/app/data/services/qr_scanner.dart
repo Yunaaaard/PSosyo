@@ -163,10 +163,10 @@ class _QrScannerPageState extends State<QrScannerPage> {
     }
   }
 
-  String _extractReferenceNo(String qrData) {
+  String? _extractReferenceNo(String qrData) {
     try {
       final uri = Uri.tryParse(qrData);
-      if (uri != null) {
+      if (uri != null && (uri.scheme == 'http' || uri.scheme == 'https')) {
         for (final key in ['referenceNo', 'refNo', 'ref', 'orderId', 'id']) {
           final value = uri.queryParameters[key];
           if (value != null && value.isNotEmpty) {
@@ -175,7 +175,7 @@ class _QrScannerPageState extends State<QrScannerPage> {
         }
       }
     } catch (_) {}
-    return qrData;
+    return null;
   }
 
   @override

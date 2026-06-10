@@ -74,20 +74,29 @@ class ScanSuccessReceiptCard extends StatelessWidget {
                         children: [
                           QrImageView(
                             data: qrData,
-                            size: 270 * scale,
+                            size: 210 * scale,
                             backgroundColor: Colors.white,
                             version: QrVersions.auto,
+                            errorCorrectionLevel: QrErrorCorrectLevel.H,
                             gapless: true,
+                            eyeStyle: const QrEyeStyle(
+                              eyeShape: QrEyeShape.circle,
+                              color: Color(0xFF171B22),
+                            ),
+                            dataModuleStyle: const QrDataModuleStyle(
+                              dataModuleShape: QrDataModuleShape.circle,
+                              color: Color(0xFF171B22),
+                            ),
                           ),
                           Container(
-                            width: 44 * scale,
-                            height: 44 * scale,
+                            width: 32 * scale,
+                            height: 32 * scale,
                             decoration: BoxDecoration(
                               color: const Color(0xFF2E5DC8),
                               shape: BoxShape.circle,
                               border: Border.all(
                                 color: Colors.white,
-                                width: 3 * scale,
+                                width: 2.5 * scale,
                               ),
                               boxShadow: const [
                                 BoxShadow(
@@ -101,7 +110,7 @@ class ScanSuccessReceiptCard extends StatelessWidget {
                               child: Icon(
                                 Icons.check,
                                 color: Colors.white,
-                                size: 24 * scale,
+                                size: 16 * scale,
                               ),
                             ),
                           ),

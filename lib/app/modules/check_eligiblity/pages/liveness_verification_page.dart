@@ -56,7 +56,7 @@ class LivenessVerificationPage extends StatelessWidget {
         ),
 
         Positioned(
-          bottom: 32,
+          bottom: 32, 
           left: 24,
           right: 24,
           child: InstructionCard(

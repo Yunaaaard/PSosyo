@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'dart:math';
 
+import 'package:intl/intl.dart';
 import 'package:p_sosyo/app/core/utils/principal_logo_resolver.dart';
 
 class ScanSuccessReceiptModel {
@@ -29,12 +31,23 @@ class ScanSuccessReceiptModel {
   }) {
     final Map<String, dynamic>? parsedQrJson = _parseQrJson(qrData);
 
+    // Auto-generate 13-digit reference number if not provided
+    final String resolvedRefNo = referenceNo ?? _generate13DigitRefNo();
+
+    // Use current date/time if not provided
+    final String resolvedDateTime = dateTime ??
+        DateFormat('yyyy-MM-ddTHH:mm:ss').format(DateTime.now());
+
+    // Resolve sender and receiver
+    final String resolvedFrom = from ?? 'MIKEL ROBBIE GARCIA ABOYME';
+    final String resolvedTo = _stringValue(parsedQrJson?['principalTitle']) ?? to ?? '';
+
     return ScanSuccessReceiptModel._(
       qrData: qrData,
-      from: from,
-      to: to,
-      referenceNo: referenceNo,
-      dateTime: dateTime,
+      from: resolvedFrom,
+      to: resolvedTo,
+      referenceNo: resolvedRefNo,
+      dateTime: resolvedDateTime,
       amountSent: amountSent,
       loanId: _stringValue(parsedQrJson?['loanId']) ?? 'N/A',
       principalTitle: _stringValue(parsedQrJson?['principalTitle']) ?? to ?? '',
@@ -62,6 +75,31 @@ class ScanSuccessReceiptModel {
   final String appliedDate;
   final String dueDate;
   final List<dynamic> products;
+
+  /// Returns the parsed base QR JSON map for external enrichment.
+  Map<String, dynamic> get parsedQrBase => _parseQrJson(qrData) ?? {};
+
+  /// Builds an enriched QR JSON string that nests from/to/refNo/date/amountSent
+  /// alongside the original loan payload data.
+  String get enrichedQrData {
+    final Map<String, dynamic> base = parsedQrBase;
+    base['from'] = from ?? 'MIKEL ROBBIE GARCIA ABOYME';
+    base['to'] = to ?? principalTitle;
+    base['refNo'] = referenceNo ?? '';
+    base['date'] = dateTime ?? '';
+    base['amountSent'] = amountSent;
+    return jsonEncode(base);
+  }
+
+  /// Generates a random 13-digit numeric reference number.
+  static String _generate13DigitRefNo() {
+    final random = Random();
+    final buffer = StringBuffer();
+    for (int i = 0; i < 13; i++) {
+      buffer.write(random.nextInt(10));
+    }
+    return buffer.toString();
+  }
 
   static Map<String, dynamic>? _parseQrJson(String qrData) {
     try {
