@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import 'package:p_sosyo/app/routes/app_routes.dart';
 
 class FastSosyoLandingController extends GetxController {
-  final title = 'FASTSOSYO';
+  final title = 'paqner';
 
   final isLogoVisible = false.obs;
   final isTitleVisible = false.obs;

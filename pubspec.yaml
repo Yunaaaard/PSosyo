@@ -59,6 +59,10 @@ flutter:
           weight: 400
         - asset: assets/fonts/ITTENOVIANADEMO-Regular.otf
           weight: 400
+    - family: "Blinko - Demo"
+      fonts:
+        - asset: assets/fonts/Blinko - Demo-Regular.otf
+          weight: 400
 
 dependency_overrides:
   tflite_flutter: ^0.12.1

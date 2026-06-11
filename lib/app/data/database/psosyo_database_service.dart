@@ -147,8 +147,15 @@ class PsosyoDatabaseService extends GetxService {
   Future<List<Map<String, Object?>>> loadPaymentRequests({int limit = 50}) =>
       paymentRequestsTable.loadRecentPaymentRequests(limit: limit);
 
-  Future<List<Map<String, Object?>>> loadAllPaymentRequests() =>
-      paymentRequestsTable.loadAllPaymentRequests();
+  Future<List<Map<String, Object?>>> loadAllPaymentRequests() async {
+    return paymentRequestsTable.loadAllPaymentRequests();
+  }
+
+  Future<List<Map<String, Object?>>> loadPendingRequestsForLoan(String loanReferenceId) =>
+      paymentRequestsTable.loadPendingRequestsForLoan(loanReferenceId);
+
+  Future<int> markPendingRequestsAsSuccess(String loanReferenceId) =>
+      paymentRequestsTable.markPendingRequestsAsSuccess(loanReferenceId);
 
   Future<List<Map<String, Object?>>> loadAllUsers() =>
       usersTable.loadAllUsers();

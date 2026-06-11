@@ -30,7 +30,7 @@ class PsosyoEligibilityPage extends StatelessWidget {
                   ),
                   const Spacer(),
                   Text(
-                    'PSOSYO',
+                    'PESOPAQ',
                     style: TextStyle(
                       color: colors.primaryPurple,
                       fontSize: 20,
@@ -54,7 +54,7 @@ class PsosyoEligibilityPage extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Text(
-                'Welcome to Psosyo',
+                'Welcome to PESOPAQ',
                 style: TextStyle(
                   color: colors.darkText,
                   fontSize: 38,

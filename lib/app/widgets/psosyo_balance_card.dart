@@ -13,6 +13,7 @@ class PsosyoBalanceCard extends StatelessWidget {
     required this.amountDue,
     required this.onPayNow,
     this.isPayNowEnabled = true,
+    this.onPendingTap,
   });
 
   final String title;
@@ -23,6 +24,7 @@ class PsosyoBalanceCard extends StatelessWidget {
   final String amountDue;
   final VoidCallback onPayNow;
   final bool isPayNowEnabled;
+  final VoidCallback? onPendingTap;
 
   static const String _fallbackAsset = 'assets/images/PSosyo-Logo.png';
 
@@ -186,7 +188,7 @@ class PsosyoBalanceCard extends StatelessWidget {
                     shadowColor:
                         isPayNowEnabled ? Colors.transparent : Colors.transparent,
                   ),
-                  onPressed: isPayNowEnabled ? onPayNow : null,
+                  onPressed: isPayNowEnabled ? onPayNow : onPendingTap,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [

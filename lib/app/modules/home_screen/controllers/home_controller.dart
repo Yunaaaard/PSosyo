@@ -889,6 +889,85 @@ class HomeController extends GetxController {
     _pendingPaymentReferenceIds.remove(order.referenceId.trim());
   }
 
+  DateTime? _lastPendingTapTime;
+
+  void handlePendingTap(LoanOrderCard order) {
+    final now = DateTime.now();
+    if (_lastPendingTapTime != null &&
+        now.difference(_lastPendingTapTime!) < const Duration(milliseconds: 500)) {
+      _lastPendingTapTime = null;
+      bypassPendingPayment(order);
+    } else {
+      _lastPendingTapTime = now;
+      Get.snackbar(
+        'Bypass Action',
+        'Tap the Pending button again to bypass this pending payment.',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 2),
+      );
+    }
+  }
+
+  Future<void> bypassPendingPayment(LoanOrderCard order) async {
+    final pendingRequests = await _database.loadPendingRequestsForLoan(order.referenceId);
+
+    double totalAmount = 0.0;
+    if (pendingRequests.isNotEmpty) {
+      for (final req in pendingRequests) {
+        final amt = double.tryParse(req['amount']?.toString() ?? '') ?? 0.0;
+        totalAmount += amt;
+      }
+      await _database.markPendingRequestsAsSuccess(order.referenceId);
+    } else {
+      totalAmount = order.remainingAmount;
+    }
+
+    final paidAmount =
+        totalAmount > order.remainingAmount ? order.remainingAmount : totalAmount;
+
+    if (paidAmount > 0) {
+      order.remainingAmount = (order.remainingAmount - paidAmount)
+          .clamp(0, double.infinity)
+          .toDouble();
+      _maximumCreditLimitValue.value =
+          (_maximumCreditLimitValue.value + paidAmount)
+              .clamp(0, creditLimit)
+              .toDouble();
+
+      if (order.remainingAmount <= 0) {
+        loanOrders.removeWhere((loanOrder) => loanOrder.referenceId == order.referenceId);
+        if (selectedLoanOrder.value?.referenceId == order.referenceId) {
+          selectedLoanOrder.value =
+              loanOrders.isNotEmpty ? loanOrders.first : null;
+        }
+      } else {
+        loanOrders.refresh();
+        if (selectedLoanOrder.value?.referenceId == order.referenceId) {
+          selectedLoanOrder.refresh();
+        }
+      }
+
+      _syncAvailableCredit();
+      await _database.applyLoanPayment(
+        referenceId: order.referenceId,
+        paidAmount: paidAmount,
+        remainingAmount: order.remainingAmount,
+      );
+    }
+
+    final result = await _loanHistoryService.rebuildTransactionHistory();
+    transactionHistory.assignAll(result.transactions);
+    _pendingPaymentReferenceIds
+      ..clear()
+      ..addAll(result.pendingReferenceIds);
+
+    Get.snackbar(
+      'Bypass Success',
+      'Pending transaction has been successfully bypassed and completed.',
+      snackPosition: SnackPosition.BOTTOM,
+    );
+  }
+
   Future<void> recordLoanPaymentPending({
     required LoanOrderCard order,
     required double amount,

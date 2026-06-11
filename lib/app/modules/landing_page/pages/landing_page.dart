@@ -19,14 +19,14 @@ class LandingPage extends GetView<LandingController> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SvgPicture.asset(
-              'assets/icons/psosyo-icon-button.svg',
+            Image.asset(
+              'assets/images/PSOSYO-LOGO.png',
               width: 200,
               height: 200,
             ),
             const SizedBox(height: 5),
             const Text(
-              'PSOSYO',
+              'PESOPAQ',
               style: TextStyle(
                 fontFamily: 'IT TENOVIANA DEMO',
                 color: Colors.white,

@@ -143,18 +143,20 @@ class InitialDashboard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 SvgPicture.asset(
-                  'assets/icons/psosyo-icon-button.svg',
+                  'assets/icons/pesopaq-icon.svg',
                   width: 42,
                   height: 42,
                   fit: BoxFit.contain,
                 ),
                 const SizedBox(height: 4),
                 const Text(
-                  'Psosyo',
+                  'PESOPAQ',
                   style: TextStyle(
                     color: Colors.white,
+                    fontFamily: 'IT TENOVIANA DEMO',
                     fontSize: 14,
                     height: 1,
+                    fontStyle: FontStyle.italic,
                     fontWeight: FontWeight.w500,
                   ),
                 ),

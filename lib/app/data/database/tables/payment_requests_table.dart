@@ -84,6 +84,28 @@ class PaymentRequestsTable {
     );
   }
 
+  Future<List<Map<String, Object?>>> loadPendingRequestsForLoan(String loanReferenceId) async {
+    final db = await _database();
+    return db.query(
+      tableName,
+      where: 'loan_reference_id = ? AND status = ?',
+      whereArgs: [loanReferenceId, 'PENDING'],
+    );
+  }
+
+  Future<int> markPendingRequestsAsSuccess(String loanReferenceId) async {
+    final db = await _database();
+    return db.update(
+      tableName,
+      <String, Object?>{
+        'status': 'SUCCESS',
+        'updated_at': DateTime.now().toIso8601String(),
+      },
+      where: 'loan_reference_id = ? AND status = ?',
+      whereArgs: [loanReferenceId, 'PENDING'],
+    );
+  }
+
   String? _stringValue(dynamic value) {
     final text = value?.toString().trim();
     if (text == null || text.isEmpty) {

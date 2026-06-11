@@ -184,6 +184,9 @@ class HomeScreen extends StatelessWidget {
                                   onPayNow: () => controller.openPayNowPage(
                                     visibleCards[index],
                                   ),
+                                  onPendingTap: () => controller.handlePendingTap(
+                                    visibleCards[index],
+                                  ),
                                 ),
                               ),
                               if (index != visibleCards.length - 1)
