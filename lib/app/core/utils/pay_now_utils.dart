@@ -31,7 +31,7 @@ String buildPayNowPayloadJson({
   required String paymentReferenceId,
   required String paymentType,
   required String remarks,
-  required String loanId,
+  required String referenceId,
   required String distributor,
   required String phoneNumber,
   required String formattedAmount,
@@ -40,7 +40,7 @@ String buildPayNowPayloadJson({
   final createdAt = DateTime.now().toUtc();
   final updatedAt = createdAt.add(const Duration(seconds: 2));
   final normalizedPaymentReferenceId =
-      paymentReferenceId.isEmpty ? loanId : paymentReferenceId;
+      paymentReferenceId.isEmpty ? referenceId : paymentReferenceId;
   final amount = _parseAmount(formattedAmount);
   final token = createdAt.microsecondsSinceEpoch.toRadixString(16);
   final normalizedPaymentType = paymentType.trim().isEmpty ? 'Cash' : paymentType.trim();
@@ -59,13 +59,13 @@ String buildPayNowPayloadJson({
     'failure_code': null,
     'created': createdAt.toIso8601String(),
     'updated': updatedAt.toIso8601String(),
-    'metadata': {
-      'customer_name': customerName,
-      'distributor': distributor,
-      'cart_id': 'cart_$loanId',
-      'phone_number': phoneNumber,
-      'remarks': remarks,
-      'payment_method_label': normalizedPaymentType,
+      'metadata': {
+        'customer_name': customerName,
+        'distributor': distributor,
+        'cart_id': 'cart_$referenceId',
+        'phone_number': phoneNumber,
+        'remarks': remarks,
+        'payment_method_label': normalizedPaymentType,
     },
   };
 

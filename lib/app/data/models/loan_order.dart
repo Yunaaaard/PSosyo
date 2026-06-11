@@ -13,7 +13,7 @@ class LoanPrincipalOption {
 class LoanOrderCard {
   LoanOrderCard({
     required this.title,
-    required this.loanId,
+    required this.referenceId,
     this.logoAsset = 'assets/images/PSosyo-Logo.png',
     required this.appliedAt,
     required this.dueAt,
@@ -22,7 +22,7 @@ class LoanOrderCard {
   });
 
   final String title;
-  final String loanId;
+  final String referenceId;
   final String logoAsset;
   final DateTime appliedAt;
   final DateTime dueAt;
@@ -61,7 +61,7 @@ String formatLoanDate(DateTime value) {
   return '$month-$day-$year  |  $hour:$minute';
 }
 
-String buildLoanId(int sequence, String principalCode) {
+String buildReferenceId(int sequence, String principalCode) {
   final paddedSequence = sequence.toString().padLeft(3, '0');
   return 'AL-$paddedSequence$principalCode';
 }

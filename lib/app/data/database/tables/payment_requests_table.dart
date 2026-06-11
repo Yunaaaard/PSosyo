@@ -13,7 +13,7 @@ class PaymentRequestsTable {
     await db.execute('''
       CREATE TABLE IF NOT EXISTS payment_requests (
         id TEXT PRIMARY KEY,
-        loan_id TEXT,
+        loan_reference_id TEXT,
         business_id TEXT,
         reference_id TEXT,
         payment_request_id TEXT,
@@ -25,14 +25,14 @@ class PaymentRequestsTable {
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
         metadata_json TEXT,
-        FOREIGN KEY (loan_id) REFERENCES loans(loan_id) ON DELETE SET NULL
+        FOREIGN KEY (loan_reference_id) REFERENCES loans(reference_id) ON DELETE SET NULL
       )
     ''');
   }
 
   Future<void> savePaymentRequest(
     Map<String, dynamic> payload, {
-    String? loanId,
+    String? loanReferenceId,
   }) async {
     final db = await _database();
     final now = DateTime.now().toIso8601String();
@@ -44,7 +44,7 @@ class PaymentRequestsTable {
       tableName,
       <String, Object?>{
         'id': id,
-        'loan_id': loanId,
+        'loan_reference_id': loanReferenceId,
         'business_id': _stringValue(payload['business_id']),
         'reference_id': _stringValue(payload['reference_id']),
         'payment_request_id': _stringValue(payload['payment_request_id']),

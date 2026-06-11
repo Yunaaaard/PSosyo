@@ -8,18 +8,20 @@ class ScanSuccessReceiptCard extends StatelessWidget {
     required this.qrData,
     required this.from,
     required this.to,
-    required this.referenceNo,
+    required this.referenceId,
     required this.formattedDateTime,
     required this.amountSent,
+    this.paymentReference,
     super.key,
   });
 
   final String qrData;
   final String from;
   final String to;
-  final String referenceNo;
+  final String referenceId;
   final String formattedDateTime;
   final String amountSent;
+  final String? paymentReference;
 
   @override
   Widget build(BuildContext context) {
@@ -122,7 +124,13 @@ class ScanSuccessReceiptCard extends StatelessWidget {
                     SizedBox(height: 14 * scale),
                     ScanSuccessReceiptInfoRow(label: 'To:', value: to, scale: scale),
                     SizedBox(height: 12 * scale),
-                    ScanSuccessReceiptInfoRow(label: 'Ref No:', value: referenceNo, scale: scale),
+                    ScanSuccessReceiptInfoRow(
+                      label: 'Reference ID:',
+                      value: (paymentReference != null && paymentReference!.isNotEmpty)
+                          ? paymentReference!
+                          : referenceId,
+                      scale: scale,
+                    ),
                     SizedBox(height: 12 * scale),
                     ScanSuccessReceiptInfoRow(label: 'Date:', value: formattedDateTime, scale: scale),
                     SizedBox(height: 18 * scale),

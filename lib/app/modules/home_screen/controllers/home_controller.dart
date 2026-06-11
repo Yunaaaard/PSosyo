@@ -25,7 +25,7 @@ import 'package:http/http.dart' as http;
 class HomeController extends GetxController {
   final RxBool showAllBalanceCards = true.obs;
   final RxBool showAllTransactionHistory = false.obs;
-  final RxSet<String> _pendingPaymentLoanIds = <String>{}.obs;
+  final RxSet<String> _pendingPaymentReferenceIds = <String>{}.obs;
 
   static const double creditLimit = 25000.00;
 
@@ -108,7 +108,7 @@ class HomeController extends GetxController {
 
   final String distributorName = 'Fast Sosyo';
   String get principalName => activeLoanOrder?.title ?? 'Monde Nissin';
-  String get loanId => activeLoanOrder?.loanId ?? 'AL-003MON';
+  String get referenceId => activeLoanOrder?.referenceId ?? 'AL-003MON';
   String get startPaymentDateTime =>
       activeLoanOrder?.appliedDateTime ?? '04-28-26 | 10:23';
   String get fullyPaidDateTime =>
@@ -144,9 +144,9 @@ class HomeController extends GetxController {
   Future<void> _bootstrapFromDatabase() async {
     final savedLoans = await _database.loadActiveLoanOrders();
     loanOrders.assignAll(savedLoans);
-    final routeSelectedLoanId = _selectedLoanIdFromRoute();
-    if (routeSelectedLoanId != null &&
-        _selectLoanOrderById(routeSelectedLoanId)) {
+    final routeSelectedReferenceId = _selectedReferenceIdFromRoute();
+    if (routeSelectedReferenceId != null &&
+        _selectLoanOrderByReferenceId(routeSelectedReferenceId)) {
       showAllBalanceCards.value = true;
     } else {
       selectedLoanOrder.value = savedLoans.isNotEmpty ? savedLoans.first : null;
@@ -156,9 +156,9 @@ class HomeController extends GetxController {
     // Load persisted loan orders and payment requests, then rebuild transaction history.
     final result = await _loanHistoryService.rebuildTransactionHistory();
     transactionHistory.assignAll(result.transactions);
-    _pendingPaymentLoanIds
+    _pendingPaymentReferenceIds
       ..clear()
-      ..addAll(result.pendingLoanIds);
+      ..addAll(result.pendingReferenceIds);
   }
 
   Future<void> _bootstrapCurrentUser() async {
@@ -190,7 +190,7 @@ class HomeController extends GetxController {
     if (selectedOrder == null) {
       return;
     }
-    if (!isPayNowAvailableForLoan(selectedOrder.loanId)) {
+    if (!isPayNowAvailableForReference(selectedOrder.referenceId)) {
       Get.snackbar(
         'Payment pending',
         'This loan has a pending payment request. Wait until it becomes successful before paying again.',
@@ -203,12 +203,12 @@ class HomeController extends GetxController {
     Get.to(() => const PayNowPage());
   }
 
-  bool isPayNowAvailableForLoan(String loanId) {
-    final key = loanId.trim();
+  bool isPayNowAvailableForReference(String referenceId) {
+    final key = referenceId.trim();
     if (key.isEmpty) {
       return true;
     }
-    return !_pendingPaymentLoanIds.contains(key);
+    return !_pendingPaymentReferenceIds.contains(key);
   }
 
   void openQrScannerPage() {
@@ -423,7 +423,7 @@ class HomeController extends GetxController {
 
       final savedLoans = await _database.loadActiveLoanOrders();
       loanOrders.assignAll(savedLoans);
-      _selectLoanOrderById(result.loanOrder!.loanId);
+      _selectLoanOrderByReferenceId(result.loanOrder!.referenceId);
       _syncAvailableCredit();
       transactionHistory.insert(
         0,
@@ -439,16 +439,17 @@ class HomeController extends GetxController {
       return true;
     }
 
-    final loanId = _loanQrPayloadService.extractLoanIdFromPayload(
+    final referenceId = _loanQrPayloadService.extractReferenceIdFromPayload(
       rawPayload,
       decodedPayload,
     );
-    if (loanId != null) {
-      final storedLoan = await _database.loadLoanOrderByLoanId(loanId);
+    if (referenceId != null) {
+      final storedLoan =
+          await _database.loadLoanOrderByReferenceId(referenceId);
       if (storedLoan != null) {
         final savedLoans = await _database.loadActiveLoanOrders();
         loanOrders.assignAll(savedLoans);
-        _selectLoanOrderById(storedLoan.loanId);
+        _selectLoanOrderByReferenceId(storedLoan.referenceId);
         _syncAvailableCredit();
         return true;
       }
@@ -477,7 +478,7 @@ class HomeController extends GetxController {
                 if (result.success && result.loanOrder != null) {
                   final savedLoans = await _database.loadActiveLoanOrders();
                   loanOrders.assignAll(savedLoans);
-                  _selectLoanOrderById(result.loanOrder!.loanId);
+                  _selectLoanOrderByReferenceId(result.loanOrder!.referenceId);
                   _syncAvailableCredit();
                   return true;
                 }
@@ -491,7 +492,7 @@ class HomeController extends GetxController {
               if (fallback.success && fallback.loanOrder != null) {
                 final savedLoans = await _database.loadActiveLoanOrders();
                 loanOrders.assignAll(savedLoans);
-                _selectLoanOrderById(fallback.loanOrder!.loanId);
+                _selectLoanOrderByReferenceId(fallback.loanOrder!.referenceId);
                 _syncAvailableCredit();
                 return true;
               }
@@ -504,7 +505,7 @@ class HomeController extends GetxController {
         AppSnackbar.warning(
           title: 'Loan not found',
           message:
-              'The scanned QR only contains a loan ID, but that loan is not stored locally yet.',
+              'The scanned QR only contains a reference ID, but that record is not stored locally yet.',
           position: SnackPosition.TOP,
           duration: const Duration(seconds: 5),
         );
@@ -540,7 +541,7 @@ class HomeController extends GetxController {
 
     final savedLoans = await _database.loadActiveLoanOrders();
     loanOrders.assignAll(savedLoans);
-    _selectLoanOrderById(result.loanOrder!.loanId);
+    _selectLoanOrderByReferenceId(result.loanOrder!.referenceId);
     _syncAvailableCredit();
     transactionHistory.insert(
       0,
@@ -556,8 +557,9 @@ class HomeController extends GetxController {
     return true;
   }
 
-  bool _selectLoanOrderById(String loanId) {
-    final index = loanOrders.indexWhere((order) => order.loanId == loanId);
+  bool _selectLoanOrderByReferenceId(String referenceId) {
+    final index =
+        loanOrders.indexWhere((order) => order.referenceId == referenceId);
     if (index == -1) {
       return false;
     }
@@ -573,17 +575,17 @@ class HomeController extends GetxController {
     return true;
   }
 
-  String? _selectedLoanIdFromRoute() {
+  String? _selectedReferenceIdFromRoute() {
     final args = Get.arguments;
     if (args is Map<String, dynamic>) {
-      final rawValue = args['selectedLoanId'] ?? args['loanId'];
-      final loanId = rawValue?.toString().trim() ?? '';
-      return loanId.isEmpty ? null : loanId;
+      final rawValue = args['selectedReferenceId'] ?? args['referenceId'];
+      final referenceId = rawValue?.toString().trim() ?? '';
+      return referenceId.isEmpty ? null : referenceId;
     }
 
     if (args is String) {
-      final loanId = args.trim();
-      return loanId.isEmpty ? null : loanId;
+      final referenceId = args.trim();
+      return referenceId.isEmpty ? null : referenceId;
     }
 
     return null;
@@ -638,7 +640,7 @@ class HomeController extends GetxController {
     final dueAt = createdAt.add(Duration(days: termDays));
     final loanOrder = LoanOrderCard(
       title: principal.title,
-      loanId: buildLoanId(loanSequence, principal.code),
+      referenceId: buildReferenceId(loanSequence, principal.code),
       logoAsset: principal.logoAsset,
       appliedAt: createdAt,
       dueAt: dueAt,
@@ -656,7 +658,7 @@ class HomeController extends GetxController {
         userPhone: Get.find<UserPhoneService>().getRegisteredPhone(),
       );
     } catch (e) {
-      loanOrders.removeWhere((order) => order.loanId == loanOrder.loanId);
+      loanOrders.removeWhere((order) => order.referenceId == loanOrder.referenceId);
       selectedLoanOrder.value = loanOrders.isNotEmpty ? loanOrders.first : null;
       _syncAvailableCredit();
       if (!seed) {
@@ -813,21 +815,21 @@ class HomeController extends GetxController {
             .toDouble();
 
     if (order.remainingAmount <= 0) {
-      loanOrders.removeWhere((loanOrder) => loanOrder.loanId == order.loanId);
-      if (selectedLoanOrder.value?.loanId == order.loanId) {
+      loanOrders.removeWhere((loanOrder) => loanOrder.referenceId == order.referenceId);
+      if (selectedLoanOrder.value?.referenceId == order.referenceId) {
         selectedLoanOrder.value =
             loanOrders.isNotEmpty ? loanOrders.first : null;
       }
     } else {
       loanOrders.refresh();
-      if (selectedLoanOrder.value?.loanId == order.loanId) {
+      if (selectedLoanOrder.value?.referenceId == order.referenceId) {
         selectedLoanOrder.refresh();
       }
     }
 
     _syncAvailableCredit();
     await _database.applyLoanPayment(
-      loanId: order.loanId,
+      referenceId: order.referenceId,
       paidAmount: paidAmount,
       remainingAmount: order.remainingAmount,
     );
@@ -846,7 +848,7 @@ class HomeController extends GetxController {
           : selectedPaymentType.value.trim();
       final payload = <String, dynamic>{
         'id': 'local-${DateTime.now().millisecondsSinceEpoch}',
-        'loan_id': order.loanId,
+        'loan_reference_id': order.referenceId,
         'reference_id': localPaymentReferenceId,
         'payment_request_id': localPaymentRequestId,
         if (selectedMethod.isNotEmpty)
@@ -860,14 +862,17 @@ class HomeController extends GetxController {
           'customer_name': currentUserName.value.trim(),
           'payment_reference_id': localPaymentReferenceId,
           'payment_request_id': localPaymentRequestId,
-          'loan_id': order.loanId,
+          'loan_reference_id': order.referenceId,
         },
         'amount': paidAmount,
         'status': 'SUCCESS',
         'created': nowIso,
         'updated': nowIso,
       };
-      await _database.savePaymentRequest(payload, loanId: order.loanId);
+      await _database.savePaymentRequest(
+        payload,
+        loanReferenceId: order.referenceId,
+      );
     } catch (_) {}
 
     transactionHistory.insert(
@@ -881,7 +886,7 @@ class HomeController extends GetxController {
         logoAsset: order.logoAsset,
       ),
     );
-    _pendingPaymentLoanIds.remove(order.loanId.trim());
+    _pendingPaymentReferenceIds.remove(order.referenceId.trim());
   }
 
   Future<void> recordLoanPaymentPending({
@@ -912,7 +917,7 @@ class HomeController extends GetxController {
     try {
       final payload = <String, dynamic>{
         'id': 'local-${DateTime.now().millisecondsSinceEpoch}',
-        'loan_id': order.loanId,
+        'loan_reference_id': order.referenceId,
         'reference_id': localPaymentReferenceId,
         'payment_request_id': localPaymentRequestId,
         if (selectedMethod.isNotEmpty)
@@ -926,14 +931,17 @@ class HomeController extends GetxController {
           'customer_name': currentUserName.value.trim(),
           'payment_reference_id': localPaymentReferenceId,
           'payment_request_id': localPaymentRequestId,
-          'loan_id': order.loanId,
+          'loan_reference_id': order.referenceId,
         },
         'amount': pendingAmount,
         'status': 'PENDING',
         'created': nowIso,
         'updated': nowIso,
       };
-      await _database.savePaymentRequest(payload, loanId: order.loanId);
+      await _database.savePaymentRequest(
+        payload,
+        loanReferenceId: order.referenceId,
+      );
     } catch (_) {}
 
     transactionHistory.insert(
@@ -948,19 +956,19 @@ class HomeController extends GetxController {
       ),
     );
 
-    _pendingPaymentLoanIds.add(order.loanId.trim());
+    _pendingPaymentReferenceIds.add(order.referenceId.trim());
 
     showAllTransactionHistory.value = true;
   }
 
   Future<void> openLoanDetailsSheet(LoanOrderCard order) async {
     final List<LoanItemRecord> items =
-        await _database.loadLoanItemsForLoan(order.loanId);
+        await _database.loadLoanItemsForReference(order.referenceId);
 
     Get.bottomSheet(
       LoanDetailsSheet(
         principalTitle: order.title,
-        loanId: order.loanId,
+        referenceId: order.referenceId,
         appliedDateTime: order.appliedDateTime,
         dueDateTime: order.dueDateTime,
         amountDue: order.amountDueText,
@@ -983,7 +991,7 @@ class HomeController extends GetxController {
     final service = PaymentService();
     try {
       final success = await service.processPayment(
-        loanId: order.loanId,
+        referenceId: order.referenceId,
         amount: amount,
         paymentReferenceId: paymentReferenceId,
         receiptPath: receiptPath,

@@ -267,7 +267,7 @@ class PayNowPage extends StatelessWidget {
                       return SummaryCard(
                         title: 'Loan Balance',
                         amount: controller.remainingBalance,
-                        subtitle: 'Selected loan: ${controller.loanId}',
+                        subtitle: 'Selected reference: ${controller.referenceId}',
                         qrWidget: const Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -311,7 +311,7 @@ class PayNowPage extends StatelessWidget {
                       paymentReferenceId: paymentReferenceId,
                       paymentType: paymentType,
                       remarks: remarks,
-                      loanId: controller.loanId,
+                      referenceId: controller.referenceId,
                       distributor: controller.principalName,
                       phoneNumber: phone,
                       formattedAmount: controller.remainingBalance,
@@ -321,7 +321,7 @@ class PayNowPage extends StatelessWidget {
                     return SummaryCard(
                       title: 'Loan Balance',
                       amount: controller.remainingBalance,
-                      subtitle: 'Selected loan: ${controller.loanId}',
+                      subtitle: 'Selected reference: ${controller.referenceId}',
                       qrWidget: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [

@@ -4,27 +4,33 @@ class LoanQrPayloadService {
   const LoanQrPayloadService();
 
   bool looksLikeImportableLoanPayload(Map<String, dynamic> payload) {
-    final loanId = findString(payload, ['loanId', 'loan_id', 'id']);
+    final referenceId = findString(
+      payload,
+      ['referenceId', 'reference_id', 'ReferenceID', 'loanId', 'loan_id', 'id'],
+    );
     final principalTitle =
         findString(payload, ['principalTitle', 'principal_title', 'title']);
     final dueDate = findDate(payload, ['dueDate', 'due_date']);
     final amountDue =
-        findAmount(payload, ['amountDue', 'amount_due', 'amount']);
+        findAmount(payload, ['amountDue', 'amount_due', 'amount', 'totalAmount', 'total_amount']);
     final products = payload['products'];
 
-    return loanId != null &&
+    return referenceId != null &&
         principalTitle != null &&
         dueDate != null &&
         (amountDue != null || products is List);
   }
 
-  String? extractLoanIdFromPayload(
+  String? extractReferenceIdFromPayload(
     String rawPayload,
     Map<String, dynamic>? decodedPayload,
   ) {
     final fromJson = decodedPayload == null
         ? null
-        : findString(decodedPayload, ['loanId', 'loan_id', 'id']);
+        : findString(
+            decodedPayload,
+            ['referenceId', 'reference_id', 'ReferenceID', 'loanId', 'loan_id', 'id'],
+          );
     if (fromJson != null) {
       return fromJson;
     }
@@ -36,7 +42,14 @@ class LoanQrPayloadService {
 
     final uri = Uri.tryParse(trimmed);
     if (uri != null) {
-      for (final key in <String>['loanId', 'loan_id', 'id']) {
+      for (final key in <String>[
+        'referenceId',
+        'reference_id',
+        'ReferenceID',
+        'loanId',
+        'loan_id',
+        'id'
+      ]) {
         final value = uri.queryParameters[key];
         if (value != null && value.trim().isNotEmpty) {
           return value.trim();
@@ -101,7 +114,7 @@ class LoanQrPayloadService {
     }
 
     final cleaned =
-        value.toString().replaceAll(',', '').replaceAll('â‚±', '').trim();
+        value.toString().replaceAll(',', '').replaceAll('₱', '').trim();
     return double.tryParse(cleaned);
   }
 
@@ -183,7 +196,9 @@ class LoanQrPayloadService {
       return match.group(1)?.trim();
     }
 
-    payload['loanId'] = matchString(r'"loanId"\s*:\s*"([^"]+)"');
+    payload['referenceId'] = matchString(
+      r'"(?:referenceId|reference_id|ReferenceID|loanId|loan_id)"\s*:\s*"([^"]+)"',
+    );
     payload['principalTitle'] =
         matchString(r'"principalTitle"\s*:\s*"([^"]+)"');
     payload['amountDue'] = matchString(r'"amountDue"\s*:\s*([^,}\n]+)');

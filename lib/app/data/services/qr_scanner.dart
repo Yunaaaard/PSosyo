@@ -147,7 +147,7 @@ class _QrScannerPageState extends State<QrScannerPage> {
           'qrData': raw,
           'from': 'PSosyo User',
           'to': 'PSosyo Service',
-          'referenceNo': _extractReferenceNo(raw),
+          'referenceId': _extractReferenceId(raw),
           'dateTime': null,
           'amountSent': selectedAmount,
         },
@@ -163,11 +163,11 @@ class _QrScannerPageState extends State<QrScannerPage> {
     }
   }
 
-  String? _extractReferenceNo(String qrData) {
+  String? _extractReferenceId(String qrData) {
     try {
       final uri = Uri.tryParse(qrData);
       if (uri != null && (uri.scheme == 'http' || uri.scheme == 'https')) {
-        for (final key in ['referenceNo', 'refNo', 'ref', 'orderId', 'id']) {
+        for (final key in ['referenceId', 'reference_id', 'ReferenceID', 'id']) {
           final value = uri.queryParameters[key];
           if (value != null && value.isNotEmpty) {
             return value;

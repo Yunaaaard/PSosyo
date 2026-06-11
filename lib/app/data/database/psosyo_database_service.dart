@@ -34,8 +34,8 @@ class PsosyoDatabaseService extends GetxService {
   Future<List<LoanOrderCard>> loadAllLoanOrders() =>
       loansTable.loadAllLoanOrders();
 
-  Future<LoanOrderCard?> loadLoanOrderByLoanId(String loanId) =>
-      loansTable.loadLoanOrderByLoanId(loanId);
+  Future<LoanOrderCard?> loadLoanOrderByReferenceId(String referenceId) =>
+      loansTable.loadLoanOrderByReferenceId(referenceId);
 
   Future<List<Map<String, Object?>>> loadAllLoanRows() =>
       loansTable.loadAllLoanRows();
@@ -77,18 +77,18 @@ class PsosyoDatabaseService extends GetxService {
       );
 
   Future<void> applyLoanPayment({
-    required String loanId,
+    required String referenceId,
     required double paidAmount,
     required double remainingAmount,
   }) =>
       loansTable.applyLoanPayment(
-        loanId: loanId,
+        referenceId: referenceId,
         paidAmount: paidAmount,
         remainingAmount: remainingAmount,
       );
 
-  Future<List<LoanItemRecord>> loadLoanItemsForLoan(String loanId) =>
-      loanItemsTable.loadLoanItemsForLoan(loanId);
+  Future<List<LoanItemRecord>> loadLoanItemsForReference(String referenceId) =>
+      loanItemsTable.loadLoanItemsForReference(referenceId);
 
   Future<void> saveUserProfile({
     String? phoneNumber,
@@ -135,9 +135,14 @@ class PsosyoDatabaseService extends GetxService {
   Future<String?> loadLatestRegisteredPhone() =>
       usersTable.getLatestPhoneNumber();
 
-  Future<void> savePaymentRequest(Map<String, dynamic> payload,
-          {String? loanId}) =>
-      paymentRequestsTable.savePaymentRequest(payload, loanId: loanId);
+  Future<void> savePaymentRequest(
+    Map<String, dynamic> payload, {
+    String? loanReferenceId,
+  }) =>
+      paymentRequestsTable.savePaymentRequest(
+        payload,
+        loanReferenceId: loanReferenceId,
+      );
 
   Future<List<Map<String, Object?>>> loadPaymentRequests({int limit = 50}) =>
       paymentRequestsTable.loadRecentPaymentRequests(limit: limit);

@@ -6,7 +6,7 @@ class PsosyoBalanceCard extends StatelessWidget {
   const PsosyoBalanceCard({
     super.key,
     required this.title,
-    required this.loanId,
+    required this.referenceId,
     required this.logoAsset,
     required this.appliedDateTime,
     required this.dueDateTime,
@@ -16,7 +16,7 @@ class PsosyoBalanceCard extends StatelessWidget {
   });
 
   final String title;
-  final String loanId;
+  final String referenceId;
   final String logoAsset;
   final String appliedDateTime;
   final String dueDateTime;
@@ -80,7 +80,7 @@ class PsosyoBalanceCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      loanId,
+                      referenceId,
                       style: const TextStyle(
                         fontSize: 12,
                         color: Color(0xFF9397A2),

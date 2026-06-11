@@ -12,14 +12,14 @@ class ScanSuccessController extends GetxController {
     required this.qrData,
     this.from,
     this.to,
-    this.referenceNo,
+    this.referenceId,
     this.dateTime,
     this.amountSent = 1834.08,
   }) : receipt = ScanSuccessReceiptModel.fromQrData(
           qrData: qrData,
           from: from,
           to: to,
-          referenceNo: referenceNo,
+          referenceId: referenceId,
           dateTime: dateTime,
           amountSent: amountSent,
         );
@@ -27,7 +27,7 @@ class ScanSuccessController extends GetxController {
   final String qrData;
   final String? from;
   final String? to;
-  final String? referenceNo;
+  final String? referenceId;
   final String? dateTime;
   final double amountSent;
   final ScanSuccessReceiptModel receipt;
@@ -50,12 +50,13 @@ class ScanSuccessController extends GetxController {
   }
 
   Future<void> _loadResolvedLoanData() async {
-    final loanId = _extractLoanIdFromQrData(qrData) ?? receipt.loanId;
-    if (loanId.trim().isEmpty || loanId == 'N/A') {
+    final referenceId = _extractReferenceIdFromQrData(qrData) ?? receipt.referenceId;
+    if (referenceId.trim().isEmpty || referenceId == 'N/A') {
       return;
     }
 
-    final loanOrder = await _databaseService.loadLoanOrderByLoanId(loanId);
+    final loanOrder =
+        await _databaseService.loadLoanOrderByReferenceId(referenceId);
     if (loanOrder != null) {
       resolvedLoanOrder.value = loanOrder;
     }
@@ -75,7 +76,8 @@ class ScanSuccessController extends GetxController {
     }
   }
 
-  String get loanId => resolvedLoanOrder.value?.loanId ?? receipt.loanId;
+  String get resolvedReferenceId =>
+      resolvedLoanOrder.value?.referenceId ?? receipt.referenceId;
 
   String get recipientName => resolvedLoanOrder.value?.title ?? receipt.principalTitle;
 
@@ -90,6 +92,8 @@ class ScanSuccessController extends GetxController {
 
   List<dynamic>? get products => receipt.products;
 
+  String? get paymentReference => receipt.paymentReference;
+
   /// The enriched QR data JSON with from/to/refNo/date nested in.
   String get enrichedQrData {
     final Map<String, dynamic> base = Map<String, dynamic>.from(receipt.parsedQrBase);
@@ -98,20 +102,20 @@ class ScanSuccessController extends GetxController {
     // Customer app expected/display properties
     base['from'] = senderName.value;
     base['to'] = recipientName;
-    base['refNo'] = receipt.referenceNo ?? '';
+    base['referenceId'] = receipt.referenceId;
     base['date'] = receipt.dateTime ?? '';
     base['amountSent'] = amountDueFromQr;
+    if (paymentReference != null && paymentReference!.isNotEmpty) {
+      base['payment_reference'] = paymentReference;
+    }
 
     // Driver app expected parser properties
-    base['id'] = receipt.referenceNo ?? '';
+    base['id'] = receipt.referenceId;
     base['amount'] = amountDueFromQr;
     base['metadata'] = {
       'customer_name': senderName.value,
-    };
-    base['payment_method'] = {
-      'ewallet': {
-        'channel_code': 'GCASH',
-      }
+      if (paymentReference != null && paymentReference!.isNotEmpty)
+        'payment_reference': paymentReference,
     };
     base['created'] = receipt.dateTime ?? '';
 
@@ -152,12 +156,17 @@ class ScanSuccessController extends GetxController {
     return parsed != null ? DateFormat('MM-dd-yy | HH:mm').format(parsed) : value;
   }
 
-  String get displayReferenceNo => formatReferenceNo(receipt.referenceNo ?? receipt.qrData);
+  String get displayReferenceId => formatReferenceId(resolvedReferenceId);
 
-  String formatReferenceNo(String value) {
+  String formatReferenceId(String value) {
     final Uri? uri = Uri.tryParse(value);
     final String? queryReference = _referenceFromUri(uri);
     final String source = queryReference ?? value;
+
+    if (source.contains(RegExp(r'[a-zA-Z]'))) {
+      return source;
+    }
+
     final String digitsOnly = source.replaceAll(RegExp(r'[^0-9]'), '');
 
     if (digitsOnly.isEmpty) {
@@ -170,7 +179,7 @@ class ScanSuccessController extends GetxController {
     return chunks.join(' ');
   }
 
-  String? _extractLoanIdFromQrData(String value) {
+  String? _extractReferenceIdFromQrData(String value) {
     final trimmed = value.trim();
     if (trimmed.isEmpty) {
       return null;
@@ -178,7 +187,12 @@ class ScanSuccessController extends GetxController {
 
     final uri = Uri.tryParse(trimmed);
     if (uri != null) {
-      for (final key in <String>['loanId', 'loan_id', 'id']) {
+      for (final key in <String>[
+        'referenceId',
+        'reference_id',
+        'ReferenceID',
+        'id'
+      ]) {
         final queryValue = uri.queryParameters[key];
         if (queryValue != null && queryValue.trim().isNotEmpty) {
           return queryValue.trim();
@@ -203,7 +217,14 @@ class ScanSuccessController extends GetxController {
       return null;
     }
 
-    for (final String key in <String>['referenceNo', 'refNo', 'ref', 'orderId', 'id']) {
+    for (final String key in <String>[
+      'referenceId',
+      'reference_id',
+      'ReferenceID',
+      'ref',
+      'orderId',
+      'id'
+    ]) {
       final String? value = uri.queryParameters[key];
       if (value != null && value.isNotEmpty) {
         return value;
@@ -231,11 +252,13 @@ class ScanSuccessController extends GetxController {
   }
 
   void goHome() {
-    final loanId = resolvedLoanOrder.value?.loanId ?? receipt.loanId;
-    if (loanId.trim().isNotEmpty && loanId != 'N/A') {
+    final referenceId = resolvedLoanOrder.value?.referenceId ?? receipt.referenceId;
+    if (referenceId.trim().isNotEmpty && referenceId != 'N/A') {
       Get.offNamed(
         AppRoutes.homeScreen,
-        arguments: {'selectedLoanId': loanId.trim()},
+        arguments: {
+          'selectedReferenceId': referenceId.trim(),
+        },
       );
       return;
     }

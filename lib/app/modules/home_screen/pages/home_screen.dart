@@ -172,14 +172,14 @@ class HomeScreen extends StatelessWidget {
                                     .openLoanDetailsSheet(visibleCards[index]),
                                 child: PsosyoBalanceCard(
                                   title: visibleCards[index].title,
-                                  loanId: visibleCards[index].loanId,
+                                  referenceId: visibleCards[index].referenceId,
                                   logoAsset: visibleCards[index].logoAsset,
                                   appliedDateTime:
                                       visibleCards[index].appliedDateTime,
                                   dueDateTime: visibleCards[index].dueDateTime,
                                   amountDue: visibleCards[index].amountDueText,
-                                  isPayNowEnabled: controller.isPayNowAvailableForLoan(
-                                    visibleCards[index].loanId,
+                                  isPayNowEnabled: controller.isPayNowAvailableForReference(
+                                    visibleCards[index].referenceId,
                                   ),
                                   onPayNow: () => controller.openPayNowPage(
                                     visibleCards[index],

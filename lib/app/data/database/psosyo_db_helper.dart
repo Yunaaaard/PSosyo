@@ -4,7 +4,7 @@ import 'package:sqflite/sqflite.dart';
 
 class PsosyoDbHelper {
   static const String databaseName = 'psosyo.db';
-  static const int databaseVersion = 4;
+  static const int databaseVersion = 5;
 
   Database? _database;
 

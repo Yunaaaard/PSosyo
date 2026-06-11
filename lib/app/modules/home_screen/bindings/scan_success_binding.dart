@@ -9,7 +9,7 @@ class ScanSuccessBinding extends Bindings {
     String qrData = '';
     String? from;
     String? to;
-    String? referenceNo;
+    String? referenceId;
     String? dateTime;
     double amountSent = 0.0;
 
@@ -17,7 +17,7 @@ class ScanSuccessBinding extends Bindings {
       qrData = args['qrData'] as String? ?? qrData;
       from = args['from'] as String?;
       to = args['to'] as String?;
-      referenceNo = args['referenceNo'] as String?;
+      referenceId = args['referenceId'] as String?;
       dateTime = args['dateTime'] as String?;
       amountSent = args['amountSent'] as double? ?? 0.0;
     } else if (args is String) {
@@ -29,7 +29,7 @@ class ScanSuccessBinding extends Bindings {
         qrData: qrData,
         from: from,
         to: to,
-        referenceNo: referenceNo,
+        referenceId: referenceId,
         dateTime: dateTime,
         amountSent: amountSent,
       ),

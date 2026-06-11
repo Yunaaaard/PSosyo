@@ -12,42 +12,42 @@ class LoanItemsTable {
     await db.execute('''
       CREATE TABLE IF NOT EXISTS loan_items (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        loan_id TEXT NOT NULL,
+        reference_id TEXT NOT NULL,
         product_name TEXT NOT NULL,
         sku TEXT NOT NULL DEFAULT '',
         quantity INTEGER NOT NULL DEFAULT 0,
         unit_price REAL NOT NULL DEFAULT 0,
         total_price REAL NOT NULL DEFAULT 0,
         created_at TEXT NOT NULL,
-        FOREIGN KEY (loan_id) REFERENCES loans(loan_id) ON DELETE CASCADE
+        FOREIGN KEY (reference_id) REFERENCES loans(reference_id) ON DELETE CASCADE
       )
     ''');
   }
 
   Future<void> replaceLoanItems(
-    String loanId,
+    String referenceId,
     List<LoanItemRecord> items,
   ) async {
     final db = await _database();
-    await replaceLoanItemsInTransaction(db, loanId, items);
+    await replaceLoanItemsInTransaction(db, referenceId, items);
   }
 
   Future<void> replaceLoanItemsInTransaction(
     DatabaseExecutor executor,
-    String loanId,
+    String referenceId,
     List<LoanItemRecord> items,
   ) async {
     final now = DateTime.now().toIso8601String();
     await executor.delete(
       tableName,
-      where: 'loan_id = ?',
-      whereArgs: <Object?>[loanId],
+      where: 'reference_id = ?',
+      whereArgs: <Object?>[referenceId],
     );
     for (final item in items) {
       await executor.insert(
         tableName,
         <String, Object?>{
-          'loan_id': loanId,
+          'reference_id': referenceId,
           'product_name': item.productName,
           'sku': item.sku,
           'quantity': item.quantity,
@@ -59,12 +59,14 @@ class LoanItemsTable {
     }
   }
 
-  Future<List<LoanItemRecord>> loadLoanItemsForLoan(String loanId) async {
+  Future<List<LoanItemRecord>> loadLoanItemsForReference(
+    String referenceId,
+  ) async {
     final db = await _database();
     final rows = await db.query(
       tableName,
-      where: 'loan_id = ?',
-      whereArgs: <Object?>[loanId],
+      where: 'reference_id = ?',
+      whereArgs: <Object?>[referenceId],
       orderBy: 'id ASC',
     );
 

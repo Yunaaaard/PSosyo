@@ -6,7 +6,7 @@ class LoanDetailsSheet extends StatelessWidget {
   const LoanDetailsSheet({
     super.key,
     required this.principalTitle,
-    required this.loanId,
+    required this.referenceId,
     required this.appliedDateTime,
     required this.dueDateTime,
     required this.amountDue,
@@ -14,7 +14,7 @@ class LoanDetailsSheet extends StatelessWidget {
   });
 
   final String principalTitle;
-  final String loanId;
+  final String referenceId;
   final String appliedDateTime;
   final String dueDateTime;
   final String amountDue;
@@ -119,7 +119,7 @@ class LoanDetailsSheet extends StatelessWidget {
                           borderRadius: BorderRadius.circular(999),
                         ),
                         child: Text(
-                          loanId,
+                          referenceId,
                           style: const TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,

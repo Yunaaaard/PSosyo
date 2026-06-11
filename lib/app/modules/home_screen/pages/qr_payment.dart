@@ -72,7 +72,7 @@ class QrPaymentPage extends StatelessWidget {
                       child: Obx(() {
                         final payload = jsonEncode({
                           'type': 'psosyo_payment_test',
-                          'loanId': controller.loanId,
+                          'referenceId': controller.referenceId,
                           'amount': controller.orderedAmount,
                           'name': _firstNameOnly(_currentName()),
                         });
@@ -89,7 +89,7 @@ class QrPaymentPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    'Test QR: ${controller.loanId}',
+                    'Test QR: ${controller.referenceId}',
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontSize: 12,

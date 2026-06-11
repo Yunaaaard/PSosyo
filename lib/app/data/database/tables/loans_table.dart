@@ -26,7 +26,7 @@ class LoansTable {
     await db.execute('''
       CREATE TABLE loans (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        loan_id TEXT NOT NULL UNIQUE,
+        reference_id TEXT NOT NULL UNIQUE,
         user_id INTEGER,
         principal_title TEXT NOT NULL,
         amount_due REAL NOT NULL,
@@ -71,17 +71,17 @@ class LoansTable {
     return rows.map(_loanOrderFromRow).toList();
   }
 
-  Future<LoanOrderCard?> loadLoanOrderByLoanId(String loanId) async {
-    final trimmedLoanId = loanId.trim();
-    if (trimmedLoanId.isEmpty) {
+  Future<LoanOrderCard?> loadLoanOrderByReferenceId(String referenceId) async {
+    final trimmedReferenceId = referenceId.trim();
+    if (trimmedReferenceId.isEmpty) {
       return null;
     }
 
     final db = await _database();
     final rows = await db.query(
       tableName,
-      where: 'loan_id = ?',
-      whereArgs: <Object?>[trimmedLoanId],
+      where: 'reference_id = ?',
+      whereArgs: <Object?>[trimmedReferenceId],
       limit: 1,
     );
 
@@ -104,7 +104,7 @@ class LoansTable {
     final db = await _database();
     final rows = await db.query(
       tableName,
-      columns: <String>['loan_id'],
+      columns: <String>['reference_id'],
       where:
           'lower(principal_title) = ? AND status = ? AND remaining_amount > 0',
       whereArgs: <Object?>[_normalizePrincipalTitle(principalTitle), 'ACTIVE'],
@@ -142,7 +142,10 @@ class LoansTable {
     String? userPhone,
     String? rawPayload,
   }) async {
-    final loanId = _stringValue(payload['loanId']);
+    final referenceId = _stringValue(payload['referenceId']) ??
+        _stringValue(payload['reference_id']) ??
+        _stringValue(payload['ReferenceID']) ??
+        _stringValue(payload['id']);
     final principalTitle = _stringValue(payload['principalTitle']);
     final principalLogo = principalLogoUrlForTitle(principalTitle) ?? '';
     final appliedDate = DateTime.now();
@@ -153,9 +156,9 @@ class LoansTable {
       fallbackAmount: _doubleValue(payload['amountDue']),
     );
 
-    if (loanId == null || loanId.isEmpty) {
+    if (referenceId == null || referenceId.isEmpty) {
       return LoanImportResult.failure(
-          'Missing loanId in the scanned QR payload.');
+          'Missing referenceId in the scanned QR payload.');
     }
     if (principalTitle == null || principalTitle.isEmpty) {
       return LoanImportResult.failure(
@@ -184,7 +187,7 @@ class LoansTable {
 
     final activePrincipalRows = await db.query(
       tableName,
-      columns: <String>['loan_id'],
+      columns: <String>['reference_id'],
       where:
           'lower(principal_title) = ? AND status = ? AND remaining_amount > 0',
       whereArgs: <Object?>[normalizedPrincipalTitle, 'ACTIVE'],
@@ -198,9 +201,9 @@ class LoansTable {
 
     final duplicateLoanRows = await db.query(
       tableName,
-      columns: <String>['loan_id'],
-      where: 'loan_id = ?',
-      whereArgs: <Object?>[loanId],
+      columns: <String>['reference_id'],
+      where: 'reference_id = ?',
+      whereArgs: <Object?>[referenceId],
       limit: 1,
     );
     if (duplicateLoanRows.isNotEmpty) {
@@ -216,7 +219,7 @@ class LoansTable {
       await txn.insert(
         tableName,
         <String, Object?>{
-          'loan_id': loanId,
+          'reference_id': referenceId,
           'user_id': userId,
           'principal_title': principalTitle,
           'amount_due': amountDue,
@@ -232,13 +235,13 @@ class LoansTable {
       );
 
       await _loanItemsTable.replaceLoanItemsInTransaction(
-          txn, loanId, products);
+          txn, referenceId, products);
     });
 
     return LoanImportResult.success(
       LoanOrderCard(
         title: principalTitle,
-        loanId: loanId,
+        referenceId: referenceId,
         logoAsset: principalLogo,
         appliedAt: appliedDate,
         dueAt: dueDate,
@@ -261,7 +264,7 @@ class LoansTable {
     await db.insert(
       tableName,
       <String, Object?>{
-        'loan_id': card.loanId,
+        'reference_id': card.referenceId,
         'user_id': userId,
         'principal_title': card.title,
         'amount_due': card.originalAmount,
@@ -277,12 +280,12 @@ class LoansTable {
     );
 
     if (loanItems.isNotEmpty) {
-      await _loanItemsTable.replaceLoanItems(card.loanId, loanItems);
+      await _loanItemsTable.replaceLoanItems(card.referenceId, loanItems);
     }
   }
 
   Future<void> applyLoanPayment({
-    required String loanId,
+    required String referenceId,
     required double paidAmount,
     required double remainingAmount,
   }) async {
@@ -297,8 +300,8 @@ class LoansTable {
           'status': 'PAID',
           'updated_at': now,
         },
-        where: 'loan_id = ?',
-        whereArgs: <Object?>[loanId],
+        where: 'reference_id = ?',
+        whereArgs: <Object?>[referenceId],
       );
       return;
     }
@@ -310,8 +313,8 @@ class LoansTable {
         'status': 'ACTIVE',
         'updated_at': now,
       },
-      where: 'loan_id = ?',
-      whereArgs: <Object?>[loanId],
+      where: 'reference_id = ?',
+      whereArgs: <Object?>[referenceId],
     );
   }
 
@@ -319,7 +322,7 @@ class LoansTable {
     final principalTitle = row['principal_title']?.toString() ?? '';
     return LoanOrderCard(
       title: principalTitle,
-      loanId: row['loan_id']?.toString() ?? '',
+      referenceId: row['reference_id']?.toString() ?? '',
       logoAsset: principalLogoUrlForTitle(principalTitle) ?? '',
       appliedAt: DateTime.tryParse(row['applied_date']?.toString() ?? '') ??
           DateTime.now(),

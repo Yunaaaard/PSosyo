@@ -12,18 +12,18 @@ class PaymentService {
   /// Sends a payment request to the backend.
   /// Returns true when the backend confirms success.
   Future<bool> processPayment({
-    required String loanId,
+    required String referenceId,
     required double amount,
     String? paymentReferenceId,
     String? receiptPath,
   }) async {
-    if (loanId.isEmpty || amount <= 0) return false;
+    if (referenceId.isEmpty || amount <= 0) return false;
 
     final uri = Uri.parse('$baseUrl/payments');
     final payload = {
-      'loanId': loanId,
+      'referenceId': referenceId,
       'amount': amount,
-      if (paymentReferenceId != null) 'reference': paymentReferenceId,
+      if (paymentReferenceId != null) 'payment_transaction_id': paymentReferenceId,
       if (receiptPath != null) 'receiptPath': receiptPath,
     };
 

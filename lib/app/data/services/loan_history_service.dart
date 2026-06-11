@@ -20,19 +20,20 @@ class LoanHistoryService {
   /// Also returns set of loan IDs with pending payments
   Future<({
     List<TransactionItem> transactions,
-    Set<String> pendingLoanIds,
+    Set<String> pendingReferenceIds,
   })> rebuildTransactionHistory() async {
     try {
       final loanRows = await _database.loadAllLoanOrders();
       final paymentRows = await _database.loadPaymentRequests(limit: 100);
       
-      // Build map of logo assets by loan ID
+      // Build map of logo assets by reference ID
       final loanLogoById = <String, String>{
         for (final loan in loanRows)
-          if (loan.loanId.trim().isNotEmpty) loan.loanId.trim(): loan.logoAsset,
+          if (loan.referenceId.trim().isNotEmpty)
+            loan.referenceId.trim(): loan.logoAsset,
       };
       
-      final latestStatusByLoanId = <String, String>{};
+      final latestStatusByReferenceId = <String, String>{};
       final items = <HistoryEntry>[];
 
       // Add loan orders to history
@@ -58,28 +59,28 @@ class LoanHistoryService {
         final createdAt =
             DateTime.tryParse(row['created_at']?.toString() ?? '') ??
                 DateTime.now();
-        final loanId = row['loan_id']?.toString().trim();
+        final referenceId = row['loan_reference_id']?.toString().trim();
         final reference = row['reference_id']?.toString();
         final status = row['status']?.toString() ?? 'SUCCESS';
         final normalizedStatus = status.trim().toUpperCase();
         
-        // Track latest status per loan ID
-        if (loanId != null &&
-            loanId.isNotEmpty &&
-            !latestStatusByLoanId.containsKey(loanId)) {
-          latestStatusByLoanId[loanId] = normalizedStatus;
+        // Track latest status per loan reference ID
+        if (referenceId != null &&
+            referenceId.isNotEmpty &&
+            !latestStatusByReferenceId.containsKey(referenceId)) {
+          latestStatusByReferenceId[referenceId] = normalizedStatus;
         }
         
         // Determine logo asset
         final logoAsset = _safeLogoAsset(
-          loanId != null && loanLogoById.containsKey(loanId.trim())
-              ? loanLogoById[loanId.trim()]
+          referenceId != null && loanLogoById.containsKey(referenceId.trim())
+              ? loanLogoById[referenceId.trim()]
               : _logoAssetFromMetadata(row['metadata_json']?.toString()),
         );
         
         // Build title
-        final title = (loanId != null && loanId.isNotEmpty)
-            ? 'Loan Payment - $loanId'
+        final title = (referenceId != null && referenceId.isNotEmpty)
+            ? 'Loan Payment - $referenceId'
             : (reference != null && reference.isNotEmpty)
                 ? 'Payment - $reference'
                 : 'Payment';
@@ -102,19 +103,22 @@ class LoanHistoryService {
       // Sort by date (newest first)
       items.sort((a, b) => b.sortKey.compareTo(a.sortKey));
       
-      // Extract pending loan IDs
-      final pendingLoanIds = latestStatusByLoanId.entries
+      // Extract pending reference IDs
+      final pendingReferenceIds = latestStatusByReferenceId.entries
           .where((entry) => entry.value == 'PENDING')
           .map((entry) => entry.key)
           .toSet();
 
       return (
         transactions: items.map((entry) => entry.item).toList(),
-        pendingLoanIds: pendingLoanIds,
+        pendingReferenceIds: pendingReferenceIds,
       );
     } catch (_) {
       // Return empty results on error
-      return (transactions: <TransactionItem>[], pendingLoanIds: <String>{});
+      return (
+        transactions: <TransactionItem>[],
+        pendingReferenceIds: <String>{},
+      );
     }
   }
 
