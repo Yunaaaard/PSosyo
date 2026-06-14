@@ -123,6 +123,7 @@ class RegisterPage extends GetView<RegisterController> {
                           cursorColor: primaryBlue,
                           inputFormatters: [
                             FilteringTextInputFormatter.digitsOnly,
+                            _PhilippinePhoneFormatter(),
                             LengthLimitingTextInputFormatter(
                               RegisterController.requiredPhoneLength,
                             ),
@@ -184,5 +185,28 @@ class RegisterPage extends GetView<RegisterController> {
         ),
       ),
     );
+  }
+}
+
+/// Formatter that removes leading 0 from Philippine phone numbers
+/// Since +63 is the country code, the leading 0 should be removed
+class _PhilippinePhoneFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    String text = newValue.text;
+
+    // If input starts with 0 and has more than 1 digit, remove the leading 0
+    if (text.startsWith('0') && text.length > 1) {
+      text = text.substring(1);
+      return TextEditingValue(
+        text: text,
+        selection: TextSelection.collapsed(offset: text.length),
+      );
+    }
+
+    return newValue;
   }
 }

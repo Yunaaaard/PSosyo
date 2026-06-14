@@ -79,16 +79,16 @@ class EmploymentIncomePage extends StatelessWidget {
                         children: [
                           _buildPesoFieldLabel(
                             colors,
-                            'Target Investment Amount',
+                            'Desired Loan Amount',
                           ),
                           const SizedBox(height: 12),
                           _buildInputField(
-                            controller: controller.sourceOfIncomeController,
+                            controller: controller.desiredLoanAmountController,
                             colors: colors,
                             keyboardType: const TextInputType.numberWithOptions(
                               decimal: true,
                             ),
-                            inputFormatters: [_decimalInputFormatter],
+                            inputFormatters: [_pesoInputFormatter],
                           ),
                           const SizedBox(height: 24),
                           Text.rich(
@@ -111,42 +111,28 @@ class EmploymentIncomePage extends StatelessWidget {
                           ),
                           const SizedBox(height: 12),
                           _buildInputField(
-                            controller: controller.monthlyIncomeController,
+                            controller: controller.monthlyRevenueController,
                             colors: colors,
                             keyboardType: const TextInputType.numberWithOptions(
                               decimal: true,
                             ),
-                            inputFormatters: [_decimalInputFormatter],
+                            inputFormatters: [_pesoInputFormatter],
                           ),
                           const SizedBox(height: 24),
-                          _buildPesoFieldLabel(
-                            colors,
-                            'Monthly Expenses',
-                          ),
+                          _buildFieldLabel(colors, 'Store Name'),
                           const SizedBox(height: 12),
                           _buildInputField(
-                            controller: controller.incomeTaxController,
-                            colors: colors,
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
-                            inputFormatters: [_decimalInputFormatter],
-                          ),
-                          const SizedBox(height: 24),
-                          _buildFieldLabel(colors, 'Business Name'),
-                          const SizedBox(height: 12),
-                          _buildInputField(
-                            controller: controller.employerNameController,
+                            controller: controller.storeNameController,
                             colors: colors,
                           ),
                           const SizedBox(height: 24),
                           _buildFieldLabel(colors, 'Years in Business'),
                           const SizedBox(height: 12),
                           _buildYearsOfEmploymentDropdown(
-                            controller: controller.yearsOfEmploymentController,
+                            controller: controller.yearsInBusinessController,
                             colors: colors,
                             onChanged: (value) {
-                              controller.yearsOfEmploymentController.text =
+                              controller.yearsInBusinessController.text =
                                   value ?? '';
                             },
                           ),
@@ -424,19 +410,56 @@ class EmploymentIncomePage extends StatelessWidget {
     );
   }
 
-  static final TextInputFormatter _decimalInputFormatter =
+  static final TextInputFormatter _pesoInputFormatter =
       TextInputFormatter.withFunction((oldValue, newValue) {
     final text = newValue.text;
     if (text.isEmpty) {
       return newValue;
     }
 
-    final decimalPattern = RegExp(r'^\d*(\.\d{0,2})?$');
-    if (decimalPattern.hasMatch(text)) {
-      return newValue;
+    // Remove all non-digit characters except the last decimal point
+    String digitsOnly = text.replaceAll(RegExp(r'[^0-9.]'), '');
+    
+    // Handle multiple decimal points - keep only the last one
+    final parts = digitsOnly.split('.');
+    if (parts.length > 2) {
+      digitsOnly = parts.take(2).join('.');
     }
 
-    return oldValue;
+    // Validate decimal places
+    if (digitsOnly.contains('.')) {
+      final decimalParts = digitsOnly.split('.');
+      if (decimalParts[1].length > 2) {
+        digitsOnly = '${decimalParts[0]}.${decimalParts[1].substring(0, 2)}';
+      }
+    }
+
+    // Format with commas
+    final parts2 = digitsOnly.split('.');
+    final integerPart = parts2[0];
+    final decimalPart = parts2.length > 1 ? parts2[1] : '';
+
+    // Add commas to integer part
+    String formattedInteger = '';
+    for (int i = 0; i < integerPart.length; i++) {
+      if (i > 0 && (integerPart.length - i) % 3 == 0) {
+        formattedInteger += ',';
+      }
+      formattedInteger += integerPart[i];
+    }
+
+    // Combine formatted number
+    String formatted = formattedInteger;
+    if (decimalPart.isNotEmpty) {
+      formatted += '.$decimalPart';
+    } else if (digitsOnly.endsWith('.')) {
+      formatted += '.';
+    }
+
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
   });
 
   Widget _buildInputField({
