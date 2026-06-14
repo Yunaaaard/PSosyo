@@ -4,11 +4,10 @@ import 'package:p_sosyo/app/widgets/app_snackbar.dart';
 import 'package:image_picker/image_picker.dart';
 
 class EmploymentIncomeController extends GetxController {
-	final TextEditingController sourceOfIncomeController = TextEditingController();
-	final TextEditingController monthlyIncomeController = TextEditingController();
-	final TextEditingController incomeTaxController = TextEditingController();
-	final TextEditingController employerNameController = TextEditingController();
-	final TextEditingController yearsOfEmploymentController = TextEditingController();
+	final TextEditingController desiredLoanAmountController = TextEditingController();
+	final TextEditingController monthlyRevenueController = TextEditingController();
+	final TextEditingController storeNameController = TextEditingController();
+	final TextEditingController yearsInBusinessController = TextEditingController();
 
 	var receiptFiles = <XFile>[].obs;
 	var isFormComplete = false.obs;
@@ -18,11 +17,10 @@ class EmploymentIncomeController extends GetxController {
 	@override
 	void onInit() {
 		super.onInit();
-		sourceOfIncomeController.addListener(_syncFormState);
-		monthlyIncomeController.addListener(_syncFormState);
-		incomeTaxController.addListener(_syncFormState);
-		employerNameController.addListener(_syncFormState);
-		yearsOfEmploymentController.addListener(_syncFormState);
+		desiredLoanAmountController.addListener(_syncFormState);
+		monthlyRevenueController.addListener(_syncFormState);
+		storeNameController.addListener(_syncFormState);
+		yearsInBusinessController.addListener(_syncFormState);
 		_syncFormState();
 	}
 
@@ -56,22 +54,20 @@ class EmploymentIncomeController extends GetxController {
 	}
 
 	void _syncFormState() {
-		isFormComplete.value = sourceOfIncomeController.text.trim().isNotEmpty &&
-			monthlyIncomeController.text.trim().isNotEmpty &&
-			incomeTaxController.text.trim().isNotEmpty &&
-			employerNameController.text.trim().isNotEmpty &&
-			yearsOfEmploymentController.text.trim().isNotEmpty &&
+		isFormComplete.value = desiredLoanAmountController.text.trim().isNotEmpty &&
+			monthlyRevenueController.text.trim().isNotEmpty &&
+			storeNameController.text.trim().isNotEmpty &&
+			yearsInBusinessController.text.trim().isNotEmpty &&
 			receiptFiles.isNotEmpty;
 		update();
 	}
 
 	@override
 	void onClose() {
-		sourceOfIncomeController.dispose();
-		monthlyIncomeController.dispose();
-		incomeTaxController.dispose();
-		employerNameController.dispose();
-		yearsOfEmploymentController.dispose();
+		desiredLoanAmountController.dispose();
+		monthlyRevenueController.dispose();
+		storeNameController.dispose();
+		yearsInBusinessController.dispose();
 		receiptFiles.clear();
 		super.onClose();
 	}
