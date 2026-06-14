@@ -143,38 +143,11 @@ class IdScanService {
           );
         }
 
-        final firstName = _extractNextValueAfterLabel(lines, [
-          'first name',
-          'given name',
-          'firstname',
-        ]);
-        final middleName = _extractNextValueAfterLabel(lines, [
-          'middle name',
-          'middlename',
-        ]);
-        final lastName = _extractNextValueAfterLabel(lines, [
-          'last name',
-          'surname',
-          'lastname',
-        ]);
-
-        final driverName = _extractFromDriversLicense(lines);
-        final birthDate = _extractBirthDateFromDriversLicense(lines) ??
-            _extractGenericBirthDate(lines);
-        final gender = _extractGenderFromDriversLicense(lines) ??
-            _extractGenericGender(lines);
-        if (driverName != null || birthDate != null || gender != null) {
-          return IdScanResult(
-            extractedName: driverName,
-            extractedBirthDate: birthDate,
-            extractedGender: gender,
-            extractedFirstName: firstName,
-            extractedMiddleName: middleName,
-            extractedLastName: lastName,
-            detectedIdType: detectedIdType,
-            matchesSelectedType: detectedIdType == 'driver_license' ||
-                detectedIdType == 'unknown',
-          );
+        final result = _parseDriversLicenseFields(lines, detectedIdType);
+        if (result.extractedName != null ||
+            result.extractedBirthDate != null ||
+            result.extractedGender != null) {
+          return result;
         }
 
         return IdScanResult(
@@ -385,6 +358,135 @@ class IdScanService {
     return null;
   }
 
+  IdScanResult _parseDriversLicenseFields(List<String> lines, String detectedIdType) {
+    String? firstName;
+    String? middleName;
+    String? lastName;
+    String? fullName;
+
+    // Check if the label "last name. first name. middle name" is present on a line.
+    final nameLabelIndex = lines.indexWhere((line) {
+      final l = line.toLowerCase();
+      return (l.contains('last name') || l.contains('lastname') || l.contains('surname')) &&
+             (l.contains('first name') || l.contains('firstname') || l.contains('given name') || l.contains('givennames')) &&
+             (l.contains('middle name') || l.contains('middlename'));
+    });
+
+    String? nameLine;
+    if (nameLabelIndex != -1) {
+      for (int i = nameLabelIndex + 1; i < lines.length; i++) {
+        final candidate = lines[i].trim();
+        if (candidate.isNotEmpty) {
+          if (!_containsAny(candidate.toLowerCase(), _allFieldLabels)) {
+            nameLine = candidate;
+            break;
+          }
+        }
+      }
+    }
+
+    // Fallback: search all lines for a name-like line with a comma
+    if (nameLine == null) {
+      for (final line in lines) {
+        final clean = line.trim();
+        if (clean.contains(',') &&
+            clean.length >= 5 &&
+            !_containsAny(clean.toLowerCase(), _allFieldLabels) &&
+            !_containsAny(clean.toLowerCase(), ['address', 'street', 'city', 'brgy', 'barangay', 'phl', 'agency', 'licence', 'license'])) {
+          nameLine = clean;
+          break;
+        }
+      }
+    }
+
+    if (nameLine != null) {
+      if (nameLine.contains(',')) {
+        final parts = nameLine.split(',');
+        if (parts.length >= 2) {
+          lastName = parts[0].trim();
+          final rest = parts.sublist(1).join(' ').trim();
+          final words = rest.split(RegExp(r'\s+')).where((w) => w.trim().isNotEmpty).toList();
+          if (words.length >= 2) {
+            middleName = words.last;
+            firstName = words.sublist(0, words.length - 1).join(' ');
+          } else if (words.isNotEmpty) {
+            firstName = words.first;
+          }
+        }
+      } else {
+        final words = nameLine.split(RegExp(r'\s+')).where((w) => w.trim().isNotEmpty).toList();
+        if (words.length == 3) {
+          lastName = words[0];
+          firstName = words[1];
+          middleName = words[2];
+        } else if (words.length == 2) {
+          lastName = words[0];
+          firstName = words[1];
+        } else if (words.isNotEmpty) {
+          lastName = words.join(' ');
+        }
+      }
+    }
+
+    // Clean extracted names
+    firstName = firstName != null ? _cleanName(firstName) : null;
+    middleName = middleName != null ? _cleanName(middleName) : null;
+    lastName = lastName != null ? _cleanName(lastName) : null;
+
+    if (firstName != null && firstName.isEmpty) firstName = null;
+    if (middleName != null && middleName.isEmpty) middleName = null;
+    if (lastName != null && lastName.isEmpty) lastName = null;
+
+    // Fallbacks if not extracted via label line
+    if (firstName == null) {
+      final val = _extractNextValueAfterLabel(lines, ['first name', 'given name', 'firstname']);
+      if (val != null && !_containsAny(val.toLowerCase(), _allFieldLabels) && !val.contains(',')) {
+        firstName = _cleanName(val);
+      }
+    }
+    if (middleName == null) {
+      final val = _extractNextValueAfterLabel(lines, ['middle name', 'middlename']);
+      if (val != null && !_containsAny(val.toLowerCase(), _allFieldLabels) && !val.contains(',')) {
+        middleName = _cleanName(val);
+      }
+    }
+    if (lastName == null) {
+      final val = _extractNextValueAfterLabel(lines, ['last name', 'surname', 'lastname']);
+      if (val != null && !_containsAny(val.toLowerCase(), _allFieldLabels) && !val.contains(',')) {
+        lastName = _cleanName(val);
+      }
+    }
+
+    // Reconstruct full name in "FIRSTNAME MIDDLENAME LASTNAME" order.
+    final parts = <String>[];
+    if (firstName != null) parts.add(firstName);
+    if (middleName != null && middleName != firstName) parts.add(middleName);
+    if (lastName != null) parts.add(lastName);
+
+    if (parts.isNotEmpty) {
+      fullName = parts.join(' ');
+    } else {
+      fullName = _extractFromDriversLicense(lines);
+    }
+
+    // Strict Date of Birth Extraction
+    String? birthDate = _extractBirthDateFromDriversLicense(lines) ?? _extractGenericBirthDate(lines);
+
+    // Strict Gender/Sex Extraction
+    String? gender = _extractGenderFromDriversLicense(lines) ?? _extractGenericGender(lines);
+
+    return IdScanResult(
+      extractedName: fullName,
+      extractedBirthDate: birthDate,
+      extractedGender: gender,
+      extractedFirstName: firstName,
+      extractedMiddleName: middleName,
+      extractedLastName: lastName,
+      detectedIdType: detectedIdType,
+      matchesSelectedType: detectedIdType == 'driver_license' || detectedIdType == 'unknown',
+    );
+  }
+
   String? _extractBirthDateFromPhilSys(List<String> lines) {
     return _extractBirthDateByLabels(lines, const [
       'date of birth',
@@ -514,7 +616,7 @@ class IdScanService {
     if (byLabel != null) return byLabel;
 
     for (final line in lines) {
-      final normalized = _normalizeDateString(line);
+      final normalized = _normalizeDateString(line, isBirthDate: true);
       if (normalized != null) return normalized;
     }
 
@@ -523,24 +625,24 @@ class IdScanService {
 
   String? _extractBirthDateByLabels(List<String> lines, List<String> labels) {
     final inline = _extractValueForLabels(lines, labels);
-    final inlineDate = _normalizeDateString(inline);
+    final inlineDate = _normalizeDateString(inline, isBirthDate: true);
     if (inlineDate != null) return inlineDate;
 
     final nextValue = _extractNextValueAfterLabel(lines, labels);
-    final nextDate = _normalizeDateString(nextValue);
+    final nextDate = _normalizeDateString(nextValue, isBirthDate: true);
     if (nextDate != null) return nextDate;
 
     for (final line in lines) {
       final lower = line.toLowerCase();
       if (!_containsAny(lower, labels)) continue;
-      final date = _normalizeDateString(line);
+      final date = _normalizeDateString(line, isBirthDate: true);
       if (date != null) return date;
     }
 
     return null;
   }
 
-  String? _normalizeDateString(String? raw) {
+  String? _normalizeDateString(String? raw, {bool isBirthDate = false}) {
     if (raw == null) return null;
 
     final text = raw
@@ -549,6 +651,11 @@ class IdScanService {
         .replaceAll('.', '/')
         .replaceAll(RegExp(r'\s+'), ' ');
     if (text.isEmpty) return null;
+
+    final currentYear = DateTime.now().year;
+    bool isValidDobYear(int y) {
+      return y > (currentYear - 100) && y <= (currentYear - 15);
+    }
 
     final ocrFixedText = _fixOcrDateChars(text);
 
@@ -561,8 +668,10 @@ class IdScanService {
       final month = _monthToNumber(monthFirst.group(1)!);
       final day = int.tryParse(monthFirst.group(2)!);
       final year = _expandYear(int.tryParse(monthFirst.group(3)!));
-      final iso = _toIsoDate(year, month, day);
-      if (iso != null) return iso;
+      if (year != null && (!isBirthDate || isValidDobYear(year))) {
+        final iso = _toIsoDate(year, month, day);
+        if (iso != null) return iso;
+      }
     }
 
     final dayMonthWordRegex = RegExp(
@@ -574,8 +683,10 @@ class IdScanService {
       final day = int.tryParse(dayMonthWord.group(1)!);
       final month = _monthToNumber(dayMonthWord.group(2)!);
       final year = _expandYear(int.tryParse(dayMonthWord.group(3)!));
-      final iso = _toIsoDate(year, month, day);
-      if (iso != null) return iso;
+      if (year != null && (!isBirthDate || isValidDobYear(year))) {
+        final iso = _toIsoDate(year, month, day);
+        if (iso != null) return iso;
+      }
     }
 
     final numericRegex = RegExp(r'(\d{1,4})[\-/](\d{1,2})[\-/](\d{1,4})');
@@ -587,12 +698,14 @@ class IdScanService {
 
       if (a != null && b != null && c != null) {
         if (numeric.group(1)!.length == 4) {
-          final iso = _toIsoDate(a, b, c);
-          if (iso != null) return iso;
+          if (!isBirthDate || isValidDobYear(a)) {
+            final iso = _toIsoDate(a, b, c);
+            if (iso != null) return iso;
+          }
         }
 
         final year = _expandYear(c);
-        if (year != null) {
+        if (year != null && (!isBirthDate || isValidDobYear(year))) {
           if (a > 12 && b <= 12) {
             final iso = _toIsoDate(year, b, a);
             if (iso != null) return iso;
@@ -1165,38 +1278,7 @@ class IdScanService {
 
       if (normalizedIdType.contains('driver') ||
           normalizedIdType.contains('license')) {
-        final firstName = _extractNextValueAfterLabel(lines, [
-          'first name',
-          'given name',
-          'firstname',
-        ]);
-        final middleName = _extractNextValueAfterLabel(lines, [
-          'middle name',
-          'middlename',
-        ]);
-        final lastName = _extractNextValueAfterLabel(lines, [
-          'last name',
-          'surname',
-          'lastname',
-        ]);
-
-        final driverName = _extractFromDriversLicense(lines);
-        final birthDate = _extractBirthDateFromDriversLicense(lines) ??
-            _extractGenericBirthDate(lines);
-        final gender = _extractGenderFromDriversLicense(lines) ??
-            _extractGenericGender(lines);
-
-        return IdScanResult(
-          extractedName: driverName,
-          extractedBirthDate: birthDate,
-          extractedGender: gender,
-          extractedFirstName: firstName,
-          extractedMiddleName: middleName,
-          extractedLastName: lastName,
-          detectedIdType: detectedIdType,
-          matchesSelectedType: detectedIdType == 'driver_license' ||
-              detectedIdType == 'unknown',
-        );
+        return _parseDriversLicenseFields(lines, detectedIdType);
       }
 
       final genericName = _extractGenericName(lines);
@@ -1299,7 +1381,7 @@ class IdScanService {
         }
 
         final genderNormalized = _normalizeGenderValue(sex);
-        final dobNormalized = _normalizeDateString(dob);
+        final dobNormalized = _normalizeDateString(dob, isBirthDate: true);
 
         return IdScanResult(
           detectedIdType: 'philsys_qr',

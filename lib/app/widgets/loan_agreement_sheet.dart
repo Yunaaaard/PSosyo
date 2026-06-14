@@ -152,7 +152,7 @@ class _LoanAgreementSheetState extends State<LoanAgreementSheet> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'PESOPAQ Loan Agreement',
+                        'Paqner Loan Agreement',
                         style: TextStyle(
                           color: Colors.black,
                           fontSize: 30,
@@ -203,7 +203,7 @@ class _LoanAgreementSheetState extends State<LoanAgreementSheet> {
                       ),
                       const SizedBox(height: 24),
                       const Text(
-                        'PESOPAQ Terms and Condition',
+                        'Paqner Terms and Condition',
                         style: TextStyle(
                           color: Colors.black,
                           fontSize: 26,

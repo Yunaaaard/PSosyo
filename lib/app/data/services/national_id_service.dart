@@ -13,8 +13,8 @@ class NationalIdService {
     return _scanService.extractNameFromPhilSysImage(imageFile);
   }
 
-  Future<IdScanResult> scanFrontInputImage(InputImage image) {
-    return _scanService.scanInputImage(image, idType: 'philsys');
+  Future<IdScanResult> scanFrontInputImage(InputImage image, {String? idType}) {
+    return _scanService.scanInputImage(image, idType: idType ?? 'philsys');
   }
 
   Future<String?> readBackQrRaw(XFile imageFile) {

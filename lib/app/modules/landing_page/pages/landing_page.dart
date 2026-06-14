@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:p_sosyo/app/core/themes/theme_colors.dart';
 
@@ -10,7 +9,6 @@ class LandingPage extends GetView<LandingController> {
 
   @override
   Widget build(BuildContext context) {
-    // Touch controller so splash navigation timer always starts.
     controller;
 
     return Scaffold(

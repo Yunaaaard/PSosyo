@@ -30,8 +30,8 @@ class DashboardController extends GetxController {
   }
 
   void _initializeStats() {
-    totalOrderedValue = RxString('0,000.00');
-    totalProducts = RxString('2,028 SKU\'s');
+    totalOrderedValue = RxString('9,000.00');
+    totalProducts = RxString('36 SKU\'s');
   }
 
   void _initializeBrandCategories() {

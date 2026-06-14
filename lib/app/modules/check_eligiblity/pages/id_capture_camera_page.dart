@@ -41,6 +41,7 @@ class _IdCaptureCameraPageState extends State<IdCaptureCameraPage> with SingleTi
 
   final NationalIdService _nationalIdService = NationalIdService();
   bool _isProcessingFrame = false;
+  bool _isFlashOn = false;
 
   @override
   void initState() {
@@ -123,7 +124,10 @@ class _IdCaptureCameraPageState extends State<IdCaptureCameraPage> with SingleTi
       );
 
       if (widget.isFront) {
-        final scanResult = await _nationalIdService.scanFrontInputImage(inputImage);
+        final scanResult = await _nationalIdService.scanFrontInputImage(
+          inputImage,
+          idType: widget.idType,
+        );
         if (mounted) {
           setState(() {
             _firstNameDetected = scanResult.extractedFirstName != null && scanResult.extractedFirstName!.trim().isNotEmpty;
@@ -198,6 +202,19 @@ class _IdCaptureCameraPageState extends State<IdCaptureCameraPage> with SingleTi
           _isCapturing = false;
         });
       }
+    }
+  }
+
+  Future<void> _toggleFlash() async {
+    if (_controller == null || !_controller!.value.isInitialized) return;
+    try {
+      final newFlashMode = _isFlashOn ? FlashMode.off : FlashMode.torch;
+      await _controller!.setFlashMode(newFlashMode);
+      setState(() {
+        _isFlashOn = !_isFlashOn;
+      });
+    } catch (e) {
+      print('Error toggling flash: $e');
     }
   }
 
@@ -472,14 +489,10 @@ class _IdCaptureCameraPageState extends State<IdCaptureCameraPage> with SingleTi
                               ),
                             ),
                             _ControlButton(
-                              icon: Icons.help_outline_rounded,
-                              onTap: () {
-                                Get.snackbar(
-                                  'Tip',
-                                  'Keep the ID flat, well-lit, and fully inside the frame.',
-                                  snackPosition: SnackPosition.BOTTOM,
-                                );
-                              },
+                              icon: _isFlashOn
+                                  ? Icons.flash_on_rounded
+                                  : Icons.flash_off_rounded,
+                              onTap: _toggleFlash,
                             ),
                           ],
                         ),

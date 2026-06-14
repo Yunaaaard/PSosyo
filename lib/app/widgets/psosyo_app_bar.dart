@@ -4,13 +4,13 @@ import 'package:get/get.dart';
 class PsosyoAppBar extends StatelessWidget implements PreferredSizeWidget {
   const PsosyoAppBar({
     super.key,
-    this.title = 'PAQNER',
+    this.title = 'paqner',
     this.onBack,
     this.showBackButton = true,
     this.backgroundColor = Colors.transparent,
     this.titleColor = const Color(0xFF6B3DF0),
     this.iconColor = const Color(0xFFB9B9C1),
-    this.titleFontSize = 26,
+    this.titleFontSize = 30,
     this.height = 62,
   });
 
@@ -49,8 +49,9 @@ class PsosyoAppBar extends StatelessWidget implements PreferredSizeWidget {
               title,
               textAlign: TextAlign.center,
               style: TextStyle(
+                fontFamily: "Blinko - Demo",
                 fontSize: titleFontSize,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w700,
                 color: titleColor,
                 letterSpacing: 0.4,
               ),

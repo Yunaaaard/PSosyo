@@ -296,7 +296,7 @@ class LoanDetailsSheet extends StatelessWidget {
                             child: SingleChildScrollView(
                               child: ScanSuccessReceiptCard(
                                 qrData: qrData,
-                                from: fromName ?? 'MIKEL ROBBIE GARCIA ABOYME',
+                                from: fromName ?? 'JOHN DOE',
                                 to: principalTitle,
                                 referenceId: referenceId,
                                 formattedDateTime: appliedDateTime,
