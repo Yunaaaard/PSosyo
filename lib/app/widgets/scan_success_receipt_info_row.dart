@@ -18,7 +18,7 @@ class ScanSuccessReceiptInfoRow extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         SizedBox(
-          width: 90 * scale,
+          width: 100 * scale,
           child: Text(
             label,
             style: TextStyle(

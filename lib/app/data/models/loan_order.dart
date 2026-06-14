@@ -19,6 +19,7 @@ class LoanOrderCard {
     required this.dueAt,
     required this.originalAmount,
     required this.remainingAmount,
+    this.rawPayload = '',
   });
 
   final String title;
@@ -28,6 +29,7 @@ class LoanOrderCard {
   final DateTime dueAt;
   final double originalAmount;
   double remainingAmount;
+  final String rawPayload;
 
   String get appliedDateTime => formatLoanDate(appliedAt);
   String get dueDateTime => formatLoanDate(dueAt);

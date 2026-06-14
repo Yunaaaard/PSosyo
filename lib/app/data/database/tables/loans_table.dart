@@ -330,6 +330,7 @@ class LoansTable {
           DateTime.now(),
       originalAmount: _doubleValue(row['amount_due']) ?? 0,
       remainingAmount: _doubleValue(row['remaining_amount']) ?? 0,
+      rawPayload: row['raw_payload']?.toString() ?? '',
     );
   }
 

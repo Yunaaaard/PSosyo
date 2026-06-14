@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:p_sosyo/app/data/models/loan_item_record.dart';
+import 'package:p_sosyo/app/widgets/scan_success_receipt_card.dart';
 
 class LoanDetailsSheet extends StatelessWidget {
   const LoanDetailsSheet({
@@ -11,6 +13,8 @@ class LoanDetailsSheet extends StatelessWidget {
     required this.dueDateTime,
     required this.amountDue,
     required this.items,
+    this.rawPayload,
+    this.fromName,
   });
 
   final String principalTitle;
@@ -19,6 +23,8 @@ class LoanDetailsSheet extends StatelessWidget {
   final String dueDateTime;
   final String amountDue;
   final List<LoanItemRecord> items;
+  final String? rawPayload;
+  final String? fromName;
 
   @override
   Widget build(BuildContext context) {
@@ -262,6 +268,72 @@ class LoanDetailsSheet extends StatelessWidget {
                           );
                         },
                       ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            ElevatedButton.icon(
+              onPressed: () {
+                final String qrData = (rawPayload != null && rawPayload!.isNotEmpty)
+                    ? rawPayload!
+                    : jsonEncode({
+                        'referenceId': referenceId,
+                        'principalTitle': principalTitle,
+                        'amountDue': _parseAmount(amountDue),
+                        'dueDate': dueDateTime,
+                      });
+
+                showDialog<void>(
+                  context: context,
+                  builder: (context) {
+                    return Dialog(
+                      backgroundColor: Colors.transparent,
+                      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+                      child: Stack(
+                        alignment: Alignment.topCenter,
+                        children: [
+                          Container(
+                            margin: const EdgeInsets.only(top: 24),
+                            child: SingleChildScrollView(
+                              child: ScanSuccessReceiptCard(
+                                qrData: qrData,
+                                from: fromName ?? 'MIKEL ROBBIE GARCIA ABOYME',
+                                to: principalTitle,
+                                referenceId: referenceId,
+                                formattedDateTime: appliedDateTime,
+                                amountSent: amountDue,
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            top: 0,
+                            right: 12,
+                            child: CircleAvatar(
+                              backgroundColor: Colors.black.withOpacity(0.5),
+                              radius: 18,
+                              child: IconButton(
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                                icon: const Icon(Icons.close, color: Colors.white, size: 20),
+                                onPressed: () => Navigator.of(context).pop(),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                );
+              },
+              icon: const Icon(Icons.qr_code_2_rounded),
+              label: const Text('View Receipt & QR Code'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF6B3DF0),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                elevation: 0,
               ),
             ),
           ],

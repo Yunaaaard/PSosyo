@@ -1052,6 +1052,8 @@ class HomeController extends GetxController {
         dueDateTime: order.dueDateTime,
         amountDue: order.amountDueText,
         items: items,
+        rawPayload: order.rawPayload,
+        fromName: displayUserName,
       ),
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
