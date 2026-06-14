@@ -90,37 +90,23 @@ class ScanSuccessController extends GetxController {
 
   String get dueDate => resolvedLoanOrder.value?.dueAt.toIso8601String() ?? receipt.dueDate;
 
-  List<dynamic>? get products => receipt.products;
+List<dynamic> get products => receipt.products;
 
-  String? get paymentReference => receipt.paymentReference;
+  String get paymentReference => receipt.paymentReference;
 
-  /// The enriched QR data JSON with from/to/refNo/date nested in.
-  String get enrichedQrData {
-    final Map<String, dynamic> base = Map<String, dynamic>.from(receipt.parsedQrBase);
-    base.remove('products');
+String get enrichedQrData {
+  final Map<String, dynamic> base =
+      Map<String, dynamic>.from(receipt.parsedQrBase);
 
-    // Customer app expected/display properties
-    base['from'] = senderName.value;
-    base['to'] = recipientName;
-    base['referenceId'] = receipt.referenceId;
-    base['date'] = receipt.dateTime ?? '';
-    base['amountSent'] = amountDueFromQr;
-    if (paymentReference != null && paymentReference!.isNotEmpty) {
-      base['payment_reference'] = paymentReference;
-    }
+  base.remove('referenceId');
+  base.remove('reference_id');
+  base.remove('id');
 
-    // Driver app expected parser properties
-    base['id'] = receipt.referenceId;
-    base['amount'] = amountDueFromQr;
-    base['metadata'] = {
-      'customer_name': senderName.value,
-      if (paymentReference != null && paymentReference!.isNotEmpty)
-        'payment_reference': paymentReference,
-    };
-    base['created'] = receipt.dateTime ?? '';
+  base['ReferenceID'] = receipt.referenceId;
+  base['payment_reference'] = paymentReference;
 
-    return jsonEncode(base);
-  }
+  return jsonEncode(base);
+}
 
   String get formattedAppliedDate {
     if (appliedDate.isEmpty) {
@@ -180,69 +166,49 @@ class ScanSuccessController extends GetxController {
   }
 
   String? _extractReferenceIdFromQrData(String value) {
-    final trimmed = value.trim();
-    if (trimmed.isEmpty) {
-      return null;
-    }
+  final trimmed = value.trim();
 
-    final uri = Uri.tryParse(trimmed);
-    if (uri != null) {
-      for (final key in <String>[
-        'referenceId',
-        'reference_id',
-        'ReferenceID',
-        'id'
-      ]) {
-        final queryValue = uri.queryParameters[key];
-        if (queryValue != null && queryValue.trim().isNotEmpty) {
-          return queryValue.trim();
-        }
-      }
-
-      final lastSegment = uri.pathSegments.isNotEmpty ? uri.pathSegments.last.trim() : '';
-      if (lastSegment.isNotEmpty) {
-        return lastSegment;
-      }
-    }
-
-    return trimmed;
-  }
-
-  String? _referenceFromUri(Uri? uri) {
-    if (uri == null) {
-      return null;
-    }
-
-    if (uri.scheme != 'http' && uri.scheme != 'https') {
-      return null;
-    }
-
-    for (final String key in <String>[
-      'referenceId',
-      'reference_id',
-      'ReferenceID',
-      'ref',
-      'orderId',
-      'id'
-    ]) {
-      final String? value = uri.queryParameters[key];
-      if (value != null && value.isNotEmpty) {
-        return value;
-      }
-    }
-
-    final String pathDigits = uri.path.replaceAll(RegExp(r'[^0-9]'), '');
-    if (pathDigits.isNotEmpty) {
-      return pathDigits;
-    }
-
-    final String queryDigits = uri.query.replaceAll(RegExp(r'[^0-9]'), '');
-    if (queryDigits.isNotEmpty) {
-      return queryDigits;
-    }
-
+  if (trimmed.isEmpty) {
     return null;
   }
+
+  final uri = Uri.tryParse(trimmed);
+
+  if (uri != null) {
+    final queryValue = uri.queryParameters['ReferenceID'];
+
+    if (queryValue != null && queryValue.trim().isNotEmpty) {
+      return queryValue.trim();
+    }
+
+    final lastSegment =
+        uri.pathSegments.isNotEmpty ? uri.pathSegments.last.trim() : '';
+
+    if (lastSegment.isNotEmpty) {
+      return lastSegment;
+    }
+  }
+
+  return trimmed;
+}
+
+  String? _referenceFromUri(Uri? uri) {
+  if (uri == null) {
+    return null;
+  }
+
+  if (uri.scheme != 'http' && uri.scheme != 'https') {
+    return null;
+  }
+
+  final value = uri.queryParameters['ReferenceID'];
+
+  if (value != null && value.isNotEmpty) {
+    return value;
+  }
+
+  return null;
+}
 
   String formatMoney(double amount) {
     return amount.toStringAsFixed(2).replaceAllMapped(

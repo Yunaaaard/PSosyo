@@ -17,7 +17,7 @@ class ScanSuccessReceiptModel {
     required this.appliedDate,
     required this.dueDate,
     required this.products,
-    this.paymentReference,
+    required this.paymentReference,
   });
 
   factory ScanSuccessReceiptModel.fromQrData({
@@ -29,27 +29,28 @@ class ScanSuccessReceiptModel {
     double amountSent = 1834.08,
   }) {
     final Map<String, dynamic>? parsedQrJson = _parseQrJson(qrData);
+
+    // Use only ReferenceID from QR payload
     final String resolvedReference = referenceId != null &&
             referenceId.trim().isNotEmpty
         ? referenceId.trim()
-        : _stringValue(parsedQrJson?['referenceId']) ??
-            _stringValue(parsedQrJson?['ReferenceID']) ??
-            _stringValue(parsedQrJson?['reference_id']) ??
-            'N/A';
+        : _stringValue(parsedQrJson?['ReferenceID']) ?? 'N/A';
 
     // Use current date/time if not provided
-    final String resolvedDateTime = dateTime ??
-        DateFormat('yyyy-MM-ddTHH:mm:ss').format(DateTime.now());
+    final String resolvedDateTime =
+        dateTime ?? DateFormat('yyyy-MM-ddTHH:mm:ss').format(DateTime.now());
 
     // Resolve sender and receiver
     final String resolvedFrom = from ?? 'MIKEL ROBBIE GARCIA ABOYME';
-    final String resolvedTo = _stringValue(parsedQrJson?['principalTitle']) ?? to ?? '';
+    final String resolvedTo =
+        _stringValue(parsedQrJson?['principalTitle']) ?? to ?? '';
 
-    final String? resolvedPaymentReference =
-        _stringValue(parsedQrJson?['payment_reference']) ??
-            _stringValue(parsedQrJson?['paymentReference']) ??
-            _stringValue(parsedQrJson?['payment_reference_id']) ??
-            _stringValue(parsedQrJson?['paymentReferenceId']);
+   final String resolvedPaymentReference =
+    _stringValue(parsedQrJson?['payment_reference']) ??
+        _stringValue(parsedQrJson?['paymentReference']) ??
+        _stringValue(parsedQrJson?['payment_reference_id']) ??
+        _stringValue(parsedQrJson?['paymentReferenceId']) ??
+        _generatePaymentReference();
 
     return ScanSuccessReceiptModel._(
       qrData: qrData,
@@ -58,20 +59,32 @@ class ScanSuccessReceiptModel {
       referenceId: resolvedReference,
       dateTime: resolvedDateTime,
       amountSent: amountSent,
-      principalTitle: _stringValue(parsedQrJson?['principalTitle']) ?? to ?? '',
+      principalTitle:
+          _stringValue(parsedQrJson?['principalTitle']) ?? to ?? '',
       principalLogo:
-          principalLogoUrlForTitle(_stringValue(parsedQrJson?['principalTitle']) ?? to) ??
-            _stringValue(parsedQrJson?['principalLogo']) ??
-            '',
-      amountDueFromQr: (parsedQrJson?['amountDue'] as num?)?.toDouble() ??
+          principalLogoUrlForTitle(
+                _stringValue(parsedQrJson?['principalTitle']) ?? to,
+              ) ??
+              _stringValue(parsedQrJson?['principalLogo']) ??
+              '',
+      amountDueFromQr:
+          (parsedQrJson?['amountDue'] as num?)?.toDouble() ??
           (parsedQrJson?['amount_due'] as num?)?.toDouble() ??
           (parsedQrJson?['amount'] as num?)?.toDouble() ??
           (parsedQrJson?['totalAmount'] as num?)?.toDouble() ??
           (parsedQrJson?['total_amount'] as num?)?.toDouble() ??
           amountSent,
-      appliedDate: _stringValue(parsedQrJson?['appliedDate']) ?? _stringValue(parsedQrJson?['applied_date']) ?? '',
-      dueDate: _stringValue(parsedQrJson?['dueDate']) ?? _stringValue(parsedQrJson?['due_date']) ?? '',
-      products: parsedQrJson?['products'] as List<dynamic>? ?? const [],
+      appliedDate:
+          _stringValue(parsedQrJson?['appliedDate']) ??
+          _stringValue(parsedQrJson?['applied_date']) ??
+          '',
+      dueDate:
+          _stringValue(parsedQrJson?['dueDate']) ??
+          _stringValue(parsedQrJson?['due_date']) ??
+          '',
+      products: parsedQrJson?['products'] is List
+          ? parsedQrJson!['products'] as List<dynamic>
+          : const [],
       paymentReference: resolvedPaymentReference,
     );
   }
@@ -88,23 +101,29 @@ class ScanSuccessReceiptModel {
   final String appliedDate;
   final String dueDate;
   final List<dynamic> products;
-  final String? paymentReference;
+  final String paymentReference;
 
   /// Returns the parsed base QR JSON map for external enrichment.
   Map<String, dynamic> get parsedQrBase => _parseQrJson(qrData) ?? {};
 
-  /// Builds an enriched QR JSON string that nests payment details into the loan payload.
-  /// alongside the original loan payload data.
+  /// Builds an enriched QR JSON string using only ReferenceID.
   String get enrichedQrData {
     final Map<String, dynamic> base = parsedQrBase;
+
+    // Ensure only one reference key exists
+    base.remove('referenceId');
+    base.remove('reference_id');
+    base['ReferenceID'] = referenceId;
+
     base['from'] = from ?? 'MIKEL ROBBIE GARCIA ABOYME';
     base['to'] = to ?? principalTitle;
-    base['referenceId'] = referenceId;
     base['date'] = dateTime ?? '';
     base['amountSent'] = amountSent;
+
     if (paymentReference != null && paymentReference!.isNotEmpty) {
       base['payment_reference'] = paymentReference;
     }
+
     return jsonEncode(base);
   }
 
@@ -122,4 +141,16 @@ class ScanSuccessReceiptModel {
     }
     return null;
   }
+  
+  static String _generatePaymentReference() {
+  final now = DateTime.now();
+
+  return '${now.year.toString().substring(2)}'
+      '${now.month.toString().padLeft(2, '0')}'
+      '${now.day.toString().padLeft(2, '0')}'
+      '${now.hour.toString().padLeft(2, '0')}'
+      '${now.minute.toString().padLeft(2, '0')}'
+      '${now.second.toString().padLeft(2, '0')}';
+}
+
 }

@@ -20,7 +20,7 @@ class QrPaymentPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF6F6F8),
       appBar: const PsosyoAppBar(
-        title: 'Psosyo Pay',
+        title: 'Paqner Pay',
         titleColor: Color(0xFF4B4F57),
         iconColor: Color(0xFFC7CCD4),
         titleFontSize: 20,
@@ -71,7 +71,7 @@ class QrPaymentPage extends StatelessWidget {
                     child: Center(
                       child: Obx(() {
                         final payload = jsonEncode({
-                          'type': 'psosyo_payment_test',
+                          'type': 'paqner_payment_test',
                           'referenceId': controller.referenceId,
                           'amount': controller.orderedAmount,
                           'name': _firstNameOnly(_currentName()),
