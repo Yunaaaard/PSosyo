@@ -18,7 +18,7 @@ class LandingPage extends GetView<LandingController> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Image.asset(
-              'assets/images/PSosyo-Logo.png',
+              'assets/images/PSOSYO-LOGO.png',
               width: 200,
               height: 200,
             ),

@@ -273,14 +273,30 @@ class LoanDetailsSheet extends StatelessWidget {
             const SizedBox(height: 12),
             ElevatedButton.icon(
               onPressed: () {
-                final String qrData = (rawPayload != null && rawPayload!.isNotEmpty)
-                    ? rawPayload!
-                    : jsonEncode({
-                        'referenceId': referenceId,
-                        'principalTitle': principalTitle,
-                        'amountDue': _parseAmount(amountDue),
-                        'dueDate': dueDateTime,
-                      });
+                // Extract or generate paymentReference
+                final String paymentRef = _resolvePaymentReference(rawPayload);
+
+                String qrData;
+                if (rawPayload != null && rawPayload!.isNotEmpty) {
+                  // Enrich existing payload with paymentReference
+                  try {
+                    final Map<String, dynamic> base =
+                        jsonDecode(rawPayload!) as Map<String, dynamic>;
+                    base['payment_reference'] = paymentRef;
+                    base['ReferenceID'] = referenceId;
+                    qrData = jsonEncode(base);
+                  } catch (_) {
+                    qrData = rawPayload!;
+                  }
+                } else {
+                  qrData = jsonEncode({
+                    'ReferenceID': referenceId,
+                    'principalTitle': principalTitle,
+                    'amountDue': _parseAmount(amountDue),
+                    'dueDate': dueDateTime,
+                    'payment_reference': paymentRef,
+                  });
+                }
 
                 showDialog<void>(
                   context: context,
@@ -301,6 +317,7 @@ class LoanDetailsSheet extends StatelessWidget {
                                 referenceId: referenceId,
                                 formattedDateTime: appliedDateTime,
                                 amountSent: amountDue,
+                                paymentReference: paymentRef,
                               ),
                             ),
                           ),
@@ -344,6 +361,33 @@ class LoanDetailsSheet extends StatelessWidget {
 
   double _parseAmount(String value) {
     return double.tryParse(value.replaceAll(',', '').trim()) ?? 0;
+  }
+
+  /// Tries to extract `paymentReference` from an existing raw QR payload JSON.
+  /// If not found, generates one in the `YYMMDDHHmmss` format that matches
+  /// [ScanSuccessReceiptModel._generatePaymentReference].
+  static String _resolvePaymentReference(String? rawPayload) {
+    if (rawPayload != null && rawPayload.isNotEmpty) {
+      try {
+        final Map<String, dynamic> parsed =
+            jsonDecode(rawPayload) as Map<String, dynamic>;
+        final ref = parsed['payment_reference'] ??
+            parsed['paymentReference'] ??
+            parsed['payment_reference_id'] ??
+            parsed['paymentReferenceId'];
+        if (ref is String && ref.trim().isNotEmpty) {
+          return ref.trim();
+        }
+      } catch (_) {}
+    }
+    // Generate in the same format: YYMMDDHHmmss
+    final now = DateTime.now();
+    return '${now.year.toString().substring(2)}'
+        '${now.month.toString().padLeft(2, '0')}'
+        '${now.day.toString().padLeft(2, '0')}'
+        '${now.hour.toString().padLeft(2, '0')}'
+        '${now.minute.toString().padLeft(2, '0')}'
+        '${now.second.toString().padLeft(2, '0')}';
   }
 }
 
