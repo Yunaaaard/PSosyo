@@ -69,7 +69,7 @@ class HomeScreen extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             const Text(
-                              'Scan QR with Paqner',
+                              'Scan QR with Pesopaq',
                               style: TextStyle(
                                 color: Color(0xFF6B3DF0),
                                 fontSize: 17,
@@ -106,7 +106,7 @@ class HomeScreen extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text(
-                          'Paqner Balance',
+                          'Pesopaq Balance',
                           style: TextStyle(
                             fontSize: 21,
                             fontWeight: FontWeight.w500,

@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 class PsosyoAppBar extends StatelessWidget implements PreferredSizeWidget {
   const PsosyoAppBar({
     super.key,
-    this.title = 'paqner',
+    this.title = 'Pesopaq',
     this.onBack,
     this.showBackButton = true,
     this.backgroundColor = Colors.transparent,

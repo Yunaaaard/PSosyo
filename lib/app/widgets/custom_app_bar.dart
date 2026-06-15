@@ -4,7 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
 
-  const CustomAppBar({Key? key, this.title = 'paqner'}) : super(key: key);
+  const CustomAppBar({Key? key, this.title = 'Pesopaq'}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
