@@ -1,6 +1,7 @@
 import 'package:p_sosyo/app/data/database/tables/loan_items_table.dart';
 import 'package:p_sosyo/app/data/database/tables/loans_table.dart';
 import 'package:p_sosyo/app/data/database/tables/payment_requests_table.dart';
+import 'package:p_sosyo/app/data/database/tables/used_gcash_receipts_table.dart';
 import 'package:p_sosyo/app/data/database/tables/users_table.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -12,6 +13,7 @@ class PsosyoDbCreator {
     await LoansTable.create(db);
     await LoanItemsTable.create(db);
     await PaymentRequestsTable.create(db);
+    await UsedGcashReceiptsTable.create(db);
 
     await db.execute(
       'CREATE INDEX idx_loans_principal_status ON loans(principal_title, status)',
@@ -34,6 +36,9 @@ class PsosyoDbCreator {
     }
     if (oldVersion < 5 && newVersion >= 5) {
       await _upgradeTo5(db);
+    }
+    if (oldVersion < 6 && newVersion >= 6) {
+      await _upgradeTo6(db);
     }
   }
 
@@ -198,6 +203,14 @@ class PsosyoDbCreator {
 
     await db.execute('COMMIT');
     await db.execute('PRAGMA foreign_keys = ON');
+  }
+
+  static Future<void> _upgradeTo6(Database db) async {
+    await UsedGcashReceiptsTable.create(db);
+    await db.execute(
+      'CREATE UNIQUE INDEX IF NOT EXISTS idx_used_gcash_reference_id '
+      'ON ${UsedGcashReceiptsTable.tableName}(gcash_reference_id)',
+    );
   }
 
   // static Future<void> upgrade(

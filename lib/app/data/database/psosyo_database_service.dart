@@ -3,6 +3,7 @@ import 'package:p_sosyo/app/data/database/psosyo_db_helper.dart';
 import 'package:p_sosyo/app/data/database/tables/loan_items_table.dart';
 import 'package:p_sosyo/app/data/database/tables/loans_table.dart';
 import 'package:p_sosyo/app/data/database/tables/payment_requests_table.dart';
+import 'package:p_sosyo/app/data/database/tables/used_gcash_receipts_table.dart';
 import 'package:p_sosyo/app/data/database/tables/users_table.dart';
 import 'package:p_sosyo/app/data/models/loan_import_result.dart';
 import 'package:p_sosyo/app/data/models/loan_item_record.dart';
@@ -15,6 +16,7 @@ class PsosyoDatabaseService extends GetxService {
   late final LoanItemsTable loanItemsTable;
   late final LoansTable loansTable;
   late final PaymentRequestsTable paymentRequestsTable;
+  late final UsedGcashReceiptsTable usedGcashReceiptsTable;
 
   Future<PsosyoDatabaseService> init() async {
     await _dbHelper.database;
@@ -23,6 +25,7 @@ class PsosyoDatabaseService extends GetxService {
     loansTable =
         LoansTable(() => _dbHelper.database, usersTable, loanItemsTable);
     paymentRequestsTable = PaymentRequestsTable(() => _dbHelper.database);
+    usedGcashReceiptsTable = UsedGcashReceiptsTable(() => _dbHelper.database);
     return this;
   }
 
@@ -159,4 +162,18 @@ class PsosyoDatabaseService extends GetxService {
 
   Future<List<Map<String, Object?>>> loadAllUsers() =>
       usersTable.loadAllUsers();
+
+  Future<bool> isGcashReceiptUsed(String gcashReferenceId) =>
+      usedGcashReceiptsTable.isReceiptUsed(gcashReferenceId);
+
+  Future<void> saveUsedGcashReceipt({
+    required String gcashReferenceId,
+    String? loanReferenceId,
+    double amount = 0,
+  }) =>
+      usedGcashReceiptsTable.saveUsedReceipt(
+        gcashReferenceId: gcashReferenceId,
+        loanReferenceId: loanReferenceId,
+        amount: amount,
+      );
 }

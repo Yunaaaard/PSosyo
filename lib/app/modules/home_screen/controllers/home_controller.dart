@@ -873,6 +873,15 @@ class HomeController extends GetxController {
         payload,
         loanReferenceId: order.referenceId,
       );
+      if (selectedMethod.toLowerCase() == 'gcash' &&
+          paymentReferenceId != null &&
+          paymentReferenceId.trim().isNotEmpty) {
+        await _database.saveUsedGcashReceipt(
+          gcashReferenceId: paymentReferenceId,
+          loanReferenceId: order.referenceId,
+          amount: paidAmount,
+        );
+      }
     } catch (_) {}
 
     transactionHistory.insert(
@@ -1021,6 +1030,15 @@ class HomeController extends GetxController {
         payload,
         loanReferenceId: order.referenceId,
       );
+      if (selectedMethod.toLowerCase() == 'gcash' &&
+          paymentReferenceId != null &&
+          paymentReferenceId.trim().isNotEmpty) {
+        await _database.saveUsedGcashReceipt(
+          gcashReferenceId: paymentReferenceId,
+          loanReferenceId: order.referenceId,
+          amount: pendingAmount,
+        );
+      }
     } catch (_) {}
 
     transactionHistory.insert(
@@ -1200,13 +1218,49 @@ class HomeController extends GetxController {
       return;
     }
 
-    final amount = order.remainingAmount;
+    // Parse the OCR-scanned "Total Amount Sent" from the GCash receipt.
+    final ocrAmountRaw = receiptOcrAmount.value.replaceAll(',', '').trim();
+    final ocrAmount = double.tryParse(ocrAmountRaw) ?? 0.0;
+    final loanBalance = order.remainingAmount;
+
+    // Validate: OCR total amount sent must not exceed the loan balance.
+    if (ocrAmount > 0 && ocrAmount > loanBalance) {
+      AppSnackbar.error(
+        title: 'Amount exceeds balance',
+        message:
+            'The total amount sent (${_formatAmount(ocrAmount)}) is greater '
+            'than the loan balance (${_formatAmount(loanBalance)}). '
+            'Please verify the receipt.',
+        position: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 5),
+      );
+      return;
+    }
+
+    // Use the OCR amount when available; otherwise fall back to the full remaining balance.
+    final amount = (ocrAmount > 0) ? ocrAmount : loanBalance;
+
     final ocrReference = receiptOcrReferenceNumber.value.trim();
     final paymentReferenceId =
         ocrReference.isNotEmpty ? ocrReference : paymentReference.value.trim();
     if (ocrReference.isNotEmpty) {
       paymentReference.value = ocrReference;
       useAutoReference.value = false;
+    }
+
+    final isGcash = paymentType.toLowerCase() == 'gcash';
+    if (isGcash && paymentReferenceId.isNotEmpty) {
+      final isUsed = await _database.isGcashReceiptUsed(paymentReferenceId);
+      if (isUsed) {
+        AppSnackbar.error(
+          title: 'Duplicate GCash receipt',
+          message:
+              'This GCash receipt (Ref: $paymentReferenceId) has already been used for a previous payment.',
+          position: SnackPosition.BOTTOM,
+          duration: const Duration(seconds: 5),
+        );
+        return;
+      }
     }
 
     await recordLoanPaymentPending(
