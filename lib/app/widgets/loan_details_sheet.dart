@@ -273,12 +273,10 @@ class LoanDetailsSheet extends StatelessWidget {
             const SizedBox(height: 12),
             ElevatedButton.icon(
               onPressed: () {
-                // Extract or generate paymentReference
                 final String paymentRef = _resolvePaymentReference(rawPayload);
 
                 String qrData;
                 if (rawPayload != null && rawPayload!.isNotEmpty) {
-                  // Enrich existing payload with paymentReference
                   try {
                     final Map<String, dynamic> base =
                         jsonDecode(rawPayload!) as Map<String, dynamic>;
@@ -363,9 +361,6 @@ class LoanDetailsSheet extends StatelessWidget {
     return double.tryParse(value.replaceAll(',', '').trim()) ?? 0;
   }
 
-  /// Tries to extract `paymentReference` from an existing raw QR payload JSON.
-  /// If not found, generates one in the `YYMMDDHHmmss` format that matches
-  /// [ScanSuccessReceiptModel._generatePaymentReference].
   static String _resolvePaymentReference(String? rawPayload) {
     if (rawPayload != null && rawPayload.isNotEmpty) {
       try {

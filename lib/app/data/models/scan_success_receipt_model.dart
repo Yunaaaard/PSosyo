@@ -115,7 +115,7 @@ class ScanSuccessReceiptModel {
     base.remove('reference_id');
     base['ReferenceID'] = referenceId;
 
-    base['from'] = from ?? 'MIKEL ROBBIE GARCIA ABOYME';
+    base['from'] = from ?? 'UNKNOWN USER';
     base['to'] = to ?? principalTitle;
     base['date'] = dateTime ?? '';
     base['amountSent'] = amountSent;
