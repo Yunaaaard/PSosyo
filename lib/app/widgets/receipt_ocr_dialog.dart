@@ -84,6 +84,11 @@ class ReceiptOcrDialog extends StatelessWidget {
         final hasRequiredOcrData = referenceNumber != null && referenceNumber!.isNotEmpty &&
             phoneNumber != null && phoneNumber!.isNotEmpty &&
             amountText != null && amountText!.isNotEmpty;
+        final missingFields = <String>[
+          if (referenceNumber == null || referenceNumber!.isEmpty) 'Ref No.',
+          if (phoneNumber == null || phoneNumber!.isEmpty) 'Phone Number',
+          if (amountText == null || amountText!.isEmpty) 'Amount',
+        ];
         final canProceed = hasSelections && isSuccess && hasRequiredOcrData;
         return Padding(
           padding: const EdgeInsets.fromLTRB(22, 22, 22, 18),
@@ -171,7 +176,7 @@ class ReceiptOcrDialog extends StatelessWidget {
                   child: Text(
                     !isSuccess
                         ? 'Receipt could not be read. Please retry.'
-                        : 'Missing receipt data (Ref No., Phone Number, or Amount). Please retry.',
+                        : 'Missing receipt data: ${missingFields.join(', ')}. Please retry.',
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontSize: 12,

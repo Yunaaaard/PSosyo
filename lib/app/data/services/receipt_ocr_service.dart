@@ -45,6 +45,13 @@ class ReceiptOcrService {
       }
     }
 
+    for (final line in lines) {
+      final digits = _extractReferenceDigits(line);
+      if (digits.length >= 10) {
+        return _formatReferenceDigits(digits);
+      }
+    }
+
     return null;
   }
 
@@ -112,7 +119,7 @@ class ReceiptOcrService {
 
   String? _extractReceiptPhoneNumber(List<String> lines) {
     for (final line in lines) {
-      final phone = _extractPlus63PhoneNumber(line);
+      final phone = _extractPhoneNumber(line);
       if (phone != null) {
         return phone;
       }
@@ -121,15 +128,15 @@ class ReceiptOcrService {
     return null;
   }
 
-  String? _extractPlus63PhoneNumber(String text) {
+  String? _extractPhoneNumber(String text) {
     final normalized = _normalizeOcrWhitespace(text);
     if (normalized.isEmpty) {
       return null;
     }
 
     final match = RegExp(
-            r'(?:\+63|63)[\s\-()]*(9\d{2})[\s\-()]*?(\d{3})[\s\-()]*?(\d{4})')
-        .firstMatch(normalized);
+      r'(?:\+63|63|0)?[\s\-()]*(9\d{2})[\s\-()]*?(\d{3})[\s\-()]*?(\d{4})',
+    ).firstMatch(normalized);
     if (match == null) {
       return null;
     }
@@ -243,6 +250,11 @@ class ReceiptOcrService {
   final List<RegExp> _referenceLabelPatterns = [
     RegExp(r'\bref\s*no\.?\b', caseSensitive: false),
     RegExp(r'\breference\s*no\.?\b', caseSensitive: false),
+    RegExp(r'\bref\b', caseSensitive: false),
+    RegExp(r'\breference\b', caseSensitive: false),
+    RegExp(r'\btransaction\s*(?:id|no\.?|number)\b', caseSensitive: false),
+    RegExp(r'\btrans\s*(?:id|no\.?|number)\b', caseSensitive: false),
+    RegExp(r'\btrace\s*no\.?\b', caseSensitive: false),
   ];
 
   final List<RegExp> _amountLabelPatterns = [
